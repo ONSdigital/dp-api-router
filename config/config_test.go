@@ -18,6 +18,7 @@ func TestGetRetrunsDefaultValues(t *testing.T) {
 		So(configuration.DatasetAPIURL, ShouldEqual, "http://localhost:22000")
 		So(configuration.RecipeAPIURL, ShouldEqual, "http://localhost:22300")
 		So(configuration.ImportAPIURL, ShouldEqual, "http://localhost:21800")
+		So(configuration.SearchAPIURL, ShouldEqual, "http://localhost:21800")
 		So(configuration.GracefulShutdown, ShouldEqual, time.Second*5)
 	})
 }

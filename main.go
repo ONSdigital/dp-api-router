@@ -51,10 +51,12 @@ func main() {
 	dataset := newAPIProxy(cfg.DatasetAPIURL)
 	filter := newAPIProxy(cfg.FilterAPIURL)
 	hierarchy := newAPIProxy(cfg.HierarchyAPIURL)
+	search := newAPIProxy(cfg.SearchAPIURL)
 	addHandler(router, codeList, "/code-lists")
 	addHandler(router, dataset, "/datasets")
 	addHandler(router, filter, "/filters")
 	addHandler(router, hierarchy, "/hierarchies")
+	addHandler(router, search, "/search")
 
 	// Private APIs
 	recipe := newAPIProxy(cfg.RecipeAPIURL)
