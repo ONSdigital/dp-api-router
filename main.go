@@ -54,7 +54,9 @@ func main() {
 	search := newAPIProxy(cfg.SearchAPIURL)
 	addHandler(router, codeList, "/code-lists")
 	addHandler(router, dataset, "/datasets")
+	addHandler(router, dataset, "/instances")
 	addHandler(router, filter, "/filters")
+	addHandler(router, filter, "/filter-outputs")
 	addHandler(router, hierarchy, "/hierarchies")
 	addHandler(router, search, "/search")
 
