@@ -12,7 +12,7 @@ type Config struct {
 	HierarchyAPIURL  string        `envconfig:"HIERARCHY_API_URL"`
 	FilterAPIURL     string        `envconfig:"FILTER_API_URL"`
 	DatasetAPIURL    string        `envconfig:"DATASET_API_URL"`
-	CodelistAPIURL   string        `envconfig:"CODELIST_API_URL"`
+	CodelistAPIURL   string        `envconfig:"CODE_LIST_API_URL"`
 	RecipeAPIURL     string        `envconfig:"RECIPE_API_URL"`
 	ImportAPIURL     string        `envconfig:"IMPORT_API_URL"`
 	SearchAPIURL     string        `envconfig:"SEARCH_API_URL"`
