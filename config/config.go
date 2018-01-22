@@ -3,6 +3,7 @@ package config
 import (
 	"time"
 
+	"github.com/ONSdigital/go-ns/log"
 	"github.com/kelseyhightower/envconfig"
 )
 
@@ -36,6 +37,7 @@ func Get() (*Config, error) {
 			GracefulShutdown: 5 * time.Second,
 		}
 		if err := envconfig.Process("", configuration); err != nil {
+			log.ErrorC("failed to parse configuration", err, log.Data{"config": configuration})
 			return nil, err
 		}
 	}
