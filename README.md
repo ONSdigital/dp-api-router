@@ -6,7 +6,8 @@ A service which routes API requests to the correct services. In the future this 
 
 | Environment variable       | Default                                   | Description
 | -------------------------- | ----------------------------------------- | -----------
-| BIND_ADDR                  | ":23200"                                   | The host and port to bind to
+| BIND_ADDR                  | ":23200"                                  | The host and port to bind to
+| VERSION                    | "v1"                                      | The version of the API
 | HIERARCHY_API_URL          | "http://localhost:22600"                  | A URL to the hierarchy api
 | FILTER_API_URL             | "http://localhost:22100"                  | A URL to the filter api
 | DATASET_API_URL            | "http://localhost:22000"                  | A URL to the dataset api

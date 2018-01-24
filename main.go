@@ -1,39 +1,24 @@
 package main
 
 import (
-	"net/http"
-	"net/http/httputil"
-	"net/url"
+	"fmt"
 	"os"
 
 	"github.com/ONSdigital/dp-api-router/config"
+	"github.com/ONSdigital/dp-api-router/proxy"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/ONSdigital/go-ns/server"
 	"github.com/gorilla/mux"
 )
 
-// APIProxy will forward any requests to a API
-type APIProxy struct {
-	target *url.URL
-	proxy  *httputil.ReverseProxy
-}
-
-func newAPIProxy(target string) *APIProxy {
-	targetURL, err := url.Parse(target)
-	if err != nil {
-		log.ErrorC("failed to create url", err, log.Data{"url": target})
-		os.Exit(1)
-	}
-	return &APIProxy{target: targetURL, proxy: httputil.NewSingleHostReverseProxy(targetURL)}
-}
-
-func (p *APIProxy) handle(w http.ResponseWriter, r *http.Request) {
-	p.proxy.ServeHTTP(w, r)
-}
-
-func addHandler(router *mux.Router, proxy *APIProxy, path string) {
+func addVersionHandler(router *mux.Router, proxy *proxy.APIProxy, path string) {
 	// Proxy any request after the path given to the target address
-	router.HandleFunc(path+"{rest:.*}", proxy.handle)
+	router.HandleFunc(fmt.Sprintf("/%s"+path+"{rest:.*}", proxy.Version), proxy.VersionHandle)
+}
+
+func addLegacyHandler(router *mux.Router, proxy *proxy.APIProxy, path string) {
+	// Proxy any request after the path given to the target address
+	router.HandleFunc(path+"{rest:.*}", proxy.VersionHandle)
 }
 
 func main() {
@@ -47,24 +32,31 @@ func main() {
 	router := mux.NewRouter()
 
 	// Public APIs
-	codeList := newAPIProxy(cfg.CodelistAPIURL)
-	dataset := newAPIProxy(cfg.DatasetAPIURL)
-	filter := newAPIProxy(cfg.FilterAPIURL)
-	hierarchy := newAPIProxy(cfg.HierarchyAPIURL)
-	search := newAPIProxy(cfg.SearchAPIURL)
-	addHandler(router, codeList, "/code-lists")
-	addHandler(router, dataset, "/datasets")
-	addHandler(router, dataset, "/instances")
-	addHandler(router, filter, "/filters")
-	addHandler(router, filter, "/filter-outputs")
-	addHandler(router, hierarchy, "/hierarchies")
-	addHandler(router, search, "/search")
+	codeList := proxy.NewAPIProxy(cfg.CodelistAPIURL, cfg.Version)
+	dataset := proxy.NewAPIProxy(cfg.DatasetAPIURL, cfg.Version)
+	filter := proxy.NewAPIProxy(cfg.FilterAPIURL, cfg.Version)
+	hierarchy := proxy.NewAPIProxy(cfg.HierarchyAPIURL, cfg.Version)
+	search := proxy.NewAPIProxy(cfg.SearchAPIURL, cfg.Version)
+	addVersionHandler(router, codeList, "/code-lists")
+	addVersionHandler(router, dataset, "/datasets")
+	addVersionHandler(router, dataset, "/instances")
+	addVersionHandler(router, filter, "/filters")
+	addVersionHandler(router, filter, "/filter-outputs")
+	addVersionHandler(router, hierarchy, "/hierarchies")
+	addVersionHandler(router, search, "/search")
 
 	// Private APIs
-	recipe := newAPIProxy(cfg.RecipeAPIURL)
-	importAPI := newAPIProxy(cfg.ImportAPIURL)
-	addHandler(router, recipe, "/recipes")
-	addHandler(router, importAPI, "/jobs")
+	recipe := proxy.NewAPIProxy(cfg.RecipeAPIURL, cfg.Version)
+	importAPI := proxy.NewAPIProxy(cfg.ImportAPIURL, cfg.Version)
+	addVersionHandler(router, recipe, "/recipes")
+	addVersionHandler(router, importAPI, "/jobs")
+
+	// legacy API
+	poc := proxy.NewAPIProxy(cfg.APIPocURL, "")
+	addLegacyHandler(router, poc, "/ops")
+	addLegacyHandler(router, poc, "/dataset")
+	addLegacyHandler(router, poc, "/timeseries")
+	addLegacyHandler(router, poc, "/search")
 
 	httpServer := server.New(cfg.BindAddr, router)
 	httpServer.DefaultShutdownTimeout = cfg.GracefulShutdown
