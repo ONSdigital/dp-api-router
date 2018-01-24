@@ -1,4 +1,4 @@
-job "dp-code-list-api" {
+job "dp-api-router" {
   datacenters = ["eu-west-1"]
   region      = "eu"
   type        = "service"
