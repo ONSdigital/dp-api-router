@@ -39,7 +39,6 @@ func main() {
 	search := proxy.NewAPIProxy(cfg.SearchAPIURL, cfg.Version)
 	addVersionHandler(router, codeList, "/code-lists")
 	addVersionHandler(router, dataset, "/datasets")
-	addVersionHandler(router, dataset, "/instances")
 	addVersionHandler(router, filter, "/filters")
 	addVersionHandler(router, filter, "/filter-outputs")
 	addVersionHandler(router, hierarchy, "/hierarchies")
@@ -51,6 +50,7 @@ func main() {
 		importAPI := proxy.NewAPIProxy(cfg.ImportAPIURL, cfg.Version)
 		addVersionHandler(router, recipe, "/recipes")
 		addVersionHandler(router, importAPI, "/jobs")
+		addVersionHandler(router, dataset, "/instances")
 	}
 
 	// legacy API
