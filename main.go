@@ -46,10 +46,12 @@ func main() {
 	addVersionHandler(router, search, "/search")
 
 	// Private APIs
-	recipe := proxy.NewAPIProxy(cfg.RecipeAPIURL, cfg.Version)
-	importAPI := proxy.NewAPIProxy(cfg.ImportAPIURL, cfg.Version)
-	addVersionHandler(router, recipe, "/recipes")
-	addVersionHandler(router, importAPI, "/jobs")
+	if cfg.EnablePrivateEndpoints {
+		recipe := proxy.NewAPIProxy(cfg.RecipeAPIURL, cfg.Version)
+		importAPI := proxy.NewAPIProxy(cfg.ImportAPIURL, cfg.Version)
+		addVersionHandler(router, recipe, "/recipes")
+		addVersionHandler(router, importAPI, "/jobs")
+	}
 
 	// legacy API
 	poc := proxy.NewAPIProxy(cfg.APIPocURL, "")

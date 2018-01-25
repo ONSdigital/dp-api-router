@@ -14,6 +14,7 @@ func TestGetRetrunsDefaultValues(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(configuration.BindAddr, ShouldEqual, ":23200")
 		So(configuration.Version, ShouldEqual, "v1")
+		So(configuration.EnablePrivateEndpoints, ShouldEqual, true)
 		So(configuration.HierarchyAPIURL, ShouldEqual, "http://localhost:22600")
 		So(configuration.FilterAPIURL, ShouldEqual, "http://localhost:22100")
 		So(configuration.DatasetAPIURL, ShouldEqual, "http://localhost:22000")
