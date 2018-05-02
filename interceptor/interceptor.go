@@ -21,6 +21,15 @@ type writer struct {
 	domain string
 }
 
+// WriteHeader wraps the response writer WriteHeader method, but
+// removes the content length header so that the correct content
+// length is written when the response has been updated
+func (w writer) WriteHeader(code int) {
+	w.ResponseWriter.Header().Del("Content-Length")
+
+	w.ResponseWriter.WriteHeader(code)
+}
+
 // Write intercepts the response writer Write method, parses the json
 // and replaces any url domains with the environment host domain
 func (w writer) Write(b []byte) (int, error) {
