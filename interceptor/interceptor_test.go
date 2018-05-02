@@ -62,6 +62,19 @@ func TestUnitInterceptor(t *testing.T) {
 		So(respW.Body.String(), ShouldEqual, `{"items":[{"links":{"self":{"href":"https://api.beta.ons.gov.uk/datasets/12345"}}}]}`)
 	})
 
+	Convey("test interceptor correctly updates a nested array of links", t, func() {
+		testJSON := `{"links":{"instances":[{"href":"/datasets/12345"}]}}`
+		respW := httptest.NewRecorder()
+
+		w := writer{respW, testDomain}
+
+		n, err := w.Write([]byte(testJSON))
+		So(err, ShouldBeNil)
+		So(n, ShouldEqual, 79)
+
+		So(respW.Body.String(), ShouldEqual, `{"links":{"instances":[{"href":"https://api.beta.ons.gov.uk/datasets/12345"}]}}`)
+	})
+
 	Convey("test interceptor returns an error on write if bytes are not valid json", t, func() {
 		b := `not valid json sorry ¯\_(ツ)_/¯`
 		respW := httptest.NewRecorder()

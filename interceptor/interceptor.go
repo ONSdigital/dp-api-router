@@ -109,14 +109,21 @@ func (w writer) checkMap(document map[string]interface{}) (map[string]interface{
 func updateMap(docMap map[string]interface{}, domain string) (map[string]interface{}, error) {
 	var err error
 	for k, v := range docMap {
-		val := v.(map[string]interface{})
-		if field, ok := val[href].(string); ok {
-			val[href], err = getLink(field, domain)
+		if val, ok := v.(map[string]interface{}); ok {
+			if field, ok := val[href].(string); ok {
+				val[href], err = getLink(field, domain)
+				if err != nil {
+					return nil, err
+				}
+			}
+			docMap[k] = val
+		}
+		if val, ok := v.([]interface{}); ok {
+			docMap[k], err = updateArray(val, domain)
 			if err != nil {
 				return nil, err
 			}
 		}
-		docMap[k] = val
 	}
 	return docMap, nil
 }
