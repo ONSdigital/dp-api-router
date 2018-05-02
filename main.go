@@ -66,7 +66,7 @@ func main() {
 
 	// Enable CORS for GET in Web
 	if !cfg.EnablePrivateEndpoints {
-		methodsOk := handlers.AllowedMethods([]string{"GET"})
+		methodsOk := handlers.AllowedMethods([]string{"GET", "POST"})
 		httpServer.Middleware["CORS"] = handlers.CORS(methodsOk)
 		httpServer.MiddlewareOrder = append(httpServer.MiddlewareOrder, "CORS")
 	}
