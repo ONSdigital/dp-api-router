@@ -9,6 +9,7 @@ import (
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/ONSdigital/go-ns/server"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/handlers"
 )
 
 func addVersionHandler(router *mux.Router, proxy *proxy.APIProxy, path string) {
@@ -60,7 +61,16 @@ func main() {
 	addLegacyHandler(router, poc, "/timeseries")
 	addLegacyHandler(router, poc, "/search")
 
+
 	httpServer := server.New(cfg.BindAddr, router)
+
+	// Enable CORS for GET in Web
+	if !cfg.EnablePrivateEndpoints {
+		methodsOk := handlers.AllowedMethods([]string{"GET"})
+		httpServer.Middleware["CORS"] = handlers.CORS(methodsOk)
+		httpServer.MiddlewareOrder = append(httpServer.MiddlewareOrder, "CORS")
+	}
+
 	httpServer.DefaultShutdownTimeout = cfg.GracefulShutdown
 	err = httpServer.ListenAndServe()
 	if err != nil {
