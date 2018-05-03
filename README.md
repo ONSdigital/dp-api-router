@@ -18,3 +18,4 @@ A service which routes API requests to the correct services. In the future this 
 | SEARCH_API_URL             | "http://localhost:23100"                  | A URL to the search api
 | API_POC_URL                | "http://localhost:3000"                   | A URL to the poc api
 | SHUTDOWN_TIMEOUT           | 5s                                        | The graceful shutdown timeout (`time.Duration` format)
+| ENV_HOST                   | "http://localhost:23200"                  | The public host for the environment the service is running on

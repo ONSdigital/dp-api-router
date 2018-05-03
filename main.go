@@ -5,11 +5,13 @@ import (
 	"os"
 
 	"github.com/ONSdigital/dp-api-router/config"
+	"github.com/ONSdigital/dp-api-router/interceptor"
 	"github.com/ONSdigital/dp-api-router/proxy"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/ONSdigital/go-ns/server"
-	"github.com/gorilla/mux"
 	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
+	"github.com/justinas/alice"
 )
 
 func addVersionHandler(router *mux.Router, proxy *proxy.APIProxy, path string) {
@@ -61,8 +63,8 @@ func main() {
 	addLegacyHandler(router, poc, "/timeseries")
 	addLegacyHandler(router, poc, "/search")
 
-
-	httpServer := server.New(cfg.BindAddr, router)
+	alice := alice.New(interceptor.Handler(cfg.EnvironmentHost)).Then(router)
+	httpServer := server.New(cfg.BindAddr, alice)
 
 	// Enable CORS for GET in Web
 	if !cfg.EnablePrivateEndpoints {
