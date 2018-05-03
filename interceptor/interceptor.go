@@ -37,6 +37,10 @@ func (w writer) WriteHeader(code int) {
 // Write intercepts the response writer Write method, parses the json
 // and replaces any url domains with the environment host domain
 func (w writer) Write(b []byte) (int, error) {
+	if f, ok := w.ResponseWriter.(http.Flusher); ok {
+		f.Flush()
+	}
+
 	b, err := w.update(b)
 	if err != nil {
 		return 0, err
