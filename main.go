@@ -9,6 +9,7 @@ import (
 	"github.com/ONSdigital/dp-api-router/proxy"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/ONSdigital/go-ns/server"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/justinas/alice"
 )
@@ -63,8 +64,15 @@ func main() {
 	addLegacyHandler(router, poc, "/search")
 
 	alice := alice.New(interceptor.Handler(cfg.EnvironmentHost)).Then(router)
-
 	httpServer := server.New(cfg.BindAddr, alice)
+
+	// Enable CORS for GET in Web
+	if !cfg.EnablePrivateEndpoints {
+		methodsOk := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE"})
+		httpServer.Middleware["CORS"] = handlers.CORS(methodsOk)
+		httpServer.MiddlewareOrder = append(httpServer.MiddlewareOrder, "CORS")
+	}
+
 	httpServer.DefaultShutdownTimeout = cfg.GracefulShutdown
 	err = httpServer.ListenAndServe()
 	if err != nil {
