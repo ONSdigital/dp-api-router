@@ -63,7 +63,8 @@ func main() {
 	addLegacyHandler(router, poc, "/timeseries")
 	addLegacyHandler(router, poc, "/search")
 
-	alice := alice.New(interceptor.Handler(cfg.EnvironmentHost)).Then(router)
+	alice := alice.New(interceptor.Handler(cfg.EnvironmentHost + "/" + cfg.Version)).Then(router)
+
 	httpServer := server.New(cfg.BindAddr, alice)
 
 	// Enable CORS for GET in Web
@@ -74,6 +75,7 @@ func main() {
 	}
 
 	httpServer.DefaultShutdownTimeout = cfg.GracefulShutdown
+
 	err = httpServer.ListenAndServe()
 	if err != nil {
 		log.ErrorC("failed to close down http server", err, log.Data{"config": cfg})
