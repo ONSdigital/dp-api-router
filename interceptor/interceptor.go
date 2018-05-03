@@ -16,6 +16,10 @@ const (
 	href = "href"
 )
 
+var (
+	re = regexp.MustCompile(`^(.+:\/\/)(.+$)`)
+)
+
 type writer struct {
 	http.ResponseWriter
 	domain string
@@ -58,8 +62,8 @@ func (w writer) update(b []byte) ([]byte, error) {
 
 func (w writer) checkMap(document map[string]interface{}) (map[string]interface{}, error) {
 	var err error
+
 	if docLinks, ok := document[links].(map[string]interface{}); ok {
-		re := regexp.MustCompile(`^(.+:\/\/)(.+$)`)
 		document[links], err = updateMap(docLinks, re.ReplaceAllString(w.domain, "${1}api.${2}"))
 		if err != nil {
 			return nil, err
@@ -67,7 +71,6 @@ func (w writer) checkMap(document map[string]interface{}) (map[string]interface{
 	}
 
 	if docDownloads, ok := document[downloads].(map[string]interface{}); ok {
-		re := regexp.MustCompile(`^(.+:\/\/)(.+$)`)
 		document[downloads], err = updateMap(docDownloads, re.ReplaceAllString(w.domain, "${1}download.${2}"))
 		if err != nil {
 			return nil, err
@@ -75,7 +78,6 @@ func (w writer) checkMap(document map[string]interface{}) (map[string]interface{
 	}
 
 	if docDimensions, ok := document[dimensions].([]interface{}); ok {
-		re := regexp.MustCompile(`^(.+:\/\/)(.+$)`)
 		document[dimensions], err = updateArray(docDimensions, re.ReplaceAllString(w.domain, "${1}api.${2}"))
 		if err != nil {
 			return nil, err
