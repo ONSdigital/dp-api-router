@@ -39,7 +39,7 @@ func (w writer) WriteHeader(code int) {
 // Write intercepts the response writer Write method, parses the json
 // and replaces any url domains with the environment host domain
 func (w writer) Write(b []byte) (int, error) {
-	log.Debug("write method successfully called", nil)
+	log.Debug("write method successfully called", nil})
 
 	if f, ok := w.ResponseWriter.(http.Flusher); ok {
 		log.Debug("flushing the response writer", nil)
@@ -64,6 +64,7 @@ func (w writer) Write(b []byte) (int, error) {
 func (w writer) update(b []byte) ([]byte, error) {
 	var err error
 	document := make(map[string]interface{})
+	log.Debug("input bytes", log.Data{"b": string(b)})
 	if err = json.Unmarshal(b, &document); err != nil {
 		return nil, err
 	}
