@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+
+	"github.com/ONSdigital/go-ns/log"
 )
 
 const (
@@ -46,7 +48,11 @@ func (w writer) Write(b []byte) (int, error) {
 		return 0, err
 	}
 
-	return w.ResponseWriter.Write(b)
+	n, err := w.ResponseWriter.Write(b)
+
+	log.Debug("number of bytes written", log.Data{"n": n})
+
+	return n, err
 }
 
 func (w writer) update(b []byte) ([]byte, error) {
