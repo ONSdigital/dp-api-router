@@ -5,13 +5,11 @@ import (
 	"os"
 
 	"github.com/ONSdigital/dp-api-router/config"
-	"github.com/ONSdigital/dp-api-router/interceptor"
 	"github.com/ONSdigital/dp-api-router/proxy"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/ONSdigital/go-ns/server"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"github.com/justinas/alice"
 )
 
 func addVersionHandler(router *mux.Router, proxy *proxy.APIProxy, path string) {
@@ -35,11 +33,11 @@ func main() {
 	router := mux.NewRouter()
 
 	// Public APIs
-	codeList := proxy.NewAPIProxy(cfg.CodelistAPIURL, cfg.Version)
-	dataset := proxy.NewAPIProxy(cfg.DatasetAPIURL, cfg.Version)
-	filter := proxy.NewAPIProxy(cfg.FilterAPIURL, cfg.Version)
-	hierarchy := proxy.NewAPIProxy(cfg.HierarchyAPIURL, cfg.Version)
-	search := proxy.NewAPIProxy(cfg.SearchAPIURL, cfg.Version)
+	codeList := proxy.NewAPIProxy(cfg.CodelistAPIURL, cfg.Version, cfg.EnvironmentHost)
+	dataset := proxy.NewAPIProxy(cfg.DatasetAPIURL, cfg.Version, cfg.EnvironmentHost)
+	filter := proxy.NewAPIProxy(cfg.FilterAPIURL, cfg.Version, cfg.EnvironmentHost)
+	hierarchy := proxy.NewAPIProxy(cfg.HierarchyAPIURL, cfg.Version, cfg.EnvironmentHost)
+	search := proxy.NewAPIProxy(cfg.SearchAPIURL, cfg.Version, cfg.EnvironmentHost)
 	addVersionHandler(router, codeList, "/code-lists")
 	addVersionHandler(router, dataset, "/datasets")
 	addVersionHandler(router, filter, "/filters")
@@ -49,23 +47,21 @@ func main() {
 
 	// Private APIs
 	if cfg.EnablePrivateEndpoints {
-		recipe := proxy.NewAPIProxy(cfg.RecipeAPIURL, cfg.Version)
-		importAPI := proxy.NewAPIProxy(cfg.ImportAPIURL, cfg.Version)
+		recipe := proxy.NewAPIProxy(cfg.RecipeAPIURL, cfg.Version, cfg.EnvironmentHost)
+		importAPI := proxy.NewAPIProxy(cfg.ImportAPIURL, cfg.Version, cfg.EnvironmentHost)
 		addVersionHandler(router, recipe, "/recipes")
 		addVersionHandler(router, importAPI, "/jobs")
 		addVersionHandler(router, dataset, "/instances")
 	}
 
 	// legacy API
-	poc := proxy.NewAPIProxy(cfg.APIPocURL, "")
+	poc := proxy.NewAPIProxy(cfg.APIPocURL, "", cfg.EnvironmentHost)
 	addLegacyHandler(router, poc, "/ops")
 	addLegacyHandler(router, poc, "/dataset")
 	addLegacyHandler(router, poc, "/timeseries")
 	addLegacyHandler(router, poc, "/search")
 
-	alice := alice.New(interceptor.Handler(cfg.EnvironmentHost + "/" + cfg.Version)).Then(router)
-
-	httpServer := server.New(cfg.BindAddr, alice)
+	httpServer := server.New(cfg.BindAddr, router)
 
 	// Enable CORS for GET in Web
 	if !cfg.EnablePrivateEndpoints {

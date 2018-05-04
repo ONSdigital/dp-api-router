@@ -1,14 +1,29 @@
 package interceptor
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"regexp"
-
-	"github.com/ONSdigital/go-ns/log"
+	"strconv"
 )
+
+// Transport implements the http RoundTripper method and allows the
+// response body to be post processed
+type Transport struct {
+	domain string
+	http.RoundTripper
+}
+
+var _ http.RoundTripper = &Transport{}
+
+// NewRoundTripper creates a Transport instance with configured domain
+func NewRoundTripper(domain string, rt http.RoundTripper) *Transport {
+	return &Transport{domain, rt}
+}
 
 const (
 	links      = "links"
@@ -22,54 +37,44 @@ var (
 	re = regexp.MustCompile(`^(.+:\/\/)(.+$)`)
 )
 
-type writer struct {
-	http.ResponseWriter
-	domain string
-}
-
-// WriteHeader wraps the response writer WriteHeader method, but
-// removes the content length header so that the correct content
-// length is written when the response has been updated
-func (w writer) WriteHeader(code int) {
-	w.ResponseWriter.Header().Del("Content-Length")
-
-	w.ResponseWriter.WriteHeader(code)
-}
-
-// Write intercepts the response writer Write method, parses the json
-// and replaces any url domains with the environment host domain
-func (w writer) Write(b []byte) (int, error) {
-	log.Debug("write method successfully called", nil)
-
-	if f, ok := w.ResponseWriter.(http.Flusher); ok {
-		log.Debug("flushing the response writer", nil)
-		f.Flush()
-	}
-
-	b, err := w.update(b)
+// RoundTrip intercepts the response body and post processes to add the correct enviornment
+// host to links
+func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error) {
+	resp, err = t.RoundTripper.RoundTrip(req)
 	if err != nil {
-		log.ErrorC("got an error updating initial response", err, nil)
-		return 0, err
+		return nil, err
 	}
 
-	log.Debug("about to call response writer write", nil)
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	err = resp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
 
-	n, err := w.ResponseWriter.Write(b)
+	b, err = t.update(b)
+	if err != nil {
+		return nil, err
+	}
 
-	log.Debug("number of bytes written", log.Data{"n": n})
+	body := ioutil.NopCloser(bytes.NewReader(b))
 
-	return n, err
+	resp.Body = body
+	resp.ContentLength = int64(len(b))
+	resp.Header.Set("Content-Length", strconv.Itoa(len(b)))
+	return resp, nil
 }
 
-func (w writer) update(b []byte) ([]byte, error) {
+func (t *Transport) update(b []byte) ([]byte, error) {
 	var err error
 	document := make(map[string]interface{})
-	log.Debug("input bytes", log.Data{"b": string(b)})
 	if err = json.Unmarshal(b, &document); err != nil {
 		return nil, err
 	}
 
-	document, err = w.checkMap(document)
+	document, err = t.checkMap(document)
 	if err != nil {
 		return nil, err
 	}
@@ -77,25 +82,25 @@ func (w writer) update(b []byte) ([]byte, error) {
 	return json.Marshal(document)
 }
 
-func (w writer) checkMap(document map[string]interface{}) (map[string]interface{}, error) {
+func (t *Transport) checkMap(document map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 
 	if docLinks, ok := document[links].(map[string]interface{}); ok {
-		document[links], err = updateMap(docLinks, re.ReplaceAllString(w.domain, "${1}api.${2}"))
+		document[links], err = updateMap(docLinks, re.ReplaceAllString(t.domain, "${1}api.${2}"))
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	if docDownloads, ok := document[downloads].(map[string]interface{}); ok {
-		document[downloads], err = updateMap(docDownloads, re.ReplaceAllString(w.domain, "${1}download.${2}"))
+		document[downloads], err = updateMap(docDownloads, re.ReplaceAllString(t.domain, "${1}download.${2}"))
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	if docDimensions, ok := document[dimensions].([]interface{}); ok {
-		document[dimensions], err = updateArray(docDimensions, re.ReplaceAllString(w.domain, "${1}api.${2}"))
+		document[dimensions], err = updateArray(docDimensions, re.ReplaceAllString(t.domain, "${1}api.${2}"))
 		if err != nil {
 			return nil, err
 		}
@@ -103,7 +108,7 @@ func (w writer) checkMap(document map[string]interface{}) (map[string]interface{
 
 	for k, v := range document {
 		if subDocument, ok := v.(map[string]interface{}); ok {
-			document[k], err = w.checkMap(subDocument)
+			document[k], err = t.checkMap(subDocument)
 			if err != nil {
 				return nil, err
 			}
@@ -112,7 +117,7 @@ func (w writer) checkMap(document map[string]interface{}) (map[string]interface{
 		if items, ok := v.([]interface{}); ok {
 			for i, subVal := range items {
 				if subValMap, ok := subVal.(map[string]interface{}); ok {
-					items[i], err = w.checkMap(subValMap)
+					items[i], err = t.checkMap(subValMap)
 					if err != nil {
 						return nil, err
 					}
@@ -161,16 +166,6 @@ func updateArray(docArray []interface{}, domain string) ([]interface{}, error) {
 		}
 	}
 	return docArray, nil
-}
-
-// Handler takes a given domain to handle the intercepting of http requests with the
-// purpose of prepending any api response urls with the correct domain for the environment
-func Handler(domain string) func(http.Handler) http.Handler {
-	return func(h http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-			h.ServeHTTP(writer{w, domain}, req)
-		})
-	}
 }
 
 func getLink(field, domain string) (string, error) {
