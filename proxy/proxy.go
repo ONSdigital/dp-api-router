@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/ONSdigital/dp-api-router/interceptor"
 	"github.com/ONSdigital/go-ns/log"
 )
 
@@ -17,15 +18,19 @@ type APIProxy struct {
 	Version string
 }
 
-func NewAPIProxy(target string, version string) *APIProxy {
+func NewAPIProxy(target, version, envHost string) *APIProxy {
 	targetURL, err := url.Parse(target)
 	if err != nil {
 		log.ErrorC("failed to create url", err, log.Data{"url": target})
 		os.Exit(1)
 	}
+
+	pxy := httputil.NewSingleHostReverseProxy(targetURL)
+	pxy.Transport = interceptor.NewRoundTripper(envHost+"/"+version, http.DefaultTransport)
+
 	return &APIProxy{
 		target:  targetURL,
-		proxy:   httputil.NewSingleHostReverseProxy(targetURL),
+		proxy:   pxy,
 		Version: version}
 }
 

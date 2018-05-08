@@ -8,6 +8,7 @@ import (
 	"github.com/ONSdigital/dp-api-router/proxy"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/ONSdigital/go-ns/server"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
@@ -32,11 +33,11 @@ func main() {
 	router := mux.NewRouter()
 
 	// Public APIs
-	codeList := proxy.NewAPIProxy(cfg.CodelistAPIURL, cfg.Version)
-	dataset := proxy.NewAPIProxy(cfg.DatasetAPIURL, cfg.Version)
-	filter := proxy.NewAPIProxy(cfg.FilterAPIURL, cfg.Version)
-	hierarchy := proxy.NewAPIProxy(cfg.HierarchyAPIURL, cfg.Version)
-	search := proxy.NewAPIProxy(cfg.SearchAPIURL, cfg.Version)
+	codeList := proxy.NewAPIProxy(cfg.CodelistAPIURL, cfg.Version, cfg.EnvironmentHost)
+	dataset := proxy.NewAPIProxy(cfg.DatasetAPIURL, cfg.Version, cfg.EnvironmentHost)
+	filter := proxy.NewAPIProxy(cfg.FilterAPIURL, cfg.Version, cfg.EnvironmentHost)
+	hierarchy := proxy.NewAPIProxy(cfg.HierarchyAPIURL, cfg.Version, cfg.EnvironmentHost)
+	search := proxy.NewAPIProxy(cfg.SearchAPIURL, cfg.Version, cfg.EnvironmentHost)
 	addVersionHandler(router, codeList, "/code-lists")
 	addVersionHandler(router, dataset, "/datasets")
 	addVersionHandler(router, filter, "/filters")
@@ -46,22 +47,31 @@ func main() {
 
 	// Private APIs
 	if cfg.EnablePrivateEndpoints {
-		recipe := proxy.NewAPIProxy(cfg.RecipeAPIURL, cfg.Version)
-		importAPI := proxy.NewAPIProxy(cfg.ImportAPIURL, cfg.Version)
+		recipe := proxy.NewAPIProxy(cfg.RecipeAPIURL, cfg.Version, cfg.EnvironmentHost)
+		importAPI := proxy.NewAPIProxy(cfg.ImportAPIURL, cfg.Version, cfg.EnvironmentHost)
 		addVersionHandler(router, recipe, "/recipes")
 		addVersionHandler(router, importAPI, "/jobs")
 		addVersionHandler(router, dataset, "/instances")
 	}
 
 	// legacy API
-	poc := proxy.NewAPIProxy(cfg.APIPocURL, "")
+	poc := proxy.NewAPIProxy(cfg.APIPocURL, "", cfg.EnvironmentHost)
 	addLegacyHandler(router, poc, "/ops")
 	addLegacyHandler(router, poc, "/dataset")
 	addLegacyHandler(router, poc, "/timeseries")
 	addLegacyHandler(router, poc, "/search")
 
 	httpServer := server.New(cfg.BindAddr, router)
+
+	// Enable CORS for GET in Web
+	if !cfg.EnablePrivateEndpoints {
+		methodsOk := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE"})
+		httpServer.Middleware["CORS"] = handlers.CORS(methodsOk)
+		httpServer.MiddlewareOrder = append(httpServer.MiddlewareOrder, "CORS")
+	}
+
 	httpServer.DefaultShutdownTimeout = cfg.GracefulShutdown
+
 	err = httpServer.ListenAndServe()
 	if err != nil {
 		log.ErrorC("failed to close down http server", err, log.Data{"config": cfg})
