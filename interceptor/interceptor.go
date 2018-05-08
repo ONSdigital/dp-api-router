@@ -34,7 +34,7 @@ const (
 )
 
 var (
-	re = regexp.MustCompile(`^(.+:\/\/)(.+$)`)
+	re = regexp.MustCompile(`^(.+:\/\/)(.+)(\/v\d)$`)
 )
 
 // RoundTrip intercepts the response body and post processes to add the correct enviornment
@@ -86,7 +86,7 @@ func (t *Transport) checkMap(document map[string]interface{}) (map[string]interf
 	var err error
 
 	if docLinks, ok := document[links].(map[string]interface{}); ok {
-		document[links], err = updateMap(docLinks, re.ReplaceAllString(t.domain, "${1}api.${2}"))
+		document[links], err = updateMap(docLinks, re.ReplaceAllString(t.domain, "${1}api.${2}${3}"))
 		if err != nil {
 			return nil, err
 		}
@@ -100,7 +100,7 @@ func (t *Transport) checkMap(document map[string]interface{}) (map[string]interf
 	}
 
 	if docDimensions, ok := document[dimensions].([]interface{}); ok {
-		document[dimensions], err = updateArray(docDimensions, re.ReplaceAllString(t.domain, "${1}api.${2}"))
+		document[dimensions], err = updateArray(docDimensions, re.ReplaceAllString(t.domain, "${1}api.${2}${3}"))
 		if err != nil {
 			return nil, err
 		}

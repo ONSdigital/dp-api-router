@@ -10,7 +10,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-const testDomain = "https://beta.ons.gov.uk"
+const testDomain = "https://beta.ons.gov.uk/v1"
 
 type dummyRT struct {
 	testJSON string
@@ -36,9 +36,9 @@ func TestUnitInterceptor(t *testing.T) {
 
 		b, _ := ioutil.ReadAll(resp.Body)
 
-		So(len(b), ShouldEqual, 72)
+		So(len(b), ShouldEqual, 75)
 
-		So(string(b), ShouldEqual, `{"links":{"self":{"href":"https://api.beta.ons.gov.uk/datasets/12345"}}}`)
+		So(string(b), ShouldEqual, `{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}`)
 	})
 
 	Convey("test interceptor correctly updates a href in downloads subdoc", t, func() {
@@ -67,9 +67,9 @@ func TestUnitInterceptor(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		b, _ := ioutil.ReadAll(resp.Body)
-		So(len(b), ShouldEqual, 73)
+		So(len(b), ShouldEqual, 76)
 
-		So(string(b), ShouldEqual, `{"dimensions":[{"href":"https://api.beta.ons.gov.uk/codelists/1234567"}]}`)
+		So(string(b), ShouldEqual, `{"dimensions":[{"href":"https://api.beta.ons.gov.uk/v1/codelists/1234567"}]}`)
 	})
 
 	Convey("test interceptor correctly updates a nested links document", t, func() {
@@ -82,9 +82,9 @@ func TestUnitInterceptor(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		b, _ := ioutil.ReadAll(resp.Body)
-		So(len(b), ShouldEqual, 84)
+		So(len(b), ShouldEqual, 87)
 
-		So(string(b), ShouldEqual, `{"items":[{"links":{"self":{"href":"https://api.beta.ons.gov.uk/datasets/12345"}}}]}`)
+		So(string(b), ShouldEqual, `{"items":[{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}]}`)
 	})
 
 	Convey("test interceptor correctly updates a nested array of links", t, func() {
@@ -97,9 +97,9 @@ func TestUnitInterceptor(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		b, _ := ioutil.ReadAll(resp.Body)
-		So(len(b), ShouldEqual, 79)
+		So(len(b), ShouldEqual, 82)
 
-		So(string(b), ShouldEqual, `{"links":{"instances":[{"href":"https://api.beta.ons.gov.uk/datasets/12345"}]}}`)
+		So(string(b), ShouldEqual, `{"links":{"instances":[{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}]}}`)
 	})
 
 	Convey("test interceptor returns an error on write if bytes are not valid json", t, func() {
