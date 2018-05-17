@@ -9,6 +9,8 @@ import (
 	"net/url"
 	"regexp"
 	"strconv"
+
+	"github.com/ONSdigital/go-ns/log"
 )
 
 // Transport implements the http RoundTripper method and allows the
@@ -56,7 +58,8 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 
 	b, err = t.update(b)
 	if err != nil {
-		return nil, err
+		log.Debug("could not update response body with correct links", log.Data{"update_error": err.Error()})
+		return resp, nil
 	}
 
 	body := ioutil.NopCloser(bytes.NewReader(b))

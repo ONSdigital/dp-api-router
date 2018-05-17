@@ -102,13 +102,4 @@ func TestUnitInterceptor(t *testing.T) {
 		So(string(b), ShouldEqual, `{"links":{"instances":[{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}]}}`)
 	})
 
-	Convey("test interceptor returns an error on write if bytes are not valid json", t, func() {
-		b := `not valid json sorry ¯\_(ツ)_/¯`
-		transp := dummyRT{b}
-
-		t := NewRoundTripper(testDomain, transp)
-
-		_, err := t.RoundTrip(nil)
-		So(err, ShouldNotBeNil)
-	})
 }
