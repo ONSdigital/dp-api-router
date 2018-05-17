@@ -56,17 +56,20 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 		return nil, err
 	}
 
-	b, err = t.update(b)
+	updatedB, err := t.update(b)
 	if err != nil {
 		log.Debug("could not update response body with correct links", log.Data{"update_error": err.Error()})
+		body := ioutil.NopCloser(bytes.NewReader(b))
+
+		resp.Body = body
 		return resp, nil
 	}
 
-	body := ioutil.NopCloser(bytes.NewReader(b))
+	body := ioutil.NopCloser(bytes.NewReader(updatedB))
 
 	resp.Body = body
-	resp.ContentLength = int64(len(b))
-	resp.Header.Set("Content-Length", strconv.Itoa(len(b)))
+	resp.ContentLength = int64(len(updatedB))
+	resp.Header.Set("Content-Length", strconv.Itoa(len(updatedB)))
 	return resp, nil
 }
 
