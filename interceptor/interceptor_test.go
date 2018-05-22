@@ -102,4 +102,34 @@ func TestUnitInterceptor(t *testing.T) {
 		So(string(b), ShouldEqual, `{"links":{"instances":[{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}]}}`)
 	})
 
+	Convey("test interceptor correctly updates a nested dimension href", t, func() {
+		testJSON := `{"dimensions":{"time":{"option":{"href":"/datasets/time"}}}}`
+		transp := dummyRT{testJSON}
+
+		t := NewRoundTripper(testDomain, transp)
+
+		resp, err := t.RoundTrip(nil)
+		So(err, ShouldBeNil)
+
+		b, _ := ioutil.ReadAll(resp.Body)
+		So(len(b), ShouldEqual, 90)
+
+		So(string(b), ShouldEqual, `{"dimensions":{"time":{"option":{"href":"https://api.beta.ons.gov.uk/v1/datasets/time"}}}}`)
+	})
+
+	Convey("test query parameters are parsed correctly on response body rewrite", t, func() {
+		testJSON := `{"dimensions":{"time":{"option":{"href":"/datasets/time?hello=world&mobile=phone"}}}}`
+		transp := dummyRT{testJSON}
+
+		t := NewRoundTripper(testDomain, transp)
+
+		resp, err := t.RoundTrip(nil)
+		So(err, ShouldBeNil)
+
+		b, _ := ioutil.ReadAll(resp.Body)
+		//	So(len(b), ShouldEqual, 90)
+
+		So(string(b), ShouldEqual, `{"dimensions":{"time":{"option":{"href":"https://api.beta.ons.gov.uk/v1/datasets/time?hello=world&mobile=phone"}}}}`)
+	})
+
 }

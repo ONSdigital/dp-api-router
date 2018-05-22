@@ -85,7 +85,14 @@ func (t *Transport) update(b []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	return json.Marshal(document)
+	var updatedB []byte
+	buf := bytes.NewBuffer(updatedB)
+
+	enc := json.NewEncoder(buf)
+	enc.SetEscapeHTML(false)
+
+	err = enc.Encode(document)
+	return bytes.TrimSpace(buf.Bytes()), err
 }
 
 func (t *Transport) checkMap(document map[string]interface{}) (map[string]interface{}, error) {
@@ -105,8 +112,17 @@ func (t *Transport) checkMap(document map[string]interface{}) (map[string]interf
 		}
 	}
 
+	// Dataset api versions endpoint treats dimensions as an array
 	if docDimensions, ok := document[dimensions].([]interface{}); ok {
 		document[dimensions], err = updateArray(docDimensions, re.ReplaceAllString(t.domain, "${1}api.${2}${3}"))
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Dataset api observations endpoint treats dimensions as a nested list
+	if docDimensions, ok := document[dimensions].(map[string]interface{}); ok {
+		document[dimensions], err = updateMap(docDimensions, re.ReplaceAllString(t.domain, "${1}api.${2}${3}"))
 		if err != nil {
 			return nil, err
 		}
@@ -145,6 +161,11 @@ func updateMap(docMap map[string]interface{}, domain string) (map[string]interfa
 				if err != nil {
 					return nil, err
 				}
+			} else {
+				val, err = updateMap(val, domain)
+				if err != nil {
+					return nil, err
+				}
 			}
 			docMap[k] = val
 		}
@@ -180,5 +201,11 @@ func getLink(field, domain string) (string, error) {
 		return "", err
 	}
 
-	return fmt.Sprintf("%s%s", domain, uri.Path), nil
+	queries := uri.RawQuery
+
+	if len(queries) == 0 {
+		return fmt.Sprintf("%s%s", domain, uri.Path), nil
+	} else {
+		return fmt.Sprintf("%s%s?%s", domain, uri.Path, queries), nil
+	}
 }
