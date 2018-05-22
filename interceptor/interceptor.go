@@ -205,7 +205,7 @@ func getLink(field, domain string) (string, error) {
 
 	if len(queries) == 0 {
 		return fmt.Sprintf("%s%s", domain, uri.Path), nil
-	} else {
-		return fmt.Sprintf("%s%s?%s", domain, uri.Path, queries), nil
 	}
+	return fmt.Sprintf("%s%s?%s", domain, uri.Path, queries), nil
+
 }

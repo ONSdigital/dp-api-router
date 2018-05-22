@@ -127,7 +127,7 @@ func TestUnitInterceptor(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		b, _ := ioutil.ReadAll(resp.Body)
-		//	So(len(b), ShouldEqual, 90)
+		So(len(b), ShouldEqual, 115)
 
 		So(string(b), ShouldEqual, `{"dimensions":{"time":{"option":{"href":"https://api.beta.ons.gov.uk/v1/datasets/time?hello=world&mobile=phone"}}}}`)
 	})
