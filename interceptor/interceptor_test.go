@@ -36,9 +36,9 @@ func TestUnitInterceptor(t *testing.T) {
 
 		b, _ := ioutil.ReadAll(resp.Body)
 
-		So(len(b), ShouldEqual, 75)
+		So(len(b), ShouldEqual, 76)
 
-		So(string(b), ShouldEqual, `{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}`)
+		So(string(b), ShouldEqual, `{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}`+"\n")
 	})
 
 	Convey("test interceptor correctly updates a href in downloads subdoc", t, func() {
@@ -52,9 +52,9 @@ func TestUnitInterceptor(t *testing.T) {
 
 		b, _ := ioutil.ReadAll(resp.Body)
 
-		So(len(b), ShouldEqual, 76)
+		So(len(b), ShouldEqual, 77)
 
-		So(string(b), ShouldEqual, `{"downloads":{"csv":{"href":"https://download.beta.ons.gov.uk/myfile.csv"}}}`)
+		So(string(b), ShouldEqual, `{"downloads":{"csv":{"href":"https://download.beta.ons.gov.uk/myfile.csv"}}}`+"\n")
 	})
 
 	Convey("test interceptor correctly updates a href in dimensions subdoc", t, func() {
@@ -67,9 +67,9 @@ func TestUnitInterceptor(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		b, _ := ioutil.ReadAll(resp.Body)
-		So(len(b), ShouldEqual, 76)
+		So(len(b), ShouldEqual, 77)
 
-		So(string(b), ShouldEqual, `{"dimensions":[{"href":"https://api.beta.ons.gov.uk/v1/codelists/1234567"}]}`)
+		So(string(b), ShouldEqual, `{"dimensions":[{"href":"https://api.beta.ons.gov.uk/v1/codelists/1234567"}]}`+"\n")
 	})
 
 	Convey("test interceptor correctly updates a nested links document", t, func() {
@@ -82,9 +82,9 @@ func TestUnitInterceptor(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		b, _ := ioutil.ReadAll(resp.Body)
-		So(len(b), ShouldEqual, 87)
+		So(len(b), ShouldEqual, 88)
 
-		So(string(b), ShouldEqual, `{"items":[{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}]}`)
+		So(string(b), ShouldEqual, `{"items":[{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}]}`+"\n")
 	})
 
 	Convey("test interceptor correctly updates a nested array of links", t, func() {
@@ -97,9 +97,9 @@ func TestUnitInterceptor(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		b, _ := ioutil.ReadAll(resp.Body)
-		So(len(b), ShouldEqual, 82)
+		So(len(b), ShouldEqual, 83)
 
-		So(string(b), ShouldEqual, `{"links":{"instances":[{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}]}}`)
+		So(string(b), ShouldEqual, `{"links":{"instances":[{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}]}}`+"\n")
 	})
 
 	Convey("test interceptor correctly updates a nested dimension href", t, func() {
@@ -112,9 +112,9 @@ func TestUnitInterceptor(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		b, _ := ioutil.ReadAll(resp.Body)
-		So(len(b), ShouldEqual, 90)
+		So(len(b), ShouldEqual, 91)
 
-		So(string(b), ShouldEqual, `{"dimensions":{"time":{"option":{"href":"https://api.beta.ons.gov.uk/v1/datasets/time"}}}}`)
+		So(string(b), ShouldEqual, `{"dimensions":{"time":{"option":{"href":"https://api.beta.ons.gov.uk/v1/datasets/time"}}}}`+"\n")
 	})
 
 	Convey("test query parameters are parsed correctly on response body rewrite", t, func() {
@@ -127,9 +127,9 @@ func TestUnitInterceptor(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		b, _ := ioutil.ReadAll(resp.Body)
-		So(len(b), ShouldEqual, 115)
+		So(len(b), ShouldEqual, 116)
 
-		So(string(b), ShouldEqual, `{"dimensions":{"time":{"option":{"href":"https://api.beta.ons.gov.uk/v1/datasets/time?hello=world&mobile=phone"}}}}`)
+		So(string(b), ShouldEqual, `{"dimensions":{"time":{"option":{"href":"https://api.beta.ons.gov.uk/v1/datasets/time?hello=world&mobile=phone"}}}}`+"\n")
 	})
 
 }

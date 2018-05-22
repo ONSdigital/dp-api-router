@@ -92,7 +92,7 @@ func (t *Transport) update(b []byte) ([]byte, error) {
 	enc.SetEscapeHTML(false)
 
 	err = enc.Encode(document)
-	return bytes.TrimSpace(buf.Bytes()), err
+	return buf.Bytes(), err
 }
 
 func (t *Transport) checkMap(document map[string]interface{}) (map[string]interface{}, error) {
