@@ -80,8 +80,7 @@ func (t *Transport) update(b []byte) ([]byte, error) {
 
 	// try and unmarshal response body to a single map
 	document := make(map[string]interface{})
-	err = json.Unmarshal(b, &document)
-	if err == nil {
+	if err = json.Unmarshal(b, &document); err == nil {
 
 		document, err = t.checkMap(document)
 		if err != nil {
@@ -90,11 +89,11 @@ func (t *Transport) update(b []byte) ([]byte, error) {
 
 	} else {
 
-		log.Debug("Interceptor failed to unmarshal response body into a map.", log.Data{"Error": err})
+		log.Debug("Interceptor failed to unmarshal response into a map.", log.Data{"Error": err})
 
 		// see if it'll unmarshall into an array of maps
 		if err = json.Unmarshal(b, &documentArray); err != nil {
-			log.Debug("Interceptor failed to unmarshal response body into an array of maps.", log.Data{"Error": err})
+			log.Debug("Interceptor failed to unmarshal response into an array of maps.", log.Data{"Error": err})
 			return nil, err
 		}
 
