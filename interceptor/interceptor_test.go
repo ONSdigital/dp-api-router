@@ -132,4 +132,19 @@ func TestUnitInterceptor(t *testing.T) {
 		So(string(b), ShouldEqual, `{"dimensions":{"time":{"option":{"href":"https://api.beta.ons.gov.uk/v1/datasets/time?hello=world&mobile=phone"}}}}`+"\n")
 	})
 
+	Convey("test interceptor correctly updates a href in links subdocs within an array", t, func() {
+		testJSON := `[{"links":{"self":{"href":"/datasets/12345"}}}, {"links":{"self":{"href":"/datasets/12345"}}}]`
+		transp := dummyRT{testJSON}
+
+		t := NewRoundTripper(testDomain, transp)
+
+		resp, err := t.RoundTrip(nil)
+		So(err, ShouldBeNil)
+
+		b, _ := ioutil.ReadAll(resp.Body)
+
+		So(len(b), ShouldEqual, 154)
+
+		So(string(b), ShouldEqual, `[{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}},{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}]`+"\n")
+	})
 }

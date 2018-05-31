@@ -74,15 +74,38 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 }
 
 func (t *Transport) update(b []byte) ([]byte, error) {
-	var err error
-	document := make(map[string]interface{})
-	if err = json.Unmarshal(b, &document); err != nil {
-		return nil, err
-	}
 
-	document, err = t.checkMap(document)
-	if err != nil {
-		return nil, err
+	var err error
+	var documentArray []map[string]interface{}
+
+	// try and unmarshal response body to a single map
+	document := make(map[string]interface{})
+	err = json.Unmarshal(b, &document)
+	if err == nil {
+
+		document, err = t.checkMap(document)
+		if err != nil {
+			return nil, err
+		}
+
+	} else {
+
+		log.Debug("Interceptor failed to unmarshal response body into a map.", log.Data{"Error": err})
+
+		// see if it'll unmarshall into an array of maps
+		if err = json.Unmarshal(b, &documentArray); err != nil {
+			log.Debug("Interceptor failed to unmarshal response body into an array of maps.", log.Data{"Error": err})
+			return nil, err
+		}
+
+		// if it did - apply checkMap per element
+		for i := range documentArray {
+			documentArray[i], err = t.checkMap(documentArray[i])
+			if err != nil {
+				return nil, err
+			}
+		}
+
 	}
 
 	var updatedB []byte
@@ -91,7 +114,12 @@ func (t *Transport) update(b []byte) ([]byte, error) {
 	enc := json.NewEncoder(buf)
 	enc.SetEscapeHTML(false)
 
-	err = enc.Encode(document)
+	if len(documentArray) > 0 {
+		err = enc.Encode(documentArray)
+	} else {
+		err = enc.Encode(document)
+	}
+
 	return buf.Bytes(), err
 }
 
