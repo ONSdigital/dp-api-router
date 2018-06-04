@@ -3,10 +3,12 @@ package interceptor
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"reflect"
 	"regexp"
 	"strconv"
 
@@ -75,36 +77,40 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 
 func (t *Transport) update(b []byte) ([]byte, error) {
 
+	var (
+		err      error
+		resource interface{}
+	)
+
+	if err = json.Unmarshal(b, &resource); err != nil {
+		return nil, err
+	}
+
+	switch reflect.TypeOf(resource).Kind() {
+	case reflect.Map:
+		document, ok := resource.(map[string]interface{})
+		if !ok {
+			return nil, errors.New("unable to assert interface to a `map[string]interface{}`")
+		}
+		return t.updateMap(document)
+	case reflect.Slice:
+		log.Info("my type", log.Data{"type": reflect.TypeOf(resource)})
+		documents, ok := resource.([]interface{})
+		if !ok {
+			return nil, errors.New("unable to assert interface to a `[]interface{}`")
+		}
+		return t.updateSlice(documents)
+	default:
+		return nil, errors.New("unknown resource type")
+	}
+}
+
+func (t *Transport) updateMap(document map[string]interface{}) ([]byte, error) {
 	var err error
-	var documentArray []map[string]interface{}
 
-	// try and unmarshal response body to a single map
-	document := make(map[string]interface{})
-	if err = json.Unmarshal(b, &document); err == nil {
-
-		document, err = t.checkMap(document)
-		if err != nil {
-			return nil, err
-		}
-
-	} else {
-
-		log.Debug("Interceptor failed to unmarshal response into a map.", log.Data{"Error": err})
-
-		// see if it'll unmarshall into an array of maps
-		if err = json.Unmarshal(b, &documentArray); err != nil {
-			log.Debug("Interceptor failed to unmarshal response into an array of maps.", log.Data{"Error": err})
-			return nil, err
-		}
-
-		// if it did - apply checkMap per element
-		for i := range documentArray {
-			documentArray[i], err = t.checkMap(documentArray[i])
-			if err != nil {
-				return nil, err
-			}
-		}
-
+	document, err = t.checkMap(document)
+	if err != nil {
+		return nil, err
 	}
 
 	var updatedB []byte
@@ -113,11 +119,33 @@ func (t *Transport) update(b []byte) ([]byte, error) {
 	enc := json.NewEncoder(buf)
 	enc.SetEscapeHTML(false)
 
-	if len(documentArray) > 0 {
-		err = enc.Encode(documentArray)
-	} else {
-		err = enc.Encode(document)
+	err = enc.Encode(document)
+
+	return buf.Bytes(), err
+}
+
+func (t *Transport) updateSlice(documents []interface{}) ([]byte, error) {
+	var (
+		documentList []map[string]interface{}
+		err          error
+	)
+
+	for i := range documents {
+		document := documents[i].(map[string]interface{})
+		document, err = t.checkMap(document)
+		if err != nil {
+			return nil, err
+		}
+		documentList = append(documentList, document)
 	}
+
+	var updatedB []byte
+	buf := bytes.NewBuffer(updatedB)
+
+	enc := json.NewEncoder(buf)
+	enc.SetEscapeHTML(false)
+
+	err = enc.Encode(documentList)
 
 	return buf.Bytes(), err
 }
