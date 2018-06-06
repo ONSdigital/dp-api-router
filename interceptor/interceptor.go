@@ -88,18 +88,11 @@ func (t *Transport) update(b []byte) ([]byte, error) {
 
 	switch reflect.TypeOf(resource).Kind() {
 	case reflect.Map:
-		document, ok := resource.(map[string]interface{})
-		if !ok {
-			return nil, errors.New("unable to assert interface to a `map[string]interface{}`")
-		}
-		return t.updateMap(document)
+		// Assert type onto document
+		return t.updateMap(resource.(map[string]interface{}))
 	case reflect.Slice:
-		log.Info("my type", log.Data{"type": reflect.TypeOf(resource)})
-		documents, ok := resource.([]interface{})
-		if !ok {
-			return nil, errors.New("unable to assert interface to a `[]interface{}`")
-		}
-		return t.updateSlice(documents)
+		// Assert type onto documents
+		return t.updateSlice(resource.([]interface{}))
 	default:
 		return nil, errors.New("unknown resource type")
 	}
