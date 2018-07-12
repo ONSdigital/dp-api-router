@@ -11,6 +11,13 @@ job "dp-api-router" {
       value     = "web"
     }
 
+    restart {
+      attempts = 3
+      delay    = "15s"
+      interval = "1m"
+      mode     = "delay"
+    }
+
     task "dp-api-router" {
       driver = "exec"
 
@@ -61,6 +68,13 @@ job "dp-api-router" {
     constraint {
       attribute = "${node.class}"
       value     = "publishing"
+    }
+
+    restart {
+      attempts = 3
+      delay    = "15s"
+      interval = "1m"
+      mode     = "delay"
     }
 
     task "dp-api-router" {
