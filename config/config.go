@@ -19,6 +19,7 @@ type Config struct {
 	RecipeAPIURL           string        `envconfig:"RECIPE_API_URL"`
 	ImportAPIURL           string        `envconfig:"IMPORT_API_URL"`
 	SearchAPIURL           string        `envconfig:"SEARCH_API_URL"`
+	ContextURL             string        `envconfig:"CONTEXT_URL"`
 	EnvironmentHost        string        `envconfig:"ENV_HOST"`
 	APIPocURL              string        `envconfig:"API_POC_URL"`
 	GracefulShutdown       time.Duration `envconfig:"SHUTDOWN_TIMEOUT"`
@@ -41,6 +42,7 @@ func Get() (*Config, error) {
 			ImportAPIURL:           "http://localhost:21800",
 			SearchAPIURL:           "http://localhost:23100",
 			APIPocURL:              "http://localhost:3000",
+			ContextURL:             "",
 			EnvironmentHost:        "http://localhost:23200",
 			GracefulShutdown:       5 * time.Second,
 		}
