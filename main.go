@@ -33,11 +33,11 @@ func main() {
 	router := mux.NewRouter()
 
 	// Public APIs
-	codeList := proxy.NewAPIProxy(cfg.CodelistAPIURL, cfg.Version, cfg.EnvironmentHost)
-	dataset := proxy.NewAPIProxy(cfg.DatasetAPIURL, cfg.Version, cfg.EnvironmentHost)
-	filter := proxy.NewAPIProxy(cfg.FilterAPIURL, cfg.Version, cfg.EnvironmentHost)
-	hierarchy := proxy.NewAPIProxy(cfg.HierarchyAPIURL, cfg.Version, cfg.EnvironmentHost)
-	search := proxy.NewAPIProxy(cfg.SearchAPIURL, cfg.Version, cfg.EnvironmentHost)
+	codeList := proxy.NewAPIProxy(cfg.CodelistAPIURL, cfg.Version, cfg.EnvironmentHost, "")
+	dataset := proxy.NewAPIProxy(cfg.DatasetAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.ContextURL)
+	filter := proxy.NewAPIProxy(cfg.FilterAPIURL, cfg.Version, cfg.EnvironmentHost, "")
+	hierarchy := proxy.NewAPIProxy(cfg.HierarchyAPIURL, cfg.Version, cfg.EnvironmentHost, "")
+	search := proxy.NewAPIProxy(cfg.SearchAPIURL, cfg.Version, cfg.EnvironmentHost, "")
 	addVersionHandler(router, codeList, "/code-lists")
 	addVersionHandler(router, dataset, "/datasets")
 	addVersionHandler(router, filter, "/filters")
@@ -47,15 +47,15 @@ func main() {
 
 	// Private APIs
 	if cfg.EnablePrivateEndpoints {
-		recipe := proxy.NewAPIProxy(cfg.RecipeAPIURL, cfg.Version, cfg.EnvironmentHost)
-		importAPI := proxy.NewAPIProxy(cfg.ImportAPIURL, cfg.Version, cfg.EnvironmentHost)
+		recipe := proxy.NewAPIProxy(cfg.RecipeAPIURL, cfg.Version, cfg.EnvironmentHost, "")
+		importAPI := proxy.NewAPIProxy(cfg.ImportAPIURL, cfg.Version, cfg.EnvironmentHost, "")
 		addVersionHandler(router, recipe, "/recipes")
 		addVersionHandler(router, importAPI, "/jobs")
 		addVersionHandler(router, dataset, "/instances")
 	}
 
 	// legacy API
-	poc := proxy.NewAPIProxy(cfg.APIPocURL, "", cfg.EnvironmentHost)
+	poc := proxy.NewAPIProxy(cfg.APIPocURL, "", cfg.EnvironmentHost, "")
 	addLegacyHandler(router, poc, "/ops")
 	addLegacyHandler(router, poc, "/dataset")
 	addLegacyHandler(router, poc, "/timeseries")

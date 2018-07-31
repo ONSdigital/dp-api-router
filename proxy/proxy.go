@@ -18,7 +18,7 @@ type APIProxy struct {
 	Version string
 }
 
-func NewAPIProxy(target, version, envHost string) *APIProxy {
+func NewAPIProxy(target, version, envHost, contextURL string) *APIProxy {
 	targetURL, err := url.Parse(target)
 	if err != nil {
 		log.ErrorC("failed to create url", err, log.Data{"url": target})
@@ -26,7 +26,7 @@ func NewAPIProxy(target, version, envHost string) *APIProxy {
 	}
 
 	pxy := httputil.NewSingleHostReverseProxy(targetURL)
-	pxy.Transport = interceptor.NewRoundTripper(envHost+"/"+version, http.DefaultTransport)
+	pxy.Transport = interceptor.NewRoundTripper(envHost+"/"+version, contextURL, http.DefaultTransport)
 
 	return &APIProxy{
 		target:  targetURL,
