@@ -18,15 +18,16 @@ import (
 // Transport implements the http RoundTripper method and allows the
 // response body to be post processed
 type Transport struct {
-	domain string
+	domain     string
+	contextURL string
 	http.RoundTripper
 }
 
 var _ http.RoundTripper = &Transport{}
 
 // NewRoundTripper creates a Transport instance with configured domain
-func NewRoundTripper(domain string, rt http.RoundTripper) *Transport {
-	return &Transport{domain, rt}
+func NewRoundTripper(domain, contextURL string, rt http.RoundTripper) *Transport {
+	return &Transport{domain, contextURL, rt}
 }
 
 const (
@@ -106,6 +107,9 @@ func (t *Transport) updateMap(document map[string]interface{}) ([]byte, error) {
 		return nil, err
 	}
 
+	if len(t.contextURL) > 0 {
+		document["@context"] = t.contextURL
+	}
 	var updatedB []byte
 	buf := bytes.NewBuffer(updatedB)
 

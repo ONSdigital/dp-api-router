@@ -11,6 +11,7 @@ import (
 )
 
 const testDomain = "https://beta.ons.gov.uk/v1"
+const testContext = "context.json"
 
 type dummyRT struct {
 	testJSON string
@@ -29,7 +30,7 @@ func TestUnitInterceptor(t *testing.T) {
 		testJSON := `{"links":{"self":{"href":"/datasets/12345"}}}`
 		transp := dummyRT{testJSON}
 
-		t := NewRoundTripper(testDomain, transp)
+		t := NewRoundTripper(testDomain, "", transp)
 
 		resp, err := t.RoundTrip(nil)
 		So(err, ShouldBeNil)
@@ -41,11 +42,27 @@ func TestUnitInterceptor(t *testing.T) {
 		So(string(b), ShouldEqual, `{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}`+"\n")
 	})
 
+	Convey("test interceptor correctly inserts context", t, func() {
+		testJSON := `{"links":{"self":{"href":"/datasets/12345"}}}`
+		transp := dummyRT{testJSON}
+
+		t := NewRoundTripper(testDomain, testContext, transp)
+
+		resp, err := t.RoundTrip(nil)
+		So(err, ShouldBeNil)
+
+		b, _ := ioutil.ReadAll(resp.Body)
+
+		So(len(b), ShouldEqual, 102)
+
+		So(string(b), ShouldEqual, `{"@context":"context.json","links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}`+"\n")
+	})
+
 	Convey("test interceptor correctly updates a href in downloads subdoc", t, func() {
 		testJSON := `{"downloads":{"csv":{"href":"http://localhost:22000/myfile.csv"}}}`
 		transp := dummyRT{testJSON}
 
-		t := NewRoundTripper(testDomain, transp)
+		t := NewRoundTripper(testDomain, "", transp)
 
 		resp, err := t.RoundTrip(nil)
 		So(err, ShouldBeNil)
@@ -61,7 +78,7 @@ func TestUnitInterceptor(t *testing.T) {
 		testJSON := `{"dimensions":[{"href":"http://localhost:23000/codelists/1234567"}]}`
 		transp := dummyRT{testJSON}
 
-		t := NewRoundTripper(testDomain, transp)
+		t := NewRoundTripper(testDomain, "", transp)
 
 		resp, err := t.RoundTrip(nil)
 		So(err, ShouldBeNil)
@@ -76,7 +93,7 @@ func TestUnitInterceptor(t *testing.T) {
 		testJSON := `{"items":[{"links":{"self":{"href":"/datasets/12345"}}}]}`
 		transp := dummyRT{testJSON}
 
-		t := NewRoundTripper(testDomain, transp)
+		t := NewRoundTripper(testDomain, "", transp)
 
 		resp, err := t.RoundTrip(nil)
 		So(err, ShouldBeNil)
@@ -91,7 +108,7 @@ func TestUnitInterceptor(t *testing.T) {
 		testJSON := `{"links":{"instances":[{"href":"/datasets/12345"}]}}`
 		transp := dummyRT{testJSON}
 
-		t := NewRoundTripper(testDomain, transp)
+		t := NewRoundTripper(testDomain, "", transp)
 
 		resp, err := t.RoundTrip(nil)
 		So(err, ShouldBeNil)
@@ -106,7 +123,7 @@ func TestUnitInterceptor(t *testing.T) {
 		testJSON := `{"dimensions":{"time":{"option":{"href":"/datasets/time"}}}}`
 		transp := dummyRT{testJSON}
 
-		t := NewRoundTripper(testDomain, transp)
+		t := NewRoundTripper(testDomain, "", transp)
 
 		resp, err := t.RoundTrip(nil)
 		So(err, ShouldBeNil)
@@ -121,7 +138,7 @@ func TestUnitInterceptor(t *testing.T) {
 		testJSON := `{"dimensions":{"time":{"option":{"href":"/datasets/time?hello=world&mobile=phone"}}}}`
 		transp := dummyRT{testJSON}
 
-		t := NewRoundTripper(testDomain, transp)
+		t := NewRoundTripper(testDomain, "", transp)
 
 		resp, err := t.RoundTrip(nil)
 		So(err, ShouldBeNil)
@@ -136,7 +153,7 @@ func TestUnitInterceptor(t *testing.T) {
 		testJSON := `[{"links":{"self":{"href":"/datasets/12345"}}}, {"links":{"self":{"href":"/datasets/12345"}}}]`
 		transp := dummyRT{testJSON}
 
-		t := NewRoundTripper(testDomain, transp)
+		t := NewRoundTripper(testDomain, "", transp)
 
 		resp, err := t.RoundTrip(nil)
 		So(err, ShouldBeNil)
