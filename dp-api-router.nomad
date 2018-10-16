@@ -3,12 +3,27 @@ job "dp-api-router" {
   region      = "eu"
   type        = "service"
 
+  update {
+    stagger          = "60s"
+    min_healthy_time = "30s"
+    healthy_deadline = "2m"
+    max_parallel     = 1
+    auto_revert      = true
+  }  
+
   group "web" {
     count = "{{WEB_TASK_COUNT}}"
 
     constraint {
       attribute = "${node.class}"
       value     = "web"
+    }
+
+    restart {
+      attempts = 3
+      delay    = "15s"
+      interval = "1m"
+      mode     = "delay"
     }
 
     task "dp-api-router" {
@@ -61,6 +76,13 @@ job "dp-api-router" {
     constraint {
       attribute = "${node.class}"
       value     = "publishing"
+    }
+
+    restart {
+      attempts = 3
+      delay    = "15s"
+      interval = "1m"
+      mode     = "delay"
     }
 
     task "dp-api-router" {
