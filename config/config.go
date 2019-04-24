@@ -11,7 +11,7 @@ import (
 type Config struct {
 	BindAddr               string        `envconfig:"BIND_ADDR"`
 	Version                string        `envconfig:"VERSION"`
-	EnableV1Endpoints      bool          `envconfig:"ENABLE_V1_ROUTES"`
+	EnableV1Endpoints      bool          `envconfig:"ENABLE_V1_ENDPOINTS"`
 	EnablePrivateEndpoints bool          `envconfig:"ENABLE_PRIVATE_ENDPOINTS"`
 	HierarchyAPIURL        string        `envconfig:"HIERARCHY_API_URL"`
 	FilterAPIURL           string        `envconfig:"FILTER_API_URL"`
