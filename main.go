@@ -33,7 +33,7 @@ func main() {
 	router := mux.NewRouter()
 
 	// legacy API
-	if cfg.EnableCmdRoutes {
+	if cfg.EnableV1Routes {
 
 		log.Info("routing to cmd endpoints has been enabled ....", nil)
 
