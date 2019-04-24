@@ -11,6 +11,7 @@ import (
 type Config struct {
 	BindAddr               string        `envconfig:"BIND_ADDR"`
 	Version                string        `envconfig:"VERSION"`
+	EnableCmdRoutes        bool          `envconfig:"ENABLE_CMD_ROUTES"`
 	EnablePrivateEndpoints bool          `envconfig:"ENABLE_PRIVATE_ENDPOINTS"`
 	HierarchyAPIURL        string        `envconfig:"HIERARCHY_API_URL"`
 	FilterAPIURL           string        `envconfig:"FILTER_API_URL"`
@@ -33,6 +34,7 @@ func Get() (*Config, error) {
 		configuration = &Config{
 			BindAddr:               ":23200",
 			Version:                "v1",
+			EnableCmdRoutes:        true,
 			EnablePrivateEndpoints: true,
 			HierarchyAPIURL:        "http://localhost:22600",
 			FilterAPIURL:           "http://localhost:22100",

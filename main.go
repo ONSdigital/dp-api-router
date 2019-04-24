@@ -32,29 +32,36 @@ func main() {
 	log.Info("starting dp-api-router ....", log.Data{"config": cfg})
 	router := mux.NewRouter()
 
-	// Public APIs
-	codeList := proxy.NewAPIProxy(cfg.CodelistAPIURL, cfg.Version, cfg.EnvironmentHost, "")
-	dataset := proxy.NewAPIProxy(cfg.DatasetAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.ContextURL)
-	filter := proxy.NewAPIProxy(cfg.FilterAPIURL, cfg.Version, cfg.EnvironmentHost, "")
-	hierarchy := proxy.NewAPIProxy(cfg.HierarchyAPIURL, cfg.Version, cfg.EnvironmentHost, "")
-	search := proxy.NewAPIProxy(cfg.SearchAPIURL, cfg.Version, cfg.EnvironmentHost, "")
-	addVersionHandler(router, codeList, "/code-lists")
-	addVersionHandler(router, dataset, "/datasets")
-	addVersionHandler(router, filter, "/filters")
-	addVersionHandler(router, filter, "/filter-outputs")
-	addVersionHandler(router, hierarchy, "/hierarchies")
-	addVersionHandler(router, search, "/search")
+	// legacy API
+	if cfg.EnableCmdRoutes {
 
-	// Private APIs
-	if cfg.EnablePrivateEndpoints {
-		recipe := proxy.NewAPIProxy(cfg.RecipeAPIURL, cfg.Version, cfg.EnvironmentHost, "")
-		importAPI := proxy.NewAPIProxy(cfg.ImportAPIURL, cfg.Version, cfg.EnvironmentHost, "")
-		addVersionHandler(router, recipe, "/recipes")
-		addVersionHandler(router, importAPI, "/jobs")
-		addVersionHandler(router, dataset, "/instances")
+		log.Info("routing to cmd endpoints has been enabled ....", nil)
+
+		// Public APIs
+		codeList := proxy.NewAPIProxy(cfg.CodelistAPIURL, cfg.Version, cfg.EnvironmentHost, "")
+		dataset := proxy.NewAPIProxy(cfg.DatasetAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.ContextURL)
+		filter := proxy.NewAPIProxy(cfg.FilterAPIURL, cfg.Version, cfg.EnvironmentHost, "")
+		hierarchy := proxy.NewAPIProxy(cfg.HierarchyAPIURL, cfg.Version, cfg.EnvironmentHost, "")
+		search := proxy.NewAPIProxy(cfg.SearchAPIURL, cfg.Version, cfg.EnvironmentHost, "")
+		addVersionHandler(router, codeList, "/code-lists")
+		addVersionHandler(router, dataset, "/datasets")
+		addVersionHandler(router, filter, "/filters")
+		addVersionHandler(router, filter, "/filter-outputs")
+		addVersionHandler(router, hierarchy, "/hierarchies")
+		addVersionHandler(router, search, "/search")
+
+		// Private APIs
+		if cfg.EnablePrivateEndpoints {
+			recipe := proxy.NewAPIProxy(cfg.RecipeAPIURL, cfg.Version, cfg.EnvironmentHost, "")
+			importAPI := proxy.NewAPIProxy(cfg.ImportAPIURL, cfg.Version, cfg.EnvironmentHost, "")
+			addVersionHandler(router, recipe, "/recipes")
+			addVersionHandler(router, importAPI, "/jobs")
+			addVersionHandler(router, dataset, "/instances")
+		}
+	} else {
+		log.Info("routing to cmd endpoints has NOT been enabled ....", nil)
 	}
 
-	// legacy API
 	poc := proxy.NewAPIProxy(cfg.APIPocURL, "", cfg.EnvironmentHost, "")
 	addLegacyHandler(router, poc, "/ops")
 	addLegacyHandler(router, poc, "/dataset")
