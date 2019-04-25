@@ -24,6 +24,7 @@ type Config struct {
 	EnvironmentHost        string        `envconfig:"ENV_HOST"`
 	APIPocURL              string        `envconfig:"API_POC_URL"`
 	GracefulShutdown       time.Duration `envconfig:"SHUTDOWN_TIMEOUT"`
+	AllowedOrigins         []string      `envconfig:"ALLOWED_ORIGINS"`
 }
 
 var configuration *Config
@@ -47,6 +48,7 @@ func Get() (*Config, error) {
 			ContextURL:             "",
 			EnvironmentHost:        "http://localhost:23200",
 			GracefulShutdown:       5 * time.Second,
+			AllowedOrigins:         []string{"https://publishing.ons.gov.uk", "https://publishing.live.onsdigital.co.uk"},
 		}
 		if err := envconfig.Process("", configuration); err != nil {
 			log.ErrorC("failed to parse configuration", err, log.Data{"config": configuration})
