@@ -32,10 +32,9 @@ func main() {
 	log.Info("starting dp-api-router ....", log.Data{"config": cfg})
 	router := mux.NewRouter()
 
-	// legacy API
 	if cfg.EnableV1Endpoints {
 
-		log.Info("routing to cmd endpoints has been enabled ....", nil)
+		log.Info("routing to v1 endpoints has been enabled", nil)
 
 		// Public APIs
 		codeList := proxy.NewAPIProxy(cfg.CodelistAPIURL, cfg.Version, cfg.EnvironmentHost, "")
@@ -59,9 +58,10 @@ func main() {
 			addVersionHandler(router, dataset, "/instances")
 		}
 	} else {
-		log.Info("routing to cmd endpoints has NOT been enabled ....", nil)
+		log.Info("routing to v1 endpoints has been disabled", nil)
 	}
 
+	// legacy API
 	poc := proxy.NewAPIProxy(cfg.APIPocURL, "", cfg.EnvironmentHost, "")
 	addLegacyHandler(router, poc, "/ops")
 	addLegacyHandler(router, poc, "/dataset")
