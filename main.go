@@ -5,12 +5,12 @@ import (
 	"os"
 
 	"github.com/ONSdigital/dp-api-router/config"
+	"github.com/ONSdigital/dp-api-router/onshandlers"
 	"github.com/ONSdigital/dp-api-router/proxy"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/ONSdigital/go-ns/server"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"net/http"
 )
 
 func addVersionHandler(router *mux.Router, proxy *proxy.APIProxy, path string) {
@@ -75,32 +75,13 @@ func main() {
 	if !cfg.EnablePrivateEndpoints {
 		methodsOk := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE"})
 		httpServer.Middleware["CORS"] = handlers.CORS(methodsOk)
-		httpServer.MiddlewareOrder = append(httpServer.MiddlewareOrder, "CORS")
 	}
 
 	// CORS - only allow specified origins in publishing
 	if cfg.EnablePrivateEndpoints {
-		originsHandler := func(h http.Handler) http.Handler {
-			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-				allowedOrigin := ""
-				origin := r.Header.Get("Origin")
-				for _, v := range cfg.AllowedOrigins {
-					if v == origin {
-						allowedOrigin = origin
-					}
-				}
-
-				if allowedOrigin != "" {
-					w.Header().Set("Access-Control-Allow-Origin", allowedOrigin)
-					h.ServeHTTP(w, r)
-				} else {
-					w.WriteHeader(http.StatusUnauthorized)
-				}
-			})
-		}
-		httpServer.Middleware["CORS"] = originsHandler
+		httpServer.Middleware["CORS"] = onshandlers.OriginHandler(cfg.AllowedOrigins)
 		httpServer.MiddlewareOrder = append(httpServer.MiddlewareOrder, "CORS")
+
 	}
 
 	httpServer.DefaultShutdownTimeout = cfg.GracefulShutdown
