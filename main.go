@@ -81,7 +81,6 @@ func main() {
 	if cfg.EnablePrivateEndpoints {
 		httpServer.Middleware["CORS"] = onshandlers.OriginHandler(cfg.AllowedOrigins)
 		httpServer.MiddlewareOrder = append(httpServer.MiddlewareOrder, "CORS")
-
 	}
 
 	httpServer.DefaultShutdownTimeout = cfg.GracefulShutdown
