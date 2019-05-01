@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/ONSdigital/dp-api-router/config"
-	"github.com/ONSdigital/dp-api-router/onshandlers"
+	"github.com/ONSdigital/dp-api-router/middleware"
 	"github.com/ONSdigital/dp-api-router/proxy"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/ONSdigital/go-ns/server"
@@ -79,7 +79,7 @@ func main() {
 
 	// CORS - only allow specified origins in publishing
 	if cfg.EnablePrivateEndpoints {
-		httpServer.Middleware["CORS"] = onshandlers.OriginHandler(cfg.AllowedOrigins)
+		httpServer.Middleware["CORS"] = middleware.SetAllowOriginHeader(cfg.AllowedOrigins)
 		httpServer.MiddlewareOrder = append(httpServer.MiddlewareOrder, "CORS")
 	}
 
