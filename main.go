@@ -80,9 +80,9 @@ func main() {
 	// CORS - only allow specified origins in publishing
 	if cfg.EnablePrivateEndpoints {
 		httpServer.Middleware["CORS"] = middleware.SetAllowOriginHeader(cfg.AllowedOrigins)
-		httpServer.MiddlewareOrder = append(httpServer.MiddlewareOrder, "CORS")
 	}
 
+	httpServer.MiddlewareOrder = append(httpServer.MiddlewareOrder, "CORS")
 	httpServer.DefaultShutdownTimeout = cfg.GracefulShutdown
 
 	err = httpServer.ListenAndServe()
