@@ -1,6 +1,6 @@
 dp-api-router
 =====================
-A service which routes API requests to the correct services. In the future this may add additional header information, which will be used by the services.
+A service which routes API requests to the correct services. In the future this may add additional header information which will be used by the services.
 
 ### JSON-LD
 
