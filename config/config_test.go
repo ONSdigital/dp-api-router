@@ -26,6 +26,5 @@ func TestGetRetrunsDefaultValues(t *testing.T) {
 		So(configuration.EnvironmentHost, ShouldEqual, "http://localhost:23200")
 		So(configuration.GracefulShutdown, ShouldEqual, time.Second*5)
 		So(configuration.AllowedOrigins, ShouldContain, "https://publishing.ons.gov.uk")
-		So(configuration.AllowedOrigins, ShouldContain, "https://publishing.live.onsdigital.co.uk")
 	})
 }
