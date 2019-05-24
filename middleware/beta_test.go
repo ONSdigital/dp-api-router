@@ -8,7 +8,7 @@ import (
 	"net/http/httptest"
 )
 
-func TestBetaHandler_WraperHandler(t *testing.T) {
+func TestBetaHandler(t *testing.T) {
 
 	Convey("beta handler should wrap another handler", t, func() {
 		wrapped := BetaApiHandler(true, dummyHandler)
