@@ -14,58 +14,58 @@ func TestBetaHandler_WraperHandler(t *testing.T) {
 		wrapped := BetaApiHandler(true, dummyHandler)
 		So(wrapped, ShouldHaveSameTypeAs, dummyHandler)
 	})
-}
 
-func TestBetaHandler_RestrictionEnabled(t *testing.T) {
+	Convey("where beta restrictions are enabled", t, func() {
 
-	Convey("a request to a beta domain should return 200 status ok", t, func() {
-		req, err := http.NewRequest("GET", "/", nil)
-		if err != nil {
-			t.Fail()
-		}
+		Convey("a request to a beta domain should return 200 status ok", func() {
+			req, err := http.NewRequest("GET", "/", nil)
+			if err != nil {
+				t.Fail()
+			}
 
-		req.Host = "api.beta"
+			req.Host = "api.beta"
 
-		w := httptest.NewRecorder()
-		wrapped := BetaApiHandler(true, dummyHandler)
+			w := httptest.NewRecorder()
+			wrapped := BetaApiHandler(true, dummyHandler)
 
-		wrapped.ServeHTTP(w, req)
-		So(w.Code, ShouldEqual, 200)
+			wrapped.ServeHTTP(w, req)
+			So(w.Code, ShouldEqual, 200)
 
+		})
+
+		Convey("a request to a non beta domain should return 404 status not found", func() {
+			req, err := http.NewRequest("GET", "/", nil)
+			if err != nil {
+				t.Fail()
+			}
+
+			req.Host = "api.not.beta"
+
+			w := httptest.NewRecorder()
+			wrapped := BetaApiHandler(true, dummyHandler)
+
+			wrapped.ServeHTTP(w, req)
+			So(w.Code, ShouldEqual, 404)
+
+		})
 	})
 
-	Convey("a request to a non beta domain should return 404 status not found", t, func() {
-		req, err := http.NewRequest("GET", "/", nil)
-		if err != nil {
-			t.Fail()
-		}
+	Convey("where beta restrictions are not enabled", t, func() {
 
-		req.Host = "api.not.beta"
+		Convey("a request to a non beta domain should return 200 status ok", func() {
+			req, err := http.NewRequest("GET", "/", nil)
+			if err != nil {
+				t.Fail()
+			}
 
-		w := httptest.NewRecorder()
-		wrapped := BetaApiHandler(true, dummyHandler)
+			req.Host = "api.not.beta"
 
-		wrapped.ServeHTTP(w, req)
-		So(w.Code, ShouldEqual, 404)
+			w := httptest.NewRecorder()
+			wrapped := BetaApiHandler(false, dummyHandler)
 
-	})
-}
+			wrapped.ServeHTTP(w, req)
+			So(w.Code, ShouldEqual, 200)
 
-func TestBetaHandler_RestrictionNotEnabled(t *testing.T) {
-
-	Convey("a request to a non beta domain should return 200 status ok", t, func() {
-		req, err := http.NewRequest("GET", "/", nil)
-		if err != nil {
-			t.Fail()
-		}
-
-		req.Host = "api.beta"
-
-		w := httptest.NewRecorder()
-		wrapped := BetaApiHandler(false, dummyHandler)
-
-		wrapped.ServeHTTP(w, req)
-		So(w.Code, ShouldEqual, 200)
-
+		})
 	})
 }
