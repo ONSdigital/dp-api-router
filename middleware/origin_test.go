@@ -14,7 +14,7 @@ const (
 )
 
 var (
-	dummyHandler = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {})
+	dummyHandler       = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {})
 	whiteListedOrigins = []string{whiteListedOrigin1, whiteListedOrigin2}
 )
 
