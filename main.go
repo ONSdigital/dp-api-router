@@ -34,7 +34,7 @@ func main() {
 	router := mux.NewRouter()
 
 	if cfg.EnableV1BetaRestriction {
-		log.Info("beta route restiction is active, /v1 api request will only be permitted aginst beta domains", nil)
+		log.Info("beta route restiction is active, /v1 api requests will only be permitted aginst beta domains", nil)
 	}
 
 	// Public APIs
