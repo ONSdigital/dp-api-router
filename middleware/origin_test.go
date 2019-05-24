@@ -35,7 +35,7 @@ func TestOriginHandler(t *testing.T) {
 		req.Header.Set("Origin", whiteListedOrigin1)
 		w := httptest.NewRecorder()
 
-		handler := SetAllowOriginHeader([]string(whiteListedOrigins))
+		handler := SetAllowOriginHeader(whiteListedOrigins)
 		wrapped := handler(dummyHandler)
 
 		wrapped.ServeHTTP(w, req)
