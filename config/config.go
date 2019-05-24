@@ -11,7 +11,7 @@ import (
 type Config struct {
 	BindAddr               string        `envconfig:"BIND_ADDR"`
 	Version                string        `envconfig:"VERSION"`
-	EnableV1Endpoints      bool          `envconfig:"ENABLE_V1_ENDPOINTS"`
+	EnableV1BetaRestriction      bool          `envconfig:"ENABLE_V1_ENDPOINTS"`
 	EnablePrivateEndpoints bool          `envconfig:"ENABLE_PRIVATE_ENDPOINTS"`
 	HierarchyAPIURL        string        `envconfig:"HIERARCHY_API_URL"`
 	FilterAPIURL           string        `envconfig:"FILTER_API_URL"`
@@ -36,7 +36,7 @@ func Get() (*Config, error) {
 			BindAddr:               ":23200",
 			Version:                "v1",
 			EnablePrivateEndpoints: true,
-			EnableV1Endpoints:      false,
+			EnableV1BetaRestriction: false,
 			HierarchyAPIURL:        "http://localhost:22600",
 			FilterAPIURL:           "http://localhost:22100",
 			DatasetAPIURL:          "http://localhost:22000",
