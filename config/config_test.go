@@ -15,6 +15,7 @@ func TestGetRetrunsDefaultValues(t *testing.T) {
 		So(configuration.BindAddr, ShouldEqual, ":23200")
 		So(configuration.Version, ShouldEqual, "v1")
 		So(configuration.EnablePrivateEndpoints, ShouldEqual, true)
+		So(configuration.EnableV1BetaRestriction, ShouldEqual, false)
 		So(configuration.HierarchyAPIURL, ShouldEqual, "http://localhost:22600")
 		So(configuration.FilterAPIURL, ShouldEqual, "http://localhost:22100")
 		So(configuration.DatasetAPIURL, ShouldEqual, "http://localhost:22000")
@@ -24,5 +25,6 @@ func TestGetRetrunsDefaultValues(t *testing.T) {
 		So(configuration.APIPocURL, ShouldEqual, "http://localhost:3000")
 		So(configuration.EnvironmentHost, ShouldEqual, "http://localhost:23200")
 		So(configuration.GracefulShutdown, ShouldEqual, time.Second*5)
+		So(configuration.AllowedOrigins, ShouldContain, "https://publishing.ons.gov.uk")
 	})
 }

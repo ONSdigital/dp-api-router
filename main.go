@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/ONSdigital/dp-api-router/config"
+	"github.com/ONSdigital/dp-api-router/middleware"
 	"github.com/ONSdigital/dp-api-router/proxy"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/ONSdigital/go-ns/server"
@@ -32,12 +33,16 @@ func main() {
 	log.Info("starting dp-api-router ....", log.Data{"config": cfg})
 	router := mux.NewRouter()
 
+	if cfg.EnableV1BetaRestriction {
+		log.Info("beta route restiction is active, /v1 api requests will only be permitted against beta domains", nil)
+	}
+
 	// Public APIs
-	codeList := proxy.NewAPIProxy(cfg.CodelistAPIURL, cfg.Version, cfg.EnvironmentHost, "")
-	dataset := proxy.NewAPIProxy(cfg.DatasetAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.ContextURL)
-	filter := proxy.NewAPIProxy(cfg.FilterAPIURL, cfg.Version, cfg.EnvironmentHost, "")
-	hierarchy := proxy.NewAPIProxy(cfg.HierarchyAPIURL, cfg.Version, cfg.EnvironmentHost, "")
-	search := proxy.NewAPIProxy(cfg.SearchAPIURL, cfg.Version, cfg.EnvironmentHost, "")
+	codeList := proxy.NewAPIProxy(cfg.CodelistAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+	dataset := proxy.NewAPIProxy(cfg.DatasetAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.ContextURL, cfg.EnableV1BetaRestriction)
+	filter := proxy.NewAPIProxy(cfg.FilterAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+	hierarchy := proxy.NewAPIProxy(cfg.HierarchyAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+	search := proxy.NewAPIProxy(cfg.SearchAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 	addVersionHandler(router, codeList, "/code-lists")
 	addVersionHandler(router, dataset, "/datasets")
 	addVersionHandler(router, filter, "/filters")
@@ -47,15 +52,15 @@ func main() {
 
 	// Private APIs
 	if cfg.EnablePrivateEndpoints {
-		recipe := proxy.NewAPIProxy(cfg.RecipeAPIURL, cfg.Version, cfg.EnvironmentHost, "")
-		importAPI := proxy.NewAPIProxy(cfg.ImportAPIURL, cfg.Version, cfg.EnvironmentHost, "")
+		recipe := proxy.NewAPIProxy(cfg.RecipeAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+		importAPI := proxy.NewAPIProxy(cfg.ImportAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 		addVersionHandler(router, recipe, "/recipes")
 		addVersionHandler(router, importAPI, "/jobs")
 		addVersionHandler(router, dataset, "/instances")
 	}
 
 	// legacy API
-	poc := proxy.NewAPIProxy(cfg.APIPocURL, "", cfg.EnvironmentHost, "")
+	poc := proxy.NewAPIProxy(cfg.APIPocURL, "", cfg.EnvironmentHost, "", false)
 	addLegacyHandler(router, poc, "/ops")
 	addLegacyHandler(router, poc, "/dataset")
 	addLegacyHandler(router, poc, "/timeseries")
@@ -63,13 +68,18 @@ func main() {
 
 	httpServer := server.New(cfg.BindAddr, router)
 
-	// Enable CORS for GET in Web
+	// CORS - only allow certain methods in web
 	if !cfg.EnablePrivateEndpoints {
 		methodsOk := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE"})
 		httpServer.Middleware["CORS"] = handlers.CORS(methodsOk)
-		httpServer.MiddlewareOrder = append(httpServer.MiddlewareOrder, "CORS")
 	}
 
+	// CORS - only allow specified origins in publishing
+	if cfg.EnablePrivateEndpoints {
+		httpServer.Middleware["CORS"] = middleware.SetAllowOriginHeader(cfg.AllowedOrigins)
+	}
+
+	httpServer.MiddlewareOrder = append(httpServer.MiddlewareOrder, "CORS")
 	httpServer.DefaultShutdownTimeout = cfg.GracefulShutdown
 
 	err = httpServer.ListenAndServe()
