@@ -35,9 +35,7 @@ func TestBetaHandler(t *testing.T) {
 
 		Convey("a request to a non beta domain should return 404 status not found", func() {
 			req, err := http.NewRequest("GET", "/", nil)
-			if err != nil {
-				t.Fail()
-			}
+			So(err, ShouldBeNil)
 
 			req.Host = "api.not.beta"
 
