@@ -19,9 +19,7 @@ func TestBetaHandler(t *testing.T) {
 
 		Convey("a request to a beta domain should return 200 status ok", func() {
 			req, err := http.NewRequest("GET", "/", nil)
-			if err != nil {
-				t.Fail()
-			}
+			So(err, ShouldBeNil)
 
 			req.Host = "api.beta"
 
@@ -52,9 +50,7 @@ func TestBetaHandler(t *testing.T) {
 
 		Convey("a request to a non beta domain should return 200 status ok", func() {
 			req, err := http.NewRequest("GET", "/", nil)
-			if err != nil {
-				t.Fail()
-			}
+			So(err, ShouldBeNil)
 
 			req.Host = "api.not.beta"
 
