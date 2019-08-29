@@ -48,12 +48,12 @@ func Get() (*Config, error) {
 			ContextURL:              "",
 			EnvironmentHost:         "http://localhost:23200",
 			GracefulShutdown:        5 * time.Second,
-			AllowedOrigins:          []string{
-										"https://publishing.ons.gov.uk",
-										"https://publishing.develop.onsdigital.co.uk",
-										"https://publishing.production.onsdigital.co.uk",
-										"https://publishing.cmd.onsdigital.co.uk",
-										"https://publishing.cmd-dev.onsdigital.co.uk"},
+			AllowedOrigins: []string{
+				"https://publishing.ons.gov.uk",
+				"https://publishing.develop.onsdigital.co.uk",
+				"https://publishing.production.onsdigital.co.uk",
+				"https://publishing.cmd.onsdigital.co.uk",
+				"https://publishing.cmd-dev.onsdigital.co.uk"},
 		}
 		if err := envconfig.Process("", configuration); err != nil {
 			log.ErrorC("failed to parse configuration", err, log.Data{"config": configuration})

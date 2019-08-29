@@ -25,7 +25,7 @@ func SetAllowOriginHeader(allowedOrigins []string) func(h http.Handler) http.Han
 					}
 				}
 
-				if acceptedOrigin == ""{
+				if acceptedOrigin == "" {
 					log.InfoCtx(r.Context(), "request received but origin not allowed, returning 401",
 						log.Data{"origin": origin, "allowed_origins": allowedOrigins})
 					w.WriteHeader(http.StatusUnauthorized)
