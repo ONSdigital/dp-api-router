@@ -25,6 +25,6 @@ func TestGetRetrunsDefaultValues(t *testing.T) {
 		So(configuration.APIPocURL, ShouldEqual, "http://localhost:3000")
 		So(configuration.EnvironmentHost, ShouldEqual, "http://localhost:23200")
 		So(configuration.GracefulShutdown, ShouldEqual, time.Second*5)
-		So(configuration.AllowedOrigins, ShouldBeBlank)
+		So(configuration.AllowedOrigins, ShouldEqual, []string{})
 	})
 }
