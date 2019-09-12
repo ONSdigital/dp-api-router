@@ -66,7 +66,7 @@ job "dp-api-router" {
       }
 
       vault {
-        policies = ["dp-api-router"]
+        policies = ["dp-api-router-web"]
       }
     }
   }
@@ -126,7 +126,7 @@ job "dp-api-router" {
       }
 
       vault {
-        policies = ["dp-api-router"]
+        policies = ["dp-api-router-publishing"]
       }
     }
   }
