@@ -26,7 +26,7 @@ job "dp-api-router" {
       mode     = "delay"
     }
 
-    task "dp-api-router" {
+    task "dp-api-router-web" {
       driver = "docker"
 
       artifact {
@@ -66,7 +66,7 @@ job "dp-api-router" {
       }
 
       vault {
-        policies = ["dp-api-router"]
+        policies = ["dp-api-router-web"]
       }
     }
   }
@@ -86,7 +86,7 @@ job "dp-api-router" {
       mode     = "delay"
     }
 
-    task "dp-api-router" {
+    task "dp-api-router-publishing" {
       driver = "docker"
 
       artifact {
@@ -126,7 +126,7 @@ job "dp-api-router" {
       }
 
       vault {
-        policies = ["dp-api-router"]
+        policies = ["dp-api-router-publishing"]
       }
     }
   }

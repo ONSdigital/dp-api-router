@@ -11,23 +11,29 @@ func SetAllowOriginHeader(allowedOrigins []string) func(h http.Handler) http.Han
 
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-			acceptedOrigin := ""
 			origin := r.Header.Get("Origin")
-			for _, v := range allowedOrigins {
-				if v == origin {
-					acceptedOrigin = origin
-					break
+
+			// Only check the origin if it's actually a cross origin request
+			if origin != "" {
+
+				acceptedOrigin := ""
+				for _, v := range allowedOrigins {
+
+					if v == origin {
+						acceptedOrigin = origin
+						break
+					}
 				}
+
+				if acceptedOrigin == "" {
+					log.InfoCtx(r.Context(), "request received but origin not allowed, returning 401",
+						log.Data{"origin": origin, "allowed_origins": allowedOrigins})
+					w.WriteHeader(http.StatusUnauthorized)
+					return
+				}
+				w.Header().Set("Access-Control-Allow-Origin", acceptedOrigin)
 			}
 
-			if acceptedOrigin == "" {
-				log.InfoCtx(r.Context(), "request received but origin not allowed, returning 401",
-					log.Data{"origin": origin, "allowed_origins": allowedOrigins})
-				w.WriteHeader(http.StatusUnauthorized)
-				return
-			}
-
-			w.Header().Set("Access-Control-Allow-Origin", acceptedOrigin)
 			h.ServeHTTP(w, r)
 		})
 	}
