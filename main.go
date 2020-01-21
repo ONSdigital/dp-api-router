@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/ONSdigital/dp-api-router/config"
+	"github.com/ONSdigital/dp-api-router/health"
 	"github.com/ONSdigital/dp-api-router/middleware"
 	"github.com/ONSdigital/dp-api-router/proxy"
 	"github.com/ONSdigital/go-ns/log"
@@ -36,6 +37,11 @@ func main() {
 	if cfg.EnableV1BetaRestriction {
 		log.Info("beta route restiction is active, /v1 api requests will only be permitted against beta domains", nil)
 	}
+
+	// Healthcheck API
+	health.InitializeHealthCheck()
+	router.HandleFunc("/health{rest:.*}", health.Handler)
+	router.HandleFunc(fmt.Sprintf("/%s/health{rest:.*}", cfg.Version), health.Handler)
 
 	// Public APIs
 	codeList := proxy.NewAPIProxy(cfg.CodelistAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
