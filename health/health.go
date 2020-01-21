@@ -34,7 +34,7 @@ func Handler(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	hc.Uptime = time.Since(hc.StartTime)
+	hc.Uptime = time.Since(hc.StartTime) / time.Millisecond
 
 	marshaled, err := json.Marshal(hc)
 	if err != nil {
