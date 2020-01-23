@@ -3,10 +3,10 @@
 	"ignore": "test",
 	"package": [
 		{
-			"checksumSHA1": "x+cc8OXVVg8t1qJVIKDQYHUtnCc=",
+			"checksumSHA1": "rjoqh3pX6kZXA6Se3pBJgC/bopw=",
 			"path": "github.com/ONSdigital/dp-healthcheck/healthcheck",
-			"revision": "e18ed65f5bdd62936faf11a4c541169791daa1a6",
-			"revisionTime": "2020-01-08T09:05:55Z"
+			"revision": "30744981e46cbafe73eaeecb34abb2d812b927bd",
+			"revisionTime": "2020-01-21T22:05:03Z"
 		},
 		{
 			"checksumSHA1": "YV8YAET8h0eZuaxGsuKd9TvrqPY=",

@@ -2,35 +2,43 @@ package health
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
+	"github.com/ONSdigital/log.go/log"
 )
 
 var hc *healthcheck.HealthCheck
 
-// ErrNotInitialized error returned when trying to use HealthCheck without initializing it.
-var ErrNotInitialized = errors.New("Healthcheck objct was not initialized")
+// InitializeHealthCheck initializes the HealthCheck object with startTime now
+func InitializeHealthCheck(BuildTime, GitCommit, Version string) {
 
-// InitializeHealthCheck initializes the HealhCheck object with startTime now
-func InitializeHealthCheck() *healthcheck.HealthCheck {
+	buildTime, err := strconv.Atoi(BuildTime)
+	if err != nil {
+		log.Event(nil, "failed to obtain build time", log.Error(err))
+		buildTime = 0
+	}
+	log.Event(nil, "init Healthckeck", log.Data{"BuildTime": BuildTime, "GitCommit": GitCommit, "Version": Version})
+
 	hc = &healthcheck.HealthCheck{
-		Status:    healthcheck.StatusOK,
-		Version:   "aaa",
+		Status: healthcheck.StatusOK,
+		Version: healthcheck.CreateVersionInfo(
+			time.Unix(int64(buildTime), 0),
+			GitCommit,
+			Version,
+		),
 		Uptime:    time.Duration(0),
 		StartTime: time.Now().UTC(),
-		Checks:    []healthcheck.Check{},
+		Checks:    []*healthcheck.Check{},
 	}
-	return hc
 }
 
 // Handler updates the HealthCheck current uptime, marshalls it, and writes it to the ResponseWriter.
 func Handler(w http.ResponseWriter, req *http.Request) {
 
 	if hc == nil {
-		// TODO log ErrNotInitialized
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -38,7 +46,6 @@ func Handler(w http.ResponseWriter, req *http.Request) {
 
 	marshaled, err := json.Marshal(hc)
 	if err != nil {
-		// TODO log Marhalling error
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

@@ -15,6 +15,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
+var BuildTime, GitCommit, Version string
+
 func addVersionHandler(router *mux.Router, proxy *proxy.APIProxy, path string) {
 	// Proxy any request after the path given to the target address
 	router.HandleFunc(fmt.Sprintf("/%s"+path+"{rest:.*}", proxy.Version), proxy.VersionHandle)
@@ -37,11 +39,11 @@ func main() {
 	router := mux.NewRouter()
 
 	if cfg.EnableV1BetaRestriction {
-		log.Event(ctx, "beta route restiction is active, /v1 api requests will only be permitted against beta domains")
+		log.Event(ctx, "beta route restriction is active, /v1 api requests will only be permitted against beta domains")
 	}
 
 	// Healthcheck API
-	health.InitializeHealthCheck()
+	health.InitializeHealthCheck(BuildTime, GitCommit, Version)
 	router.HandleFunc("/health{rest:.*}", health.Handler)
 	router.HandleFunc(fmt.Sprintf("/%s/health{rest:.*}", cfg.Version), health.Handler)
 
