@@ -44,8 +44,8 @@ func main() {
 
 	// Healthcheck API
 	health.InitializeHealthCheck(BuildTime, GitCommit, Version)
-	router.HandleFunc("/health{rest:.*}", health.Handler)
-	router.HandleFunc(fmt.Sprintf("/%s/health{rest:.*}", cfg.Version), health.Handler)
+	router.HandleFunc("/health", health.Handler)
+	router.HandleFunc(fmt.Sprintf("/%s/health", cfg.Version), health.Handler)
 
 	// Public APIs
 	codeList := proxy.NewAPIProxy(cfg.CodelistAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
