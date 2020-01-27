@@ -1,9 +1,9 @@
 package health
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
@@ -13,22 +13,20 @@ import (
 var hc *healthcheck.HealthCheck
 
 // InitializeHealthCheck initializes the HealthCheck object with startTime now
-func InitializeHealthCheck(BuildTime, GitCommit, Version string) {
+func InitializeHealthCheck(ctx context.Context, buildTime, gitCommit, version string) {
 
-	buildTime, err := strconv.Atoi(BuildTime)
+	versionInfo, err := healthcheck.CreateVersionInfo(
+		buildTime,
+		gitCommit,
+		version,
+	)
 	if err != nil {
-		log.Event(nil, "failed to obtain build time", log.Error(err))
-		buildTime = 0
+		log.Event(ctx, "failed to obtain versionInfo", log.Error(err))
 	}
-	log.Event(nil, "init Healthckeck", log.Data{"BuildTime": BuildTime, "GitCommit": GitCommit, "Version": Version})
 
 	hc = &healthcheck.HealthCheck{
-		Status: healthcheck.StatusOK,
-		Version: healthcheck.CreateVersionInfo(
-			time.Unix(int64(buildTime), 0),
-			GitCommit,
-			Version,
-		),
+		Status:    healthcheck.StatusOK,
+		Version:   versionInfo,
 		Uptime:    time.Duration(0),
 		StartTime: time.Now().UTC(),
 		Checks:    []*healthcheck.Check{},
