@@ -1,9 +1,10 @@
 package proxy
 
 import (
+	"context"
 	"github.com/ONSdigital/dp-api-router/interceptor"
 	"github.com/ONSdigital/dp-api-router/middleware"
-	"github.com/ONSdigital/go-ns/log"
+	"github.com/ONSdigital/log.go/log"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -22,7 +23,7 @@ type APIProxy struct {
 func NewAPIProxy(target, version, envHost, contextURL string, enableBetaRestriction bool) *APIProxy {
 	targetURL, err := url.Parse(target)
 	if err != nil {
-		log.ErrorC("failed to create url", err, log.Data{"url": target})
+		log.Event(context.Background(), "failed to create url", log.Data{"url": target}, log.Error(err))
 		os.Exit(1)
 	}
 

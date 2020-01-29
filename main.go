@@ -1,17 +1,21 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 
 	"github.com/ONSdigital/dp-api-router/config"
+	"github.com/ONSdigital/dp-api-router/health"
 	"github.com/ONSdigital/dp-api-router/middleware"
 	"github.com/ONSdigital/dp-api-router/proxy"
-	"github.com/ONSdigital/go-ns/log"
 	"github.com/ONSdigital/go-ns/server"
+	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
+
+var BuildTime, GitCommit, Version string
 
 func addVersionHandler(router *mux.Router, proxy *proxy.APIProxy, path string) {
 	// Proxy any request after the path given to the target address
@@ -25,17 +29,23 @@ func addLegacyHandler(router *mux.Router, proxy *proxy.APIProxy, path string) {
 
 func main() {
 	log.Namespace = "dp-api-router"
+	ctx := context.Background()
 	cfg, err := config.Get()
 	if err != nil {
-		log.Error(err, log.Data{"config": cfg})
+		log.Event(ctx, "error getting config", log.Data{"config": cfg}, log.Error(err))
 		os.Exit(1)
 	}
-	log.Info("starting dp-api-router ....", log.Data{"config": cfg})
+	log.Event(ctx, "starting dp-api-router ....", log.Data{"config": cfg})
 	router := mux.NewRouter()
 
 	if cfg.EnableV1BetaRestriction {
-		log.Info("beta route restiction is active, /v1 api requests will only be permitted against beta domains", nil)
+		log.Event(ctx, "beta route restriction is active, /v1 api requests will only be permitted against beta domains")
 	}
+
+	// Healthcheck API
+	health.InitializeHealthCheck(ctx, BuildTime, GitCommit, Version)
+	router.HandleFunc("/health", health.Handler)
+	router.HandleFunc(fmt.Sprintf("/%s/health", cfg.Version), health.Handler)
 
 	// Public APIs
 	codeList := proxy.NewAPIProxy(cfg.CodelistAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
@@ -84,7 +94,7 @@ func main() {
 
 	err = httpServer.ListenAndServe()
 	if err != nil {
-		log.ErrorC("failed to close down http server", err, log.Data{"config": cfg})
+		log.Event(ctx, "failed to close down http server", log.Data{"config": cfg}, log.Error(err))
 		os.Exit(1)
 	}
 }

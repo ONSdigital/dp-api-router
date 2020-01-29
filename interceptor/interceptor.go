@@ -2,6 +2,7 @@ package interceptor
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -12,7 +13,7 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/ONSdigital/go-ns/log"
+	"github.com/ONSdigital/log.go/log"
 )
 
 // Transport implements the http RoundTripper method and allows the
@@ -61,7 +62,7 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 
 	updatedB, err := t.update(b)
 	if err != nil {
-		log.Debug("could not update response body with correct links", log.Data{"update_error": err.Error()})
+		log.Event(context.Background(), "could not update response body with correct links", log.Error(err))
 		body := ioutil.NopCloser(bytes.NewReader(b))
 
 		resp.Body = body
