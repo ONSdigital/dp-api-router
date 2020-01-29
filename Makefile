@@ -16,7 +16,7 @@ build:
 	go build -o $(BUILD_ARCH)/$(BIN_DIR)/dp-api-router -ldflags="-X 'main.BuildTime=$(BUILD_TIME)' -X 'main.GitCommit=$(GIT_COMMIT)' -X 'main.Version=$(VERSION)'" main.go
 
 test:
-	go test -cover $(shell go list ./... | grep -v /vendor/)
+	go test -race -cover ./...
 
 debug:
 	HUMAN_LOG=1 go run -race -ldflags="-X 'main.BuildTime=$(BUILD_TIME)' -X 'main.GitCommit=$(GIT_COMMIT)' -X 'main.Version=$(VERSION)'" main.go
