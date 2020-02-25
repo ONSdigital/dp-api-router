@@ -6,9 +6,9 @@ import (
 	"os"
 
 	"github.com/ONSdigital/dp-api-router/config"
-	"github.com/ONSdigital/dp-api-router/health"
 	"github.com/ONSdigital/dp-api-router/middleware"
 	"github.com/ONSdigital/dp-api-router/proxy"
+	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/go-ns/server"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/handlers"
@@ -32,20 +32,26 @@ func main() {
 	ctx := context.Background()
 	cfg, err := config.Get()
 	if err != nil {
-		log.Event(ctx, "error getting config", log.Data{"config": cfg}, log.Error(err))
+		log.Event(ctx, "error getting config", log.FATAL, log.Data{"config": cfg}, log.Error(err))
 		os.Exit(1)
 	}
-	log.Event(ctx, "starting dp-api-router ....", log.Data{"config": cfg})
+	log.Event(ctx, "starting dp-api-router ....", log.INFO, log.Data{"config": cfg})
 	router := mux.NewRouter()
 
 	if cfg.EnableV1BetaRestriction {
-		log.Event(ctx, "beta route restriction is active, /v1 api requests will only be permitted against beta domains")
+		log.Event(ctx, "beta route restriction is active, /v1 api requests will only be permitted against beta domains", log.INFO)
 	}
 
 	// Healthcheck API
-	health.InitializeHealthCheck(ctx, BuildTime, GitCommit, Version)
-	router.HandleFunc("/health", health.Handler)
-	router.HandleFunc(fmt.Sprintf("/%s/health", cfg.Version), health.Handler)
+	versionInfo, err := healthcheck.NewVersionInfo(BuildTime, GitCommit, Version)
+	if err != nil {
+		log.Event(ctx, "Failed to obtain VersionInfo for healthcheck", log.FATAL, log.Error(err))
+		os.Exit(1)
+	}
+	hc := healthcheck.New(versionInfo, cfg.HealthCheckCriticalTimeout, cfg.HealthCheckInterval)
+
+	router.HandleFunc("/health", hc.Handler)
+	router.HandleFunc(fmt.Sprintf("/%s/health", cfg.Version), hc.Handler)
 
 	// Public APIs
 	codeList := proxy.NewAPIProxy(cfg.CodelistAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
@@ -92,9 +98,10 @@ func main() {
 	httpServer.MiddlewareOrder = append(httpServer.MiddlewareOrder, "CORS")
 	httpServer.DefaultShutdownTimeout = cfg.GracefulShutdown
 
+	hc.Start(ctx)
 	err = httpServer.ListenAndServe()
 	if err != nil {
-		log.Event(ctx, "failed to close down http server", log.Data{"config": cfg}, log.Error(err))
+		log.Event(ctx, "failed to close down http server", log.FATAL, log.Data{"config": cfg}, log.Error(err))
 		os.Exit(1)
 	}
 }
