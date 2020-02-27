@@ -1,8 +1,9 @@
 package middleware
 
 import (
-	"github.com/ONSdigital/log.go/log"
 	"net/http"
+
+	"github.com/ONSdigital/log.go/log"
 )
 
 // SetAllowOriginHeader sets the 'Access-Control-Allow-Origin' field for origin domains we allow. Otherwise returning a 401.
@@ -26,7 +27,7 @@ func SetAllowOriginHeader(allowedOrigins []string) func(h http.Handler) http.Han
 				}
 
 				if acceptedOrigin == "" {
-					log.Event(r.Context(), "request received but origin not allowed, returning 401",
+					log.Event(r.Context(), "request received but origin not allowed, returning 401", log.WARN,
 						log.Data{"origin": origin, "allowed_origins": allowedOrigins})
 					w.WriteHeader(http.StatusUnauthorized)
 					return
