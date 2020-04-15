@@ -51,8 +51,8 @@ func Get() (*Config, error) {
 			ContextURL:                 "",
 			EnvironmentHost:            "http://localhost:23200",
 			GracefulShutdown:           5 * time.Second,
-			HealthCheckInterval:        10 * time.Second,
-			HealthCheckCriticalTimeout: 1 * time.Minute,
+			HealthCheckInterval:        30 * time.Second,
+			HealthCheckCriticalTimeout: 90 * time.Second,
 		}
 		if err := envconfig.Process("", configuration); err != nil {
 			log.Event(context.Background(), "failed to parse configuration", log.ERROR, log.Data{"config": configuration}, log.Error(err))
