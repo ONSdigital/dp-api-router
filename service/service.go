@@ -14,7 +14,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// Run initialises the dependencies, the proxy router, and starts the http server
+// Run initialises the dependencies, proxy router, and starts the http server
 func Run(ctx context.Context, buildTime, gitCommit, version string) error {
 	cfg, err := config.Get()
 	if err != nil {
@@ -71,14 +71,16 @@ func CreateRouter(ctx context.Context, cfg *config.Config, hc IHealthCheck) *mux
 	router.HandleFunc(fmt.Sprintf("/%s/health", cfg.Version), hc.Handler)
 
 	// Public APIs
+	if cfg.EnableObservationAPI {
+		observation := proxy.NewAPIProxy(cfg.ObservationAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.ContextURL, cfg.EnableV1BetaRestriction)
+		addVersionHandler(router, observation, "/datasets/{dataset_id}/editions/{edition}/versions/{version}/observations")
+	}
 	codeList := proxy.NewAPIProxy(cfg.CodelistAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 	dataset := proxy.NewAPIProxy(cfg.DatasetAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.ContextURL, cfg.EnableV1BetaRestriction)
-	observation := proxy.NewAPIProxy(cfg.ObservationAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.ContextURL, cfg.EnableV1BetaRestriction)
 	filter := proxy.NewAPIProxy(cfg.FilterAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 	hierarchy := proxy.NewAPIProxy(cfg.HierarchyAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 	search := proxy.NewAPIProxy(cfg.SearchAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 	addVersionHandler(router, codeList, "/code-lists")
-	addVersionHandler(router, observation, "/datasets/{dataset_id}/editions/{edition}/versions/{version}/observations")
 	addVersionHandler(router, dataset, "/datasets")
 	addVersionHandler(router, filter, "/filters")
 	addVersionHandler(router, filter, "/filter-outputs")
@@ -94,7 +96,7 @@ func CreateRouter(ctx context.Context, cfg *config.Config, hc IHealthCheck) *mux
 		addVersionHandler(router, dataset, "/instances")
 	}
 
-	// legacy API
+	// Legacy API
 	poc := proxy.NewAPIProxy(cfg.APIPocURL, "", cfg.EnvironmentHost, "", false)
 	addLegacyHandler(router, poc, "/ops")
 	addLegacyHandler(router, poc, "/dataset")

@@ -24,9 +24,9 @@ var (
 	testServiceAuthToken = "Bearer testServiceAuthToken"
 )
 
-func TestRouterPublicAPIs(t *testing.T) {
+func TestNotProxied(t *testing.T) {
 
-	Convey("Given a healthy api router and proxies with all public endpoints available", t, func() {
+	Convey("Given a healthy api router", t, func() {
 
 		cfg, err := config.Get()
 		So(err, ShouldBeNil)
@@ -36,6 +36,35 @@ func TestRouterPublicAPIs(t *testing.T) {
 				w.WriteHeader(http.StatusOK)
 			},
 		}
+
+		resetProxyMocksWithExpectations(map[string]*url.URL{})
+
+		Convey("A request to the health endpoint is successful and not proxied", func() {
+			w := createRouterTest(cfg, "http://localhost:23200/health", hcMock)
+			So(w.Code, ShouldEqual, http.StatusOK)
+			for _, pxy := range registeredProxies {
+				So(len(pxy.ServeHTTPCalls()), ShouldEqual, 0)
+			}
+		})
+
+		Convey("A request to a not-registered endpoint fails with Status NotFound and is not proxied", func() {
+			w := createRouterTest(cfg, "http://localhost:23200/v1/wrong", hcMock)
+			So(w.Code, ShouldEqual, http.StatusNotFound)
+			for _, pxy := range registeredProxies {
+				So(len(pxy.ServeHTTPCalls()), ShouldEqual, 0)
+			}
+		})
+	})
+}
+
+func TestRouterPublicAPIs(t *testing.T) {
+
+	Convey("Given an api router and proxies with all public endpoints available", t, func() {
+
+		cfg, err := config.Get()
+		So(err, ShouldBeNil)
+
+		hcMock := &mock.IHealthCheckMock{}
 
 		hierarchyAPIURL, err := url.Parse(cfg.HierarchyAPIURL)
 		So(err, ShouldBeNil)
@@ -62,104 +91,109 @@ func TestRouterPublicAPIs(t *testing.T) {
 
 		resetProxyMocksWithExpectations(expectedPublicURLs)
 
-		Convey("A request to the health endpoint is successful and not proxied", func() {
-			w := createRouterTest(cfg, "http://localhost:23200/health", hcMock)
-			So(w.Code, ShouldEqual, http.StatusOK)
-			for _, pxy := range registeredProxies {
-				So(len(pxy.ServeHTTPCalls()), ShouldEqual, 0)
-			}
+		Convey("and observation API enabled by configuration", func() {
+			cfg.EnableObservationAPI = true
+
+			Convey("A request to code-list path succeeds and is proxied to codeListAPIURL", func() {
+				w := createRouterTest(cfg, "http://localhost:23200/v1/code-lists", hcMock)
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/code-lists", codelistAPIURL)
+			})
+
+			Convey("A request to code-list subpath succeeds and is proxied to codeListAPIURL", func() {
+				w := createRouterTest(cfg, "http://localhost:23200/v1/code-lists/subpath", hcMock)
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/code-lists/subpath", codelistAPIURL)
+			})
+
+			Convey("A request to dataset path succeeds and is proxied to datasetAPIURL", func() {
+				w := createRouterTest(cfg, "http://localhost:23200/v1/datasets", hcMock)
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/datasets", datasetAPIURL)
+			})
+
+			Convey("A request to dataset edition path succeeds and is proxied to datasetAPIURL", func() {
+				w := createRouterTest(cfg, "http://localhost:23200/v1/datasets/cpih012/editions/123", hcMock)
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/datasets/cpih012/editions/123", datasetAPIURL)
+			})
+
+			Convey("A request to a dataset edition version endpoint succeeds and is proxied to datasetAPIURL", func() {
+				w := createRouterTest(cfg, "http://localhost:23200/v1/datasets/cpih012/editions/123/versions/321", hcMock)
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/datasets/cpih012/editions/123/versions/321", datasetAPIURL)
+			})
+
+			Convey("A request to a dataset edition version observation endpoint succeeds and is proxied to observationAPIURL", func() {
+				w := createRouterTest(cfg, "http://localhost:23200/v1/datasets/cpih012/editions/123/versions/321/observations", hcMock)
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/datasets/cpih012/editions/123/versions/321/observations", observationAPIURL)
+			})
+
+			Convey("A request to a filters is proxied to filterAPIURL", func() {
+				w := createRouterTest(cfg, "http://localhost:23200/v1/filters", hcMock)
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/filters", filterAPIURL)
+			})
+
+			Convey("A request to a filters subpath is proxied to filterAPIURL", func() {
+				w := createRouterTest(cfg, "http://localhost:23200/v1/filters/subpath", hcMock)
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/filters/subpath", filterAPIURL)
+			})
+
+			Convey("A request to a filter-output is proxied to filterAPIURL", func() {
+				w := createRouterTest(cfg, "http://localhost:23200/v1/filter-outputs", hcMock)
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/filter-outputs", filterAPIURL)
+			})
+
+			Convey("A request to a filter-output subpath is proxied to filterAPIURL", func() {
+				w := createRouterTest(cfg, "http://localhost:23200/v1/filter-outputs/subpath", hcMock)
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/filter-outputs/subpath", filterAPIURL)
+			})
+
+			Convey("A request to a hierarchies path is proxied to hierarchyAPIURL", func() {
+				w := createRouterTest(cfg, "http://localhost:23200/v1/hierarchies", hcMock)
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/hierarchies", hierarchyAPIURL)
+			})
+
+			Convey("A request to a hierarchies subpath is proxied to hierarchyAPIURL", func() {
+				w := createRouterTest(cfg, "http://localhost:23200/v1/hierarchies/subpath", hcMock)
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/hierarchies/subpath", hierarchyAPIURL)
+			})
+
+			Convey("A request to a search path is proxied to searchAPIURL", func() {
+				w := createRouterTest(cfg, "http://localhost:23200/v1/search", hcMock)
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/search", searchAPIURL)
+			})
+
+			Convey("A request to a search subpath is proxied to searchAPIURL", func() {
+				w := createRouterTest(cfg, "http://localhost:23200/v1/search/subpath", hcMock)
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/search/subpath", searchAPIURL)
+			})
 		})
 
-		Convey("A request to a wrong endpoint fails with Status NotFound and is not proxied", func() {
-			w := createRouterTest(cfg, "http://localhost:23200/v1/wrong", hcMock)
-			So(w.Code, ShouldEqual, http.StatusNotFound)
-			for _, pxy := range registeredProxies {
-				So(len(pxy.ServeHTTPCalls()), ShouldEqual, 0)
-			}
-		})
+		Convey("and observation API disabled by configuration", func() {
+			cfg.EnableObservationAPI = false
 
-		Convey("A request to code-list path succeeds and is proxied to codeListAPIURL", func() {
-			w := createRouterTest(cfg, "http://localhost:23200/v1/code-lists", hcMock)
-			So(w.Code, ShouldEqual, http.StatusOK)
-			verifyProxied("/code-lists", codelistAPIURL)
-		})
+			Convey("A request to dataset path succeeds and is proxied to datasetAPIURL", func() {
+				w := createRouterTest(cfg, "http://localhost:23200/v1/datasets", hcMock)
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/datasets", datasetAPIURL)
+			})
 
-		Convey("A request to code-list subpath succeeds and is proxied to codeListAPIURL", func() {
-			w := createRouterTest(cfg, "http://localhost:23200/v1/code-lists/subpath", hcMock)
-			So(w.Code, ShouldEqual, http.StatusOK)
-			verifyProxied("/code-lists/subpath", codelistAPIURL)
-		})
+			Convey("A request to a dataset edition version observation endpoint succeeds and is proxied to datasetAPIURL", func() {
+				w := createRouterTest(cfg, "http://localhost:23200/v1/datasets/cpih012/editions/123/versions/321/observations", hcMock)
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/datasets/cpih012/editions/123/versions/321/observations", datasetAPIURL)
+			})
 
-		Convey("A request to dataset path succeeds and is proxied to datasetAPIURL", func() {
-			w := createRouterTest(cfg, "http://localhost:23200/v1/datasets", hcMock)
-			So(w.Code, ShouldEqual, http.StatusOK)
-			verifyProxied("/datasets", datasetAPIURL)
-		})
-
-		Convey("A request to dataset edition path succeeds and is proxied to datasetAPIURL", func() {
-			w := createRouterTest(cfg, "http://localhost:23200/v1/datasets/cpih012/editions/123", hcMock)
-			So(w.Code, ShouldEqual, http.StatusOK)
-			verifyProxied("/datasets/cpih012/editions/123", datasetAPIURL)
-		})
-
-		Convey("A request to a dataset edition version endpoint succeeds and is proxied to datasetAPIURL", func() {
-			w := createRouterTest(cfg, "http://localhost:23200/v1/datasets/cpih012/editions/123/versions/321", hcMock)
-			So(w.Code, ShouldEqual, http.StatusOK)
-			verifyProxied("/datasets/cpih012/editions/123/versions/321", datasetAPIURL)
-		})
-
-		Convey("A request to a dataset edition version observation endpoint succeeds and is proxied to observationAPIURL", func() {
-			w := createRouterTest(cfg, "http://localhost:23200/v1/datasets/cpih012/editions/123/versions/321/observations", hcMock)
-			So(w.Code, ShouldEqual, http.StatusOK)
-			verifyProxied("/datasets/cpih012/editions/123/versions/321/observations", observationAPIURL)
-		})
-
-		Convey("A request to a filters is proxied to filterAPIURL", func() {
-			w := createRouterTest(cfg, "http://localhost:23200/v1/filters", hcMock)
-			So(w.Code, ShouldEqual, http.StatusOK)
-			verifyProxied("/filters", filterAPIURL)
-		})
-
-		Convey("A request to a filters subpath is proxied to filterAPIURL", func() {
-			w := createRouterTest(cfg, "http://localhost:23200/v1/filters/subpath", hcMock)
-			So(w.Code, ShouldEqual, http.StatusOK)
-			verifyProxied("/filters/subpath", filterAPIURL)
-		})
-
-		Convey("A request to a filter-output is proxied to filterAPIURL", func() {
-			w := createRouterTest(cfg, "http://localhost:23200/v1/filter-outputs", hcMock)
-			So(w.Code, ShouldEqual, http.StatusOK)
-			verifyProxied("/filter-outputs", filterAPIURL)
-		})
-
-		Convey("A request to a filter-output subpath is proxied to filterAPIURL", func() {
-			w := createRouterTest(cfg, "http://localhost:23200/v1/filter-outputs/subpath", hcMock)
-			So(w.Code, ShouldEqual, http.StatusOK)
-			verifyProxied("/filter-outputs/subpath", filterAPIURL)
-		})
-
-		Convey("A request to a hierarchies path is proxied to hierarchyAPIURL", func() {
-			w := createRouterTest(cfg, "http://localhost:23200/v1/hierarchies", hcMock)
-			So(w.Code, ShouldEqual, http.StatusOK)
-			verifyProxied("/hierarchies", hierarchyAPIURL)
-		})
-
-		Convey("A request to a hierarchies subpath is proxied to hierarchyAPIURL", func() {
-			w := createRouterTest(cfg, "http://localhost:23200/v1/hierarchies/subpath", hcMock)
-			So(w.Code, ShouldEqual, http.StatusOK)
-			verifyProxied("/hierarchies/subpath", hierarchyAPIURL)
-		})
-
-		Convey("A request to a search path is proxied to searchAPIURL", func() {
-			w := createRouterTest(cfg, "http://localhost:23200/v1/search", hcMock)
-			So(w.Code, ShouldEqual, http.StatusOK)
-			verifyProxied("/search", searchAPIURL)
-		})
-
-		Convey("A request to a search subpath is proxied to searchAPIURL", func() {
-			w := createRouterTest(cfg, "http://localhost:23200/v1/search/subpath", hcMock)
-			So(w.Code, ShouldEqual, http.StatusOK)
-			verifyProxied("/search/subpath", searchAPIURL)
 		})
 
 	})
@@ -167,16 +201,12 @@ func TestRouterPublicAPIs(t *testing.T) {
 
 func TestRouterPrivateAPIs(t *testing.T) {
 
-	Convey("Given a healthy api router and proxies with all private endpoints available", t, func() {
+	Convey("Given an api router and proxies with all private endpoints available", t, func() {
 
 		cfg, err := config.Get()
 		So(err, ShouldBeNil)
 
-		hcMock := &mock.IHealthCheckMock{
-			HandlerFunc: func(w http.ResponseWriter, req *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-		}
+		hcMock := &mock.IHealthCheckMock{}
 
 		datasetAPIURL, err := url.Parse(cfg.DatasetAPIURL)
 		So(err, ShouldBeNil)
@@ -266,16 +296,12 @@ func TestRouterPrivateAPIs(t *testing.T) {
 
 func TestRouterLegacyAPIs(t *testing.T) {
 
-	Convey("Given a healthy api router and proxies with all legacy endpoints available", t, func() {
+	Convey("Given an api router and proxies with all legacy endpoints available", t, func() {
 
 		cfg, err := config.Get()
 		So(err, ShouldBeNil)
 
-		hcMock := &mock.IHealthCheckMock{
-			HandlerFunc: func(w http.ResponseWriter, req *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-		}
+		hcMock := &mock.IHealthCheckMock{}
 
 		apiPocURL, err := url.Parse(cfg.APIPocURL)
 		So(err, ShouldBeNil)
