@@ -14,9 +14,11 @@ type Config struct {
 	Version                    string        `envconfig:"VERSION"`
 	EnableV1BetaRestriction    bool          `envconfig:"ENABLE_V1_BETA_RESTRICTION"`
 	EnablePrivateEndpoints     bool          `envconfig:"ENABLE_PRIVATE_ENDPOINTS"`
+	EnableObservationAPI       bool          `envconfig:"ENABLE_OBSERVATION_API"`
 	HierarchyAPIURL            string        `envconfig:"HIERARCHY_API_URL"`
 	FilterAPIURL               string        `envconfig:"FILTER_API_URL"`
 	DatasetAPIURL              string        `envconfig:"DATASET_API_URL"`
+	ObservationAPIURL          string        `envconfig:"OBSERVATION_API_URL"`
 	CodelistAPIURL             string        `envconfig:"CODE_LIST_API_URL"`
 	RecipeAPIURL               string        `envconfig:"RECIPE_API_URL"`
 	ImportAPIURL               string        `envconfig:"IMPORT_API_URL"`
@@ -40,9 +42,11 @@ func Get() (*Config, error) {
 			Version:                    "v1",
 			EnablePrivateEndpoints:     true,
 			EnableV1BetaRestriction:    false,
+			EnableObservationAPI:       false,
 			HierarchyAPIURL:            "http://localhost:22600",
 			FilterAPIURL:               "http://localhost:22100",
 			DatasetAPIURL:              "http://localhost:22000",
+			ObservationAPIURL:          "http://localhost:24500",
 			CodelistAPIURL:             "http://localhost:22400",
 			RecipeAPIURL:               "http://localhost:22300",
 			ImportAPIURL:               "http://localhost:21800",

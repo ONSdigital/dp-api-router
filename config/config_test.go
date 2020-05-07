@@ -12,20 +12,26 @@ func TestGetRetrunsDefaultValues(t *testing.T) {
 	Convey("When a loading a configuration, default values are return", t, func() {
 		configuration, err := Get()
 		So(err, ShouldBeNil)
-		So(configuration.BindAddr, ShouldEqual, ":23200")
-		So(configuration.Version, ShouldEqual, "v1")
-		So(configuration.EnablePrivateEndpoints, ShouldEqual, true)
-		So(configuration.EnableV1BetaRestriction, ShouldEqual, false)
-		So(configuration.HierarchyAPIURL, ShouldEqual, "http://localhost:22600")
-		So(configuration.FilterAPIURL, ShouldEqual, "http://localhost:22100")
-		So(configuration.DatasetAPIURL, ShouldEqual, "http://localhost:22000")
-		So(configuration.RecipeAPIURL, ShouldEqual, "http://localhost:22300")
-		So(configuration.ImportAPIURL, ShouldEqual, "http://localhost:21800")
-		So(configuration.SearchAPIURL, ShouldEqual, "http://localhost:23100")
-		So(configuration.APIPocURL, ShouldEqual, "http://localhost:3000")
-		So(configuration.EnvironmentHost, ShouldEqual, "http://localhost:23200")
-		So(configuration.GracefulShutdown, ShouldEqual, time.Second*5)
-		So(configuration.HealthCheckInterval, ShouldEqual, time.Second*30)
-		So(configuration.HealthCheckCriticalTimeout, ShouldEqual, time.Second*90)
+		So(configuration, ShouldResemble, &Config{
+			BindAddr:                   ":23200",
+			Version:                    "v1",
+			EnablePrivateEndpoints:     true,
+			EnableV1BetaRestriction:    false,
+			EnableObservationAPI:       false,
+			HierarchyAPIURL:            "http://localhost:22600",
+			FilterAPIURL:               "http://localhost:22100",
+			DatasetAPIURL:              "http://localhost:22000",
+			ObservationAPIURL:          "http://localhost:24500",
+			CodelistAPIURL:             "http://localhost:22400",
+			RecipeAPIURL:               "http://localhost:22300",
+			ImportAPIURL:               "http://localhost:21800",
+			SearchAPIURL:               "http://localhost:23100",
+			APIPocURL:                  "http://localhost:3000",
+			ContextURL:                 "",
+			EnvironmentHost:            "http://localhost:23200",
+			GracefulShutdown:           5 * time.Second,
+			HealthCheckInterval:        30 * time.Second,
+			HealthCheckCriticalTimeout: 90 * time.Second,
+		})
 	})
 }
