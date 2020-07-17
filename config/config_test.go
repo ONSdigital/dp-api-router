@@ -32,6 +32,9 @@ func TestGetRetrunsDefaultValues(t *testing.T) {
 			GracefulShutdown:           5 * time.Second,
 			HealthCheckInterval:        30 * time.Second,
 			HealthCheckCriticalTimeout: 90 * time.Second,
+			Brokers:                    []string{"localhost:9092"},
+			KafkaMaxBytes:              2000000,
+			AuditTopic:                 "audit-events",
 		})
 	})
 }

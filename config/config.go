@@ -30,6 +30,9 @@ type Config struct {
 	AllowedOrigins             []string      `envconfig:"ALLOWED_ORIGINS"`
 	HealthCheckInterval        time.Duration `envconfig:"HEALTHCHECK_INTERVAL"`
 	HealthCheckCriticalTimeout time.Duration `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`
+	Brokers                    []string      `envconfig:"KAFKA_ADDR"`
+	KafkaMaxBytes              int           `envconfig:"KAFKA_MAX_BYTES"`
+	AuditTopic                 string        `envconfig:"AUDIT_TOPIC"`
 }
 
 var configuration *Config
@@ -57,6 +60,9 @@ func Get() (*Config, error) {
 			GracefulShutdown:           5 * time.Second,
 			HealthCheckInterval:        30 * time.Second,
 			HealthCheckCriticalTimeout: 90 * time.Second,
+			Brokers:                    []string{"localhost:9092"},
+			KafkaMaxBytes:              2000000,
+			AuditTopic:                 "audit-events",
 		}
 		if err := envconfig.Process("", configuration); err != nil {
 			log.Event(context.Background(), "failed to parse configuration", log.ERROR, log.Data{"config": configuration}, log.Error(err))

@@ -31,7 +31,7 @@ func TestNotProxied(t *testing.T) {
 		cfg, err := config.Get()
 		So(err, ShouldBeNil)
 
-		hcMock := &mock.IHealthCheckMock{
+		hcMock := &mock.HealthCheckerMock{
 			HandlerFunc: func(w http.ResponseWriter, req *http.Request) {
 				w.WriteHeader(http.StatusOK)
 			},
@@ -64,7 +64,7 @@ func TestRouterPublicAPIs(t *testing.T) {
 		cfg, err := config.Get()
 		So(err, ShouldBeNil)
 
-		hcMock := &mock.IHealthCheckMock{}
+		hcMock := &mock.HealthCheckerMock{}
 
 		hierarchyAPIURL, err := url.Parse(cfg.HierarchyAPIURL)
 		So(err, ShouldBeNil)
@@ -206,7 +206,7 @@ func TestRouterPrivateAPIs(t *testing.T) {
 		cfg, err := config.Get()
 		So(err, ShouldBeNil)
 
-		hcMock := &mock.IHealthCheckMock{}
+		hcMock := &mock.HealthCheckerMock{}
 
 		datasetAPIURL, err := url.Parse(cfg.DatasetAPIURL)
 		So(err, ShouldBeNil)
@@ -301,7 +301,7 @@ func TestRouterLegacyAPIs(t *testing.T) {
 		cfg, err := config.Get()
 		So(err, ShouldBeNil)
 
-		hcMock := &mock.IHealthCheckMock{}
+		hcMock := &mock.HealthCheckerMock{}
 
 		apiPocURL, err := url.Parse(cfg.APIPocURL)
 		So(err, ShouldBeNil)
@@ -342,7 +342,7 @@ func TestRouterLegacyAPIs(t *testing.T) {
 }
 
 // createRouterTest calls service CreateRouter httptest request, recorder, and healthcheck mock
-func createRouterTest(cfg *config.Config, url string, hcMock *mock.IHealthCheckMock) *httptest.ResponseRecorder {
+func createRouterTest(cfg *config.Config, url string, hcMock *mock.HealthCheckerMock) *httptest.ResponseRecorder {
 	r := httptest.NewRequest(http.MethodGet, url, nil)
 	r.Header.Set(authorizationHeader, testServiceAuthToken)
 	w := httptest.NewRecorder()
