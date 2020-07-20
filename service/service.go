@@ -38,11 +38,13 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		log.Event(ctx, "beta route restriction is active, /v1 api requests will only be permitted against beta domains", log.INFO)
 	}
 
-	// Get Kafka Audit Producer
-	svc.KafkaAuditProducer, err = serviceList.GetKafkaAuditProducer(ctx, cfg)
-	if err != nil {
-		log.Event(ctx, "could not instantiate kafka audit producer", log.FATAL, log.Error(err))
-		return nil, err
+	// Get Kafka Audit Producer (if enabled)
+	if cfg.EnableAudit {
+		svc.KafkaAuditProducer, err = serviceList.GetKafkaAuditProducer(ctx, cfg)
+		if err != nil {
+			log.Event(ctx, "could not instantiate kafka audit producer", log.FATAL, log.Error(err))
+			return nil, err
+		}
 	}
 
 	// Healthcheck
@@ -75,7 +77,9 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	svc.Server.HandleOSSignals = false
 
 	// kafka error channel logging go-routine
-	svc.KafkaAuditProducer.Channels().LogErrors(ctx, "kafka Audit Producer")
+	if cfg.EnableAudit {
+		svc.KafkaAuditProducer.Channels().LogErrors(ctx, "kafka Audit Producer")
+	}
 
 	// Start healthcheck and run the http server in a new go-routine
 	svc.HealthCheck.Start(ctx)
@@ -196,9 +200,11 @@ func (svc *Service) Close(ctx context.Context) error {
 func (svc *Service) registerCheckers(ctx context.Context) (err error) {
 	hasErrors := false
 
-	if err = svc.HealthCheck.AddCheck("Kafka Audit Producer", svc.KafkaAuditProducer.Checker); err != nil {
-		hasErrors = true
-		log.Event(ctx, "failed to add kafka audit producer checker", log.ERROR, log.Error(err))
+	if svc.Config.EnableAudit {
+		if err = svc.HealthCheck.AddCheck("Kafka Audit Producer", svc.KafkaAuditProducer.Checker); err != nil {
+			hasErrors = true
+			log.Event(ctx, "failed to add kafka audit producer checker", log.ERROR, log.Error(err))
+		}
 	}
 
 	if hasErrors {

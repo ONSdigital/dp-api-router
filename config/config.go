@@ -15,6 +15,7 @@ type Config struct {
 	EnableV1BetaRestriction    bool          `envconfig:"ENABLE_V1_BETA_RESTRICTION"`
 	EnablePrivateEndpoints     bool          `envconfig:"ENABLE_PRIVATE_ENDPOINTS"`
 	EnableObservationAPI       bool          `envconfig:"ENABLE_OBSERVATION_API"`
+	EnableAudit                bool          `envconfig:"ENABLE_AUDIT"`
 	HierarchyAPIURL            string        `envconfig:"HIERARCHY_API_URL"`
 	FilterAPIURL               string        `envconfig:"FILTER_API_URL"`
 	DatasetAPIURL              string        `envconfig:"DATASET_API_URL"`
@@ -46,6 +47,7 @@ func Get() (*Config, error) {
 			EnablePrivateEndpoints:     true,
 			EnableV1BetaRestriction:    false,
 			EnableObservationAPI:       false,
+			EnableAudit:                false,
 			HierarchyAPIURL:            "http://localhost:22600",
 			FilterAPIURL:               "http://localhost:22100",
 			DatasetAPIURL:              "http://localhost:22000",

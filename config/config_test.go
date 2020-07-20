@@ -18,6 +18,7 @@ func TestGetRetrunsDefaultValues(t *testing.T) {
 			EnablePrivateEndpoints:     true,
 			EnableV1BetaRestriction:    false,
 			EnableObservationAPI:       false,
+			EnableAudit:                false,
 			HierarchyAPIURL:            "http://localhost:22600",
 			FilterAPIURL:               "http://localhost:22100",
 			DatasetAPIURL:              "http://localhost:22000",
