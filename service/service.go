@@ -72,6 +72,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 
 	svc.Server.MiddlewareOrder = append(svc.Server.MiddlewareOrder, "CORS")
 	svc.Server.DefaultShutdownTimeout = cfg.GracefulShutdown
+	svc.Server.HandleOSSignals = false
 
 	// kafka error channel logging go-routine
 	svc.KafkaAuditProducer.Channels().LogErrors(ctx, "kafka Audit Producer")
