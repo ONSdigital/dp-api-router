@@ -64,7 +64,7 @@ func Get() (*Config, error) {
 			HealthCheckCriticalTimeout: 90 * time.Second,
 			Brokers:                    []string{"localhost:9092"},
 			KafkaMaxBytes:              2000000,
-			AuditTopic:                 "audit-events",
+			AuditTopic:                 "audit",
 		}
 		if err := envconfig.Process("", configuration); err != nil {
 			log.Event(context.Background(), "failed to parse configuration", log.ERROR, log.Data{"config": configuration}, log.Error(err))
