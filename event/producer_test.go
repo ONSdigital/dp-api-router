@@ -2,7 +2,6 @@ package event_test
 
 import (
 	"testing"
-	"time"
 
 	"github.com/ONSdigital/dp-api-router/event"
 	"github.com/ONSdigital/dp-api-router/event/mock"
@@ -14,7 +13,7 @@ import (
 var errMarshal = errors.New("Marshal error")
 
 var testAuditEvent = &event.Audit{
-	CreatedAt:    time.Date(2020, time.April, 26, 8, 5, 52, 0, time.UTC),
+	CreatedAt:    testTimeMillis,
 	RequestID:    "myRequest",
 	Identity:     "myIdentity",
 	CollectionID: "myCollection",
