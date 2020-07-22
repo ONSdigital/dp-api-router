@@ -71,8 +71,14 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	if cfg.EnablePrivateEndpoints {
 		svc.Server.Middleware["CORS"] = middleware.SetAllowOriginHeader(cfg.AllowedOrigins)
 	}
-
 	svc.Server.MiddlewareOrder = append(svc.Server.MiddlewareOrder, "CORS")
+
+	// Audit - send kafka message to track user requests
+	if cfg.EnableAudit {
+		svc.Server.Middleware["AUDIT"] = middleware.AuditHandler
+		svc.Server.MiddlewareOrder = append(svc.Server.MiddlewareOrder, "AUDIT")
+	}
+
 	svc.Server.DefaultShutdownTimeout = cfg.GracefulShutdown
 	svc.Server.HandleOSSignals = false
 
