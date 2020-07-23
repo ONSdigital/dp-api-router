@@ -67,10 +67,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		svc.Server.Middleware["CORS"] = handlers.CORS(methodsOk)
 	}
 
-	// CORS - only allow specified origins in publishing
-	if cfg.EnablePrivateEndpoints {
-		svc.Server.Middleware["CORS"] = middleware.SetAllowOriginHeader(cfg.AllowedOrigins)
-	}
+	svc.Server.Middleware["CORS"] = middleware.SetAllowOriginHeader(cfg.AllowedOrigins)
 
 	svc.Server.MiddlewareOrder = append(svc.Server.MiddlewareOrder, "CORS")
 	svc.Server.DefaultShutdownTimeout = cfg.GracefulShutdown
