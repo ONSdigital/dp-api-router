@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/ONSdigital/dp-api-router/config"
 	"github.com/ONSdigital/dp-api-router/middleware"
@@ -13,6 +14,12 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
+)
+
+// Constants to identify middleware handlers in http server
+const (
+	MidCors  = "CORS"
+	MidAudit = "AUDIT"
 )
 
 // Service contains all the configs, server and clients to run the API Router
@@ -60,24 +67,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	// Create router and http server
 	svc.Router = CreateRouter(ctx, cfg, svc.HealthCheck)
 	svc.Server = server.New(cfg.BindAddr, svc.Router)
-
-	// CORS - only allow certain methods in web
-	if !cfg.EnablePrivateEndpoints {
-		methodsOk := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE"})
-		svc.Server.Middleware["CORS"] = handlers.CORS(methodsOk)
-	}
-
-	// CORS - only allow specified origins in publishing
-	if cfg.EnablePrivateEndpoints {
-		svc.Server.Middleware["CORS"] = middleware.SetAllowOriginHeader(cfg.AllowedOrigins)
-	}
-	svc.Server.MiddlewareOrder = append(svc.Server.MiddlewareOrder, "CORS")
-
-	// Audit - send kafka message to track user requests
-	if cfg.EnableAudit {
-		svc.Server.Middleware["AUDIT"] = middleware.AuditHandler
-		svc.Server.MiddlewareOrder = append(svc.Server.MiddlewareOrder, "AUDIT")
-	}
+	svc.SetMiddleware(cfg)
 
 	svc.Server.DefaultShutdownTimeout = cfg.GracefulShutdown
 	svc.Server.HandleOSSignals = false
@@ -96,6 +86,26 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	}()
 
 	return svc, nil
+}
+
+// SetMiddleware adds the HTTP server middleware handlers in the required order
+func (svc *Service) SetMiddleware(cfg *config.Config) {
+
+	if cfg.EnablePrivateEndpoints {
+		// CORS - only allow specified origins in publishing
+		svc.Server.Middleware[MidCors] = middleware.SetAllowOriginHeader(cfg.AllowedOrigins)
+	} else {
+		// CORS - only allow certain methods in web
+		methodsOk := handlers.AllowedMethods([]string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete})
+		svc.Server.Middleware[MidCors] = handlers.CORS(methodsOk)
+	}
+
+	if cfg.EnableAudit {
+		// Audit - send kafka message to track user requests
+		svc.Server.Middleware[MidAudit] = middleware.AuditHandler
+		svc.Server.MiddlewareOrder = append(svc.Server.MiddlewareOrder, MidAudit)
+	}
+	svc.Server.MiddlewareOrder = append(svc.Server.MiddlewareOrder, MidCors)
 }
 
 // CreateRouter creates the router with the required endpoints for proxied APIs
