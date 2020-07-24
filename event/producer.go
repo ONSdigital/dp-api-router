@@ -25,20 +25,25 @@ func NewAvroProducer(outputChannel chan []byte, marshaller Marshaller) *AvroProd
 	}
 }
 
-// Audit produces a new Audit event.
+// Audit produces a new Audit event. This
 func (producer *AvroProducer) Audit(event *Audit) error {
-	if event == nil {
-		return errors.New("event required but was nil")
-	}
-	return producer.marshalAndSendEvent(event)
-}
-
-//marshalAndSendEvent is a generic function that marshals avro events and sends them to the output channel of the producer
-func (producer *AvroProducer) marshalAndSendEvent(event interface{}) error {
-	bytes, err := producer.marshaller.Marshal(event)
+	bytes, err := producer.Marshal(event)
 	if err != nil {
 		return err
 	}
-	producer.out <- bytes
+	producer.Send(bytes)
 	return nil
+}
+
+// Marshal marshalls an Audit event and returns the corresponding byte array
+func (producer *AvroProducer) Marshal(event *Audit) ([]byte, error) {
+	if event == nil {
+		return nil, errors.New("event required but was nil")
+	}
+	return producer.marshaller.Marshal(event)
+}
+
+// Send sends the byte array to the output channel
+func (producer *AvroProducer) Send(bytes []byte) {
+	producer.out <- bytes
 }

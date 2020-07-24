@@ -6,8 +6,10 @@ import (
 	"net/http"
 
 	"github.com/ONSdigital/dp-api-router/config"
+	"github.com/ONSdigital/dp-api-router/event"
 	"github.com/ONSdigital/dp-api-router/middleware"
 	"github.com/ONSdigital/dp-api-router/proxy"
+	"github.com/ONSdigital/dp-api-router/schema"
 	kafka "github.com/ONSdigital/dp-kafka"
 	"github.com/ONSdigital/go-ns/server"
 	"github.com/ONSdigital/log.go/log"
@@ -102,8 +104,8 @@ func (svc *Service) SetMiddleware(cfg *config.Config) {
 
 	if cfg.EnableAudit {
 		// Audit - send kafka message to track user requests
-		// TODO provide event producer externally, to make it testable
-		svc.Server.Middleware[MidAudit] = middleware.AuditHandler(svc.KafkaAuditProducer)
+		auditProducer := event.NewAvroProducer(svc.KafkaAuditProducer.Channels().Output, schema.AuditEvent)
+		svc.Server.Middleware[MidAudit] = middleware.AuditHandler(auditProducer)
 		svc.Server.MiddlewareOrder = append(svc.Server.MiddlewareOrder, MidAudit)
 	}
 	svc.Server.MiddlewareOrder = append(svc.Server.MiddlewareOrder, MidCors)

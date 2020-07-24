@@ -2,6 +2,8 @@ package middleware_test
 
 import (
 	"context"
+	"errors"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"sync"
@@ -9,9 +11,11 @@ import (
 	"time"
 
 	"github.com/ONSdigital/dp-api-router/event"
+	eventmock "github.com/ONSdigital/dp-api-router/event/mock"
 	"github.com/ONSdigital/dp-api-router/middleware"
 	"github.com/ONSdigital/dp-api-router/schema"
-	kafkatest "github.com/ONSdigital/dp-kafka/kafkatest"
+
+	"github.com/ONSdigital/dp-kafka/kafkatest"
 	dphttp "github.com/ONSdigital/dp-net/http"
 
 	. "github.com/smartystreets/goconvey/convey"
@@ -23,11 +27,15 @@ var (
 	testCollectionID       = "myCollection"
 	testTime               = time.Date(2020, time.April, 26, 7, 5, 52, 123000000, time.UTC)
 	testTimeMillis   int64 = 1587884752123
+	testBody               = []byte{1, 2, 3, 4}
+	errMarshal             = errors.New("avro marshal error")
+	errCopy                = errors.New("io.Copy error")
 )
 
-func testHandler(statusCode int) http.Handler {
+func testHandler(statusCode int, body []byte) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(statusCode)
+		w.Write(body)
 	})
 }
 
@@ -44,8 +52,13 @@ func TestAuditHandler(t *testing.T) {
 		So(err, ShouldBeNil)
 		w := httptest.NewRecorder()
 
+		// audit handler under test
+		p := kafkatest.NewMessageProducer(true)
+		auditProducer := event.NewAvroProducer(p.Channels().Output, schema.AuditEvent)
+		auditHandler := middleware.AuditHandler(auditProducer)(testHandler(http.StatusOK, testBody))
+
 		// execute request and wait for audit events
-		auditBefore, auditAfter := serveAndCaptureAudit(c, w, req, testHandler(http.StatusOK), true)
+		auditEvents := serveAndCaptureAudit(c, w, req, auditHandler, p.Channels().Output, 2)
 
 		expectedAuditEvent := event.Audit{
 			CreatedAt:  testTimeMillis,
@@ -54,17 +67,17 @@ func TestAuditHandler(t *testing.T) {
 			QueryParam: "q1=v1&q2=v2",
 		}
 
-		Convey("Then status OK is returned", func(c C) {
+		Convey("Then status OK and expected body is returned", func(c C) {
 			c.So(w.Code, ShouldEqual, http.StatusOK)
+			b, err := ioutil.ReadAll(w.Body)
+			So(err, ShouldBeNil)
+			c.So(b, ShouldResemble, testBody)
 		})
 
-		Convey("The expected audit event is sent before proxying the call", func() {
-			c.So(auditBefore, ShouldResemble, expectedAuditEvent)
-		})
-
-		Convey("And the expected audit event with OK status code is sent after proxying the call", func() {
+		Convey("The expected audit events are sent before and after proxying the call", func() {
+			c.So(auditEvents[0], ShouldResemble, expectedAuditEvent)
 			expectedAuditEvent.StatusCode = int32(http.StatusOK)
-			c.So(auditAfter, ShouldResemble, expectedAuditEvent)
+			c.So(auditEvents[1], ShouldResemble, expectedAuditEvent)
 		})
 	})
 
@@ -78,8 +91,13 @@ func TestAuditHandler(t *testing.T) {
 		req = req.WithContext(context.WithValue(req.Context(), dphttp.CollectionIDHeaderKey, testCollectionID))
 		w := httptest.NewRecorder()
 
+		// audit handler under test
+		p := kafkatest.NewMessageProducer(true)
+		auditProducer := event.NewAvroProducer(p.Channels().Output, schema.AuditEvent)
+		auditHandler := middleware.AuditHandler(auditProducer)(testHandler(http.StatusOK, testBody))
+
 		// execute request and wait for audit events
-		auditBefore, auditAfter := serveAndCaptureAudit(c, w, req, testHandler(http.StatusOK), true)
+		auditEvents := serveAndCaptureAudit(c, w, req, auditHandler, p.Channels().Output, 2)
 
 		expectedAuditEvent := event.Audit{
 			CreatedAt:    testTimeMillis,
@@ -91,17 +109,17 @@ func TestAuditHandler(t *testing.T) {
 			QueryParam:   "",
 		}
 
-		Convey("Then status OK is returned", func() {
+		Convey("Then status OK and the expected body is returned", func() {
 			So(w.Code, ShouldEqual, http.StatusOK)
+			b, err := ioutil.ReadAll(w.Body)
+			So(err, ShouldBeNil)
+			c.So(b, ShouldResemble, testBody)
 		})
 
-		Convey("The expected audit event is sent before proxying the call", func() {
-			c.So(auditBefore, ShouldResemble, expectedAuditEvent)
-		})
-
-		Convey("And the expected audit event with OK status code is sent after proxying the call", func() {
+		Convey("The expected audit event is sent before and after proxying the call", func() {
+			c.So(auditEvents[0], ShouldResemble, expectedAuditEvent)
 			expectedAuditEvent.StatusCode = int32(http.StatusOK)
-			c.So(auditAfter, ShouldResemble, expectedAuditEvent)
+			c.So(auditEvents[1], ShouldResemble, expectedAuditEvent)
 		})
 	})
 
@@ -112,8 +130,13 @@ func TestAuditHandler(t *testing.T) {
 		So(err, ShouldBeNil)
 		w := httptest.NewRecorder()
 
+		// audit handler under test
+		p := kafkatest.NewMessageProducer(true)
+		auditProducer := event.NewAvroProducer(p.Channels().Output, schema.AuditEvent)
+		auditHandler := middleware.AuditHandler(auditProducer)(testHandler(http.StatusNotFound, []byte{}))
+
 		// execute request and wait for audit events
-		auditBefore, auditAfter := serveAndCaptureAudit(c, w, req, testHandler(http.StatusNotFound), true)
+		auditEvents := serveAndCaptureAudit(c, w, req, auditHandler, p.Channels().Output, 2)
 
 		expectedAuditEvent := event.Audit{
 			CreatedAt:  testTimeMillis,
@@ -122,55 +145,118 @@ func TestAuditHandler(t *testing.T) {
 			QueryParam: "",
 		}
 
-		Convey("Then status NotFound is returned", func() {
+		Convey("Then status NotFound and an empty body is returned", func() {
 			So(w.Code, ShouldEqual, http.StatusNotFound)
+			b, err := ioutil.ReadAll(w.Body)
+			So(err, ShouldBeNil)
+			c.So(b, ShouldResemble, []byte{})
 		})
 
-		Convey("The expected audit event is sent before proxying the call", func() {
-			c.So(auditBefore, ShouldResemble, expectedAuditEvent)
-		})
-
-		Convey("And the expected audit event with NotFound status code is sent after proxying the call", func() {
+		Convey("The expected audit event is sent before and after proxying the call", func() {
+			c.So(auditEvents[0], ShouldResemble, expectedAuditEvent)
 			expectedAuditEvent.StatusCode = int32(http.StatusNotFound)
-			c.So(auditAfter, ShouldResemble, expectedAuditEvent)
+			c.So(auditEvents[1], ShouldResemble, expectedAuditEvent)
 		})
-	})
-
-	Convey("Given a proxied call with a failing auditing before the call (inbound)", t, func() {
-		// TODO verify 500 and empty body
-		So(true, ShouldBeTrue)
-	})
-
-	Convey("Given a proxied call with a failing auditing after the call (outbound)", t, func() {
-		// TODO verify 500 and empty body
-		So(true, ShouldBeTrue)
 	})
 }
 
-// aux function for testing that serves HTTP, wrapping the provided handler with AuditHandler, and waits for the audit events to be sent
-func serveAndCaptureAudit(c C, w http.ResponseWriter, req *http.Request, innerHandler http.Handler, expectAfter bool) (auditBefore, auditAfter event.Audit) {
+func TestAuditHandlerFailure(t *testing.T) {
 
-	// create testing kafka producer and audit handler wrapping the provided handler
-	p := kafkatest.NewMessageProducer(true)
-	wrapped := middleware.AuditHandler(p)(innerHandler)
+	Convey("Given a proxied call with a failing auditing before the call (inbound)", t, func(c C) {
+
+		// prepare test
+		req, err := http.NewRequest("GET", "/v1/datasets", nil)
+		So(err, ShouldBeNil)
+		w := httptest.NewRecorder()
+
+		failingMarshaller := &eventmock.MarshallerMock{
+			MarshalFunc: func(s interface{}) ([]byte, error) {
+				return []byte{}, errMarshal
+			},
+		}
+
+		// audit handler under test
+		p := kafkatest.NewMessageProducer(true)
+		auditProducer := event.NewAvroProducer(p.Channels().Output, failingMarshaller)
+		auditHandler := middleware.AuditHandler(auditProducer)(nil)
+
+		// execute request and wait for audit events
+		serveAndCaptureAudit(c, w, req, auditHandler, p.Channels().Output, 0)
+
+		Convey("Then status NotFound and empty body is returned", func(c C) {
+			So(w.Code, ShouldEqual, http.StatusInternalServerError)
+			b, err := ioutil.ReadAll(w.Body)
+			So(err, ShouldBeNil)
+			c.So(b, ShouldResemble, []byte{})
+		})
+	})
+
+	Convey("Given a proxied call with a failing auditing after the call (outbound)", t, func(c C) {
+
+		// prepare test
+		req, err := http.NewRequest("GET", "/v1/datasets", nil)
+		So(err, ShouldBeNil)
+		w := httptest.NewRecorder()
+
+		nMarshalCall := 0
+		failingMarshaller := &eventmock.MarshallerMock{
+			MarshalFunc: func(s interface{}) ([]byte, error) {
+				if nMarshalCall == 0 {
+					nMarshalCall++
+					auditEvent := event.Audit{
+						CreatedAt: testTimeMillis,
+						Path:      "/v1/datasets",
+						Method:    http.MethodGet,
+					}
+					b, err := schema.AuditEvent.Marshal(auditEvent)
+					c.So(err, ShouldBeNil)
+					return b, nil
+				}
+				return []byte{}, errMarshal
+			},
+		}
+
+		// audit handler under test
+		p := kafkatest.NewMessageProducer(true)
+		auditProducer := event.NewAvroProducer(p.Channels().Output, failingMarshaller)
+		auditHandler := middleware.AuditHandler(auditProducer)(testHandler(http.StatusOK, testBody))
+
+		// execute request and wait for audit events
+		serveAndCaptureAudit(c, w, req, auditHandler, p.Channels().Output, 1)
+
+		Convey("Then status NotFound and empty body is returned", func(c C) {
+			So(w.Code, ShouldEqual, http.StatusInternalServerError)
+			b, err := ioutil.ReadAll(w.Body)
+			So(err, ShouldBeNil)
+			c.So(b, ShouldResemble, []byte{})
+		})
+	})
+}
+
+// aux function for testing that serves HTTP, wrapping the provided handler with AuditHandler,
+// and waits for the number of expected audit events, which are then returned in an array
+func serveAndCaptureAudit(c C, w http.ResponseWriter, req *http.Request, auditHandler http.Handler, outChan chan []byte, numExpectedMessages int) (auditEvents []event.Audit) {
 
 	// run HTTP server in a parallel go-routine
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		wrapped.ServeHTTP(w, req)
+		auditHandler.ServeHTTP(w, req)
 	}()
 
-	auditBefore = captureAuditEvents(c, p.Channels().Output)
-	if expectAfter {
-		auditAfter = captureAuditEvents(c, p.Channels().Output)
+	// capture audit events from kafka output channel
+	auditEvents = []event.Audit{}
+	for i := 0; i < numExpectedMessages; i++ {
+		auditEvents = append(auditEvents, captureAuditEvent(c, outChan))
 	}
+
 	wg.Wait()
-	return auditBefore, auditAfter
+	return auditEvents
 }
 
-func captureAuditEvents(c C, outChan chan []byte) event.Audit {
+// captureAuditEvent reads the provided channel and unmarshals the bytes to an auditEvent
+func captureAuditEvent(c C, outChan chan []byte) event.Audit {
 	messageBytes := <-outChan
 	auditEvent := event.Audit{}
 	err := schema.AuditEvent.Unmarshal(messageBytes, &auditEvent)
