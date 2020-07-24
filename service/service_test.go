@@ -13,6 +13,7 @@ import (
 	proxyMock "github.com/ONSdigital/dp-api-router/proxy/mock"
 	"github.com/ONSdigital/dp-api-router/service"
 	"github.com/ONSdigital/dp-api-router/service/mock"
+	"github.com/ONSdigital/dp-kafka/kafkatest"
 	"github.com/ONSdigital/go-ns/server"
 	"github.com/justinas/alice"
 	. "github.com/smartystreets/goconvey/convey"
@@ -354,6 +355,7 @@ func TestMiddleware(t *testing.T) {
 		}
 
 		Convey("Then if private endpoints and audit are enabled, audit is added before cors middleware", func() {
+			svc.KafkaAuditProducer = kafkatest.NewMessageProducer(true)
 			cfg := &config.Config{
 				EnablePrivateEndpoints: true,
 				EnableAudit:            true,
@@ -363,6 +365,7 @@ func TestMiddleware(t *testing.T) {
 		})
 
 		Convey("Then if private endpoints are disabled and audit is enabled, audit is added before cors middleware", func() {
+			svc.KafkaAuditProducer = kafkatest.NewMessageProducer(true)
 			cfg := &config.Config{
 				EnablePrivateEndpoints: false,
 				EnableAudit:            true,

@@ -102,7 +102,8 @@ func (svc *Service) SetMiddleware(cfg *config.Config) {
 
 	if cfg.EnableAudit {
 		// Audit - send kafka message to track user requests
-		svc.Server.Middleware[MidAudit] = middleware.AuditHandler
+		// TODO provide event producer externally, to make it testable
+		svc.Server.Middleware[MidAudit] = middleware.AuditHandler(svc.KafkaAuditProducer)
 		svc.Server.MiddlewareOrder = append(svc.Server.MiddlewareOrder, MidAudit)
 	}
 	svc.Server.MiddlewareOrder = append(svc.Server.MiddlewareOrder, MidCors)
