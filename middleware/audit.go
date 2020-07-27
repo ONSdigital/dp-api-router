@@ -11,10 +11,22 @@ import (
 	"github.com/ONSdigital/log.go/log"
 )
 
+// ignoredPaths will not be audited
+var ignoredPaths = map[string]bool{
+	"/health":      true,
+	"/healthcheck": true,
+}
+
 // AuditHandler is a middleware handler that keeps track of calls that are proxied for auditing purposes.
 func AuditHandler(auditProducer *event.AvroProducer) func(h http.Handler) http.Handler {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+			// check if path needs to be ignored (not audited)
+			if _, found := ignoredPaths[r.URL.Path]; found {
+				h.ServeHTTP(w, r)
+				return
+			}
 
 			// Audit before proxying
 			auditEvent := generateAuditEvent(r)
@@ -27,7 +39,7 @@ func AuditHandler(auditProducer *event.AvroProducer) func(h http.Handler) http.H
 			rec := &responseRecorder{w, http.StatusOK, &bytes.Buffer{}}
 			h.ServeHTTP(rec, r)
 
-			// Audit after proxying. We need to marshal first, and then send it there is no other error in the process
+			// Audit after proxying. We need to marshal first, and then send if there is no other error in the process
 			auditEvent.StatusCode = int32(rec.statusCode)
 			eventBytes, err := auditProducer.Marshal(auditEvent)
 			if err != nil {

@@ -25,7 +25,7 @@ func NewAvroProducer(outputChannel chan []byte, marshaller Marshaller) *AvroProd
 	}
 }
 
-// Audit produces a new Audit event. This
+// Audit produces a new Audit event.
 func (producer *AvroProducer) Audit(event *Audit) error {
 	bytes, err := producer.Marshal(event)
 	if err != nil {
