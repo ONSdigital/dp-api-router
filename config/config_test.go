@@ -19,6 +19,7 @@ func TestGetRetrunsDefaultValues(t *testing.T) {
 			EnableV1BetaRestriction:    false,
 			EnableObservationAPI:       false,
 			EnableAudit:                false,
+			ZebedeeURL:                 "http://localhost:8082",
 			HierarchyAPIURL:            "http://localhost:22600",
 			FilterAPIURL:               "http://localhost:22100",
 			DatasetAPIURL:              "http://localhost:22000",

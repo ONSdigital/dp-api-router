@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/ONSdigital/dp-api-clients-go/health"
 	"github.com/ONSdigital/dp-api-router/config"
 	"github.com/ONSdigital/dp-api-router/event"
 	"github.com/ONSdigital/dp-api-router/middleware"
@@ -20,8 +21,10 @@ import (
 
 // Constants to identify middleware handlers in http server
 const (
-	MidCors  = "CORS"
-	MidAudit = "AUDIT"
+	MidPathFilter = "PATH_FILTER"
+	MidIdentity   = "IDENTITY"
+	MidCors       = "CORS"
+	MidAudit      = "AUDIT"
 )
 
 // Service contains all the configs, server and clients to run the API Router
@@ -32,6 +35,7 @@ type Service struct {
 	Server             *server.Server
 	Router             *mux.Router
 	HealthCheck        HealthChecker
+	ZebedeeClient      *health.Client
 }
 
 // Run initialises the dependencies, proxy router, and starts the http server
@@ -46,6 +50,9 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	if cfg.EnableV1BetaRestriction {
 		log.Event(ctx, "beta route restriction is active, /v1 api requests will only be permitted against beta domains", log.INFO)
 	}
+
+	// Get healthcheck client for Zebedee
+	svc.ZebedeeClient = health.NewClient("Zebedee", cfg.ZebedeeURL)
 
 	// Get Kafka Audit Producer (if enabled)
 	if cfg.EnableAudit {
@@ -93,6 +100,20 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 // SetMiddleware adds the HTTP server middleware handlers in the required order
 func (svc *Service) SetMiddleware(cfg *config.Config) {
 
+	// Allow Healthcheck endpoint to skip any further middleware
+	svc.Server.Middleware[MidPathFilter] = middleware.HealthcheckFilter(svc.HealthCheck.Handler)
+	svc.Server.MiddlewareOrder = append(svc.Server.MiddlewareOrder, MidPathFilter)
+
+	// Audit - send kafka message to track user requests
+	if cfg.EnableAudit {
+		auditProducer := event.NewAvroProducer(svc.KafkaAuditProducer.Channels().Output, schema.AuditEvent)
+		svc.Server.Middleware[MidAudit] = middleware.AuditHandler(auditProducer)
+		svc.Server.MiddlewareOrder = append(svc.Server.MiddlewareOrder, MidAudit)
+	}
+
+	// Identity middleware with Zebedee Health Client
+	svc.Server.Middleware[MidIdentity] = middleware.IdentityHandler(svc.ZebedeeClient, cfg.ZebedeeURL)
+
 	if cfg.EnablePrivateEndpoints {
 		// CORS - only allow specified origins in publishing
 		svc.Server.Middleware[MidCors] = middleware.SetAllowOriginHeader(cfg.AllowedOrigins)
@@ -102,22 +123,12 @@ func (svc *Service) SetMiddleware(cfg *config.Config) {
 		svc.Server.Middleware[MidCors] = handlers.CORS(methodsOk)
 	}
 
-	if cfg.EnableAudit {
-		// Audit - send kafka message to track user requests
-		auditProducer := event.NewAvroProducer(svc.KafkaAuditProducer.Channels().Output, schema.AuditEvent)
-		svc.Server.Middleware[MidAudit] = middleware.AuditHandler(auditProducer)
-		svc.Server.MiddlewareOrder = append(svc.Server.MiddlewareOrder, MidAudit)
-	}
-	svc.Server.MiddlewareOrder = append(svc.Server.MiddlewareOrder, MidCors)
+	svc.Server.MiddlewareOrder = append(svc.Server.MiddlewareOrder, MidIdentity, MidCors)
 }
 
 // CreateRouter creates the router with the required endpoints for proxied APIs
 func CreateRouter(ctx context.Context, cfg *config.Config, hc HealthChecker) *mux.Router {
 	router := mux.NewRouter()
-
-	// Healthcheck Endpoint
-	router.HandleFunc("/health", hc.Handler)
-	router.HandleFunc(fmt.Sprintf("/%s/health", cfg.Version), hc.Handler)
 
 	// Public APIs
 	if cfg.EnableObservationAPI {
@@ -224,6 +235,11 @@ func (svc *Service) registerCheckers(ctx context.Context) (err error) {
 			hasErrors = true
 			log.Event(ctx, "failed to add kafka audit producer checker", log.ERROR, log.Error(err))
 		}
+	}
+
+	if err = svc.HealthCheck.AddCheck("Zebedee", svc.ZebedeeClient.Checker); err != nil {
+		hasErrors = true
+		log.Event(ctx, "failed to add zebedee checker", log.ERROR, log.Error(err))
 	}
 
 	if hasErrors {
