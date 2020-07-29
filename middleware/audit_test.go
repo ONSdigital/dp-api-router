@@ -1,7 +1,6 @@
 package middleware_test
 
 import (
-	"context"
 	"errors"
 	"io/ioutil"
 	"net/http"
@@ -86,9 +85,9 @@ func TestAuditHandler(t *testing.T) {
 		// prepare test
 		req, err := http.NewRequest("GET", "/v1/datasets", nil)
 		So(err, ShouldBeNil)
-		req = req.WithContext(context.WithValue(req.Context(), dphttp.RequestIdKey, testRequestID))
-		req = req.WithContext(context.WithValue(req.Context(), dphttp.CallerIdentityKey, testIdentity))
-		req = req.WithContext(context.WithValue(req.Context(), dphttp.CollectionIDHeaderKey, testCollectionID))
+		req.Header.Set(dphttp.RequestHeaderKey, testRequestID)
+		req.Header.Set(dphttp.CollectionIDHeaderKey, testCollectionID)
+		req.Header.Set(dphttp.UserHeaderKey, testIdentity)
 		w := httptest.NewRecorder()
 
 		// audit handler under test

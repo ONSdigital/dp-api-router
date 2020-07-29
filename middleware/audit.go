@@ -72,21 +72,20 @@ var Now = func() time.Time {
 
 // generateAuditEvent creates an audit event with the values from request and request context, if present.
 func generateAuditEvent(req *http.Request) *event.Audit {
-	ctx := req.Context()
 	auditEvent := &event.Audit{
 		CreatedAt:  event.CreatedAtMillis(Now()),
 		Path:       req.URL.Path,
 		Method:     req.Method,
 		QueryParam: req.URL.RawQuery,
 	}
-	if ctx.Value(dphttp.RequestIdKey) != nil {
-		auditEvent.RequestID = ctx.Value(dphttp.RequestIdKey).(string)
+	if requestID := req.Header.Get(dphttp.RequestHeaderKey); requestID != "" {
+		auditEvent.RequestID = requestID
 	}
-	if ctx.Value(dphttp.CallerIdentityKey) != nil {
-		auditEvent.Identity = ctx.Value(dphttp.CallerIdentityKey).(string)
+	if colID := req.Header.Get(dphttp.CollectionIDHeaderKey); colID != "" {
+		auditEvent.CollectionID = colID
 	}
-	if ctx.Value(dphttp.CollectionIDHeaderKey) != nil {
-		auditEvent.CollectionID = ctx.Value(dphttp.CollectionIDHeaderKey).(string)
+	if userIdentity := req.Header.Get(dphttp.UserHeaderKey); userIdentity != "" {
+		auditEvent.Identity = userIdentity
 	}
 	return auditEvent
 }
