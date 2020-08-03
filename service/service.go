@@ -50,11 +50,9 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		log.Event(ctx, "beta route restriction is active, /v1 api requests will only be permitted against beta domains", log.INFO)
 	}
 
-	// Get healthcheck client for Zebedee
-	svc.ZebedeeClient = health.NewClient("Zebedee", cfg.ZebedeeURL)
-
-	// Get Kafka Audit Producer (if enabled)
+	// Get Zebedee client and Kafka Audit Producer (only if audit is enabled)
 	if cfg.EnableAudit {
+		svc.ZebedeeClient = health.NewClient("Zebedee", cfg.ZebedeeURL)
 		svc.KafkaAuditProducer, err = serviceList.GetKafkaAuditProducer(ctx, cfg)
 		if err != nil {
 			log.Event(ctx, "could not instantiate kafka audit producer", log.FATAL, log.Error(err))
@@ -231,11 +229,11 @@ func (svc *Service) registerCheckers(ctx context.Context) (err error) {
 			hasErrors = true
 			log.Event(ctx, "failed to add kafka audit producer checker", log.ERROR, log.Error(err))
 		}
-	}
 
-	if err = svc.HealthCheck.AddCheck("Zebedee", svc.ZebedeeClient.Checker); err != nil {
-		hasErrors = true
-		log.Event(ctx, "failed to add zebedee checker", log.ERROR, log.Error(err))
+		if err = svc.HealthCheck.AddCheck("Zebedee", svc.ZebedeeClient.Checker); err != nil {
+			hasErrors = true
+			log.Event(ctx, "failed to add zebedee checker", log.ERROR, log.Error(err))
+		}
 	}
 
 	if hasErrors {
