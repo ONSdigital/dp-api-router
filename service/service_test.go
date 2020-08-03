@@ -10,12 +10,12 @@ import (
 
 	"github.com/ONSdigital/dp-api-clients-go/health"
 	"github.com/ONSdigital/dp-api-router/config"
-	"github.com/ONSdigital/dp-api-router/middleware"
 	"github.com/ONSdigital/dp-api-router/proxy"
 	proxyMock "github.com/ONSdigital/dp-api-router/proxy/mock"
 	"github.com/ONSdigital/dp-api-router/service"
 	"github.com/ONSdigital/dp-api-router/service/mock"
 	"github.com/ONSdigital/dp-kafka/kafkatest"
+	dphttp "github.com/ONSdigital/dp-net/http"
 	"github.com/ONSdigital/go-ns/server"
 	"github.com/justinas/alice"
 	. "github.com/smartystreets/goconvey/convey"
@@ -340,18 +340,14 @@ func TestRouterLegacyAPIs(t *testing.T) {
 
 func TestMiddleware(t *testing.T) {
 
-	dummyHandler := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {})
-	middleware.IdentityHandler = func(zc *health.Client, url string) func(http.Handler) http.Handler {
-		return func(http.Handler) http.Handler { return dummyHandler }
-	}
-
 	Convey("Given a service without middleware", t, func() {
 		svc := service.Service{
 			Server: &server.Server{
 				Middleware:      map[string]alice.Constructor{},
 				MiddlewareOrder: []string{},
 			},
-			HealthCheck: &mock.HealthCheckerMock{},
+			HealthCheck:   &mock.HealthCheckerMock{},
+			ZebedeeClient: &health.Client{Client: &dphttp.ClienterMock{}},
 		}
 
 		Convey("Then if private endpoints and audit are enabled, audit is added before cors middleware", func() {
@@ -361,7 +357,7 @@ func TestMiddleware(t *testing.T) {
 				EnableAudit:            true,
 			}
 			svc.SetMiddleware(cfg)
-			So(svc.Server.MiddlewareOrder, ShouldResemble, []string{service.MidPathFilter, service.MidAudit, service.MidIdentity, service.MidCors})
+			So(svc.Server.MiddlewareOrder, ShouldResemble, []string{service.MidPathFilter, service.MidAudit, service.MidCors})
 		})
 
 		Convey("Then if private endpoints are disabled and audit is enabled, audit is added before cors middleware", func() {
@@ -371,7 +367,7 @@ func TestMiddleware(t *testing.T) {
 				EnableAudit:            true,
 			}
 			svc.SetMiddleware(cfg)
-			So(svc.Server.MiddlewareOrder, ShouldResemble, []string{service.MidPathFilter, service.MidAudit, service.MidIdentity, service.MidCors})
+			So(svc.Server.MiddlewareOrder, ShouldResemble, []string{service.MidPathFilter, service.MidAudit, service.MidCors})
 		})
 
 		Convey("Then if private endpoints are enabled and audit is disabled, only cors middleware is added", func() {
@@ -380,7 +376,7 @@ func TestMiddleware(t *testing.T) {
 				EnableAudit:            false,
 			}
 			svc.SetMiddleware(cfg)
-			So(svc.Server.MiddlewareOrder, ShouldResemble, []string{service.MidPathFilter, service.MidIdentity, service.MidCors})
+			So(svc.Server.MiddlewareOrder, ShouldResemble, []string{service.MidPathFilter, service.MidCors})
 		})
 
 		Convey("Then if private endpoints and audit are disabled, only cors middleware is added", func() {
@@ -389,7 +385,7 @@ func TestMiddleware(t *testing.T) {
 				EnableAudit:            false,
 			}
 			svc.SetMiddleware(cfg)
-			So(svc.Server.MiddlewareOrder, ShouldResemble, []string{service.MidPathFilter, service.MidIdentity, service.MidCors})
+			So(svc.Server.MiddlewareOrder, ShouldResemble, []string{service.MidPathFilter, service.MidCors})
 		})
 	})
 }

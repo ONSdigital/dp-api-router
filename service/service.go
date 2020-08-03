@@ -22,7 +22,6 @@ import (
 // Constants to identify middleware handlers in http server
 const (
 	MidPathFilter = "PATH_FILTER"
-	MidIdentity   = "IDENTITY"
 	MidCors       = "CORS"
 	MidAudit      = "AUDIT"
 )
@@ -107,12 +106,9 @@ func (svc *Service) SetMiddleware(cfg *config.Config) {
 	// Audit - send kafka message to track user requests
 	if cfg.EnableAudit {
 		auditProducer := event.NewAvroProducer(svc.KafkaAuditProducer.Channels().Output, schema.AuditEvent)
-		svc.Server.Middleware[MidAudit] = middleware.AuditHandler(auditProducer)
+		svc.Server.Middleware[MidAudit] = middleware.AuditHandler(auditProducer, svc.ZebedeeClient.Client, cfg.ZebedeeURL)
 		svc.Server.MiddlewareOrder = append(svc.Server.MiddlewareOrder, MidAudit)
 	}
-
-	// Identity middleware with Zebedee Health Client
-	svc.Server.Middleware[MidIdentity] = middleware.IdentityHandler(svc.ZebedeeClient, cfg.ZebedeeURL)
 
 	if cfg.EnablePrivateEndpoints {
 		// CORS - only allow specified origins in publishing
@@ -123,7 +119,7 @@ func (svc *Service) SetMiddleware(cfg *config.Config) {
 		svc.Server.Middleware[MidCors] = handlers.CORS(methodsOk)
 	}
 
-	svc.Server.MiddlewareOrder = append(svc.Server.MiddlewareOrder, MidIdentity, MidCors)
+	svc.Server.MiddlewareOrder = append(svc.Server.MiddlewareOrder, MidCors)
 }
 
 // CreateRouter creates the router with the required endpoints for proxied APIs
