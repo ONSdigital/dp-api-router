@@ -3,6 +3,7 @@ module github.com/ONSdigital/dp-api-router
 go 1.13
 
 require (
+	github.com/ONSdigital/dp-api-clients-go v1.20.0
 	github.com/ONSdigital/dp-healthcheck v1.0.4
 	github.com/ONSdigital/dp-kafka v1.1.6
 	github.com/ONSdigital/dp-net v1.0.4
