@@ -16,14 +16,8 @@ import (
 	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/justinas/alice"
 	"github.com/pkg/errors"
-)
-
-// Constants to identify middleware handlers in http server
-const (
-	MidPathFilter = "PATH_FILTER"
-	MidCors       = "CORS"
-	MidAudit      = "AUDIT"
 )
 
 // Service contains all the configs, server and clients to run the API Router
@@ -32,7 +26,6 @@ type Service struct {
 	ServiceList        *ExternalServiceList
 	KafkaAuditProducer kafka.IProducer
 	Server             *server.Server
-	Router             *mux.Router
 	HealthCheck        HealthChecker
 	ZebedeeClient      *health.Client
 }
@@ -71,9 +64,9 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	}
 
 	// Create router and http server
-	svc.Router = CreateRouter(ctx, cfg, svc.HealthCheck)
-	svc.Server = server.New(cfg.BindAddr, svc.Router)
-	svc.SetMiddleware(cfg)
+	r := CreateRouter(ctx, cfg, svc.HealthCheck)
+	m := svc.CreateMiddleware(cfg)
+	svc.Server = server.New(cfg.BindAddr, m.Then(r))
 
 	svc.Server.DefaultShutdownTimeout = cfg.GracefulShutdown
 	svc.Server.HandleOSSignals = false
@@ -94,30 +87,28 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	return svc, nil
 }
 
-// SetMiddleware adds the HTTP server middleware handlers in the required order
-func (svc *Service) SetMiddleware(cfg *config.Config) {
+// CreateMiddleware creates an Alice middleware chain of handlers in the required order
+func (svc *Service) CreateMiddleware(cfg *config.Config) alice.Chain {
 
 	// Allow Healthcheck endpoint to skip any further middleware
-	svc.Server.Middleware[MidPathFilter] = middleware.HealthcheckFilter(svc.HealthCheck.Handler)
-	svc.Server.MiddlewareOrder = append(svc.Server.MiddlewareOrder, MidPathFilter)
+	m := alice.New(middleware.HealthcheckFilter(svc.HealthCheck.Handler))
 
 	// Audit - send kafka message to track user requests
 	if cfg.EnableAudit {
 		auditProducer := event.NewAvroProducer(svc.KafkaAuditProducer.Channels().Output, schema.AuditEvent)
-		svc.Server.Middleware[MidAudit] = middleware.AuditHandler(auditProducer, svc.ZebedeeClient.Client, cfg.ZebedeeURL)
-		svc.Server.MiddlewareOrder = append(svc.Server.MiddlewareOrder, MidAudit)
+		m = m.Append(middleware.AuditHandler(auditProducer, svc.ZebedeeClient.Client, cfg.ZebedeeURL))
 	}
 
 	if cfg.EnablePrivateEndpoints {
 		// CORS - only allow specified origins in publishing
-		svc.Server.Middleware[MidCors] = middleware.SetAllowOriginHeader(cfg.AllowedOrigins)
+		m = m.Append(middleware.SetAllowOriginHeader(cfg.AllowedOrigins))
 	} else {
 		// CORS - only allow certain methods in web
 		methodsOk := handlers.AllowedMethods([]string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete})
-		svc.Server.Middleware[MidCors] = handlers.CORS(methodsOk)
+		m = m.Append(handlers.CORS(methodsOk))
 	}
 
-	svc.Server.MiddlewareOrder = append(svc.Server.MiddlewareOrder, MidCors)
+	return m
 }
 
 // CreateRouter creates the router with the required endpoints for proxied APIs
