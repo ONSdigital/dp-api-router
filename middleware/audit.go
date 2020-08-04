@@ -20,6 +20,10 @@ import (
 // before and after proxying calling the downstream service.
 // It obtains the user and caller information by calling Zebedee GET /identity
 func AuditHandler(auditProducer *event.AvroProducer, cli dphttp.Clienter, zebedeeURL string) func(h http.Handler) http.Handler {
+
+	// create Identity client that will be used by middleware to check callers identity
+	idClient := clientsidentity.NewAPIClient(cli, zebedeeURL)
+
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -28,7 +32,7 @@ func AuditHandler(auditProducer *event.AvroProducer, cli dphttp.Clienter, zebede
 
 			// Retrieve Identity from Zebedee, which is stored in context.
 			// if it fails, try to audit with the statusCode before returning
-			ctx, statusCode, err := retrieveIdentity(w, r, cli, zebedeeURL)
+			ctx, statusCode, err := retrieveIdentity(w, r, idClient, zebedeeURL)
 			if err != nil {
 				// error already handled in retrieveIdentity. Try to audit it.
 				auditEvent.StatusCode = int32(statusCode)
@@ -118,11 +122,9 @@ func generateAuditEvent(req *http.Request) *event.Audit {
 }
 
 // retrieveIdentity requests the user and caller identity from Zebedee, using hte provided client and url.
-func retrieveIdentity(w http.ResponseWriter, req *http.Request, cli dphttp.Clienter, zebedeeURL string) (ctx context.Context, status int, err error) {
+func retrieveIdentity(w http.ResponseWriter, req *http.Request, idClient *clientsidentity.Client, zebedeeURL string) (ctx context.Context, status int, err error) {
 	ctx = req.Context()
-	log.Event(ctx, "executing identity check for auditing purposes")
-
-	idClient := clientsidentity.NewAPIClient(cli, zebedeeURL)
+	log.Event(ctx, "executing identity check for auditing purposes", log.INFO)
 
 	florenceToken, err := getFlorenceToken(ctx, req)
 	if err != nil {
@@ -146,7 +148,7 @@ func retrieveIdentity(w http.ResponseWriter, req *http.Request, cli dphttp.Clien
 
 	if authFailure != nil {
 		handleError(ctx, w, req, statusCode, "identity client check request returned an auth error", authFailure, logData)
-		log.Event(ctx, "identity client check request returned an auth error", log.Error(authFailure), logData)
+		log.Event(ctx, "identity client check request returned an auth error", log.ERROR, log.Error(authFailure), logData)
 		return ctx, statusCode, authFailure
 	}
 
@@ -167,7 +169,7 @@ func getFlorenceToken(ctx context.Context, req *http.Request) (string, error) {
 	if err == nil {
 		florenceToken = token
 	} else if headers.IsErrNotFound(err) {
-		log.Event(ctx, "florence access token header not found attempting to find access token cookie")
+		log.Event(ctx, "florence access token header not found attempting to find access token cookie", log.INFO)
 		florenceToken, err = getFlorenceTokenFromCookie(ctx, req)
 	}
 
@@ -183,7 +185,7 @@ func getFlorenceTokenFromCookie(ctx context.Context, req *http.Request) (string,
 		florenceToken = c.Value
 	} else if err == http.ErrNoCookie {
 		err = nil // we don't consider this scenario an error so we set err to nil and return an empty token
-		log.Event(ctx, "florence access token cookie not found in request")
+		log.Event(ctx, "florence access token cookie not found in request", log.INFO)
 	}
 
 	return florenceToken, err
@@ -197,7 +199,7 @@ func getServiceAuthToken(ctx context.Context, req *http.Request) (string, error)
 		authToken = token
 	} else if headers.IsErrNotFound(err) {
 		err = nil // we don't consider this scenario an error so we set err to nil and return an empty token
-		log.Event(ctx, "service auth token request header is not found")
+		log.Event(ctx, "service auth token request header is not found", log.INFO)
 	}
 
 	return authToken, err

@@ -7,7 +7,6 @@ import (
 	"github.com/ONSdigital/dp-api-router/config"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	kafka "github.com/ONSdigital/dp-kafka"
-	dphttp "github.com/ONSdigital/dp-net/http"
 )
 
 //go:generate moq -out ./mock/initialiser.go -pkg mock . Initialiser
@@ -26,6 +25,3 @@ type HealthChecker interface {
 	Stop()
 	AddCheck(name string, checker healthcheck.Checker) (err error)
 }
-
-// Clienter is the dphttp Clienter interface
-type Clienter = dphttp.Clienter
