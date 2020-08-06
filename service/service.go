@@ -3,72 +3,117 @@ package service
 import (
 	"context"
 	"fmt"
+	"net/http"
 
+	"github.com/ONSdigital/dp-api-clients-go/health"
 	"github.com/ONSdigital/dp-api-router/config"
+	"github.com/ONSdigital/dp-api-router/event"
 	"github.com/ONSdigital/dp-api-router/middleware"
 	"github.com/ONSdigital/dp-api-router/proxy"
-	"github.com/ONSdigital/dp-healthcheck/healthcheck"
+	"github.com/ONSdigital/dp-api-router/schema"
+	kafka "github.com/ONSdigital/dp-kafka"
 	"github.com/ONSdigital/go-ns/server"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/justinas/alice"
+	"github.com/pkg/errors"
 )
 
+// Service contains all the configs, server and clients to run the API Router
+type Service struct {
+	Config             *config.Config
+	ServiceList        *ExternalServiceList
+	KafkaAuditProducer kafka.IProducer
+	Server             *server.Server
+	HealthCheck        HealthChecker
+	ZebedeeClient      *health.Client
+}
+
 // Run initialises the dependencies, proxy router, and starts the http server
-func Run(ctx context.Context, buildTime, gitCommit, version string) error {
-	cfg, err := config.Get()
-	if err != nil {
-		log.Event(ctx, "error getting config", log.FATAL, log.Data{"config": cfg}, log.Error(err))
-		return err
+func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceList, buildTime, gitCommit, version string, svcErrors chan error) (svc *Service, err error) {
+	log.Event(ctx, "got service configuration", log.Data{"config": cfg}, log.INFO)
+
+	svc = &Service{
+		Config:      cfg,
+		ServiceList: serviceList,
 	}
-	log.Event(ctx, "starting dp-api-router ....", log.INFO, log.Data{"config": cfg})
 
 	if cfg.EnableV1BetaRestriction {
 		log.Event(ctx, "beta route restriction is active, /v1 api requests will only be permitted against beta domains", log.INFO)
 	}
 
-	// Healthcheck
-	versionInfo, err := healthcheck.NewVersionInfo(buildTime, gitCommit, version)
-	if err != nil {
-		log.Event(ctx, "Failed to obtain VersionInfo for healthcheck", log.FATAL, log.Error(err))
-		return err
+	// Get Zebedee client and Kafka Audit Producer (only if audit is enabled)
+	if cfg.EnableAudit {
+		svc.ZebedeeClient = health.NewClient("Zebedee", cfg.ZebedeeURL)
+		svc.KafkaAuditProducer, err = serviceList.GetKafkaAuditProducer(ctx, cfg)
+		if err != nil {
+			log.Event(ctx, "could not instantiate kafka audit producer", log.FATAL, log.Error(err))
+			return nil, err
+		}
 	}
-	hc := healthcheck.New(versionInfo, cfg.HealthCheckCriticalTimeout, cfg.HealthCheckInterval)
+
+	// Healthcheck
+	svc.HealthCheck, err = serviceList.GetHealthCheck(cfg, buildTime, gitCommit, version)
+	if err != nil {
+		log.Event(ctx, "could not instantiate healthcheck", log.FATAL, log.Error(err))
+		return nil, err
+	}
+	if err := svc.registerCheckers(ctx); err != nil {
+		return nil, errors.Wrap(err, "unable to register checkers")
+	}
 
 	// Create router and http server
-	router := CreateRouter(ctx, cfg, &hc)
-	httpServer := server.New(cfg.BindAddr, router)
+	r := CreateRouter(ctx, cfg, svc.HealthCheck)
+	m := svc.CreateMiddleware(cfg)
+	svc.Server = server.New(cfg.BindAddr, m.Then(r))
 
-	// CORS - only allow certain methods in web
-	if !cfg.EnablePrivateEndpoints {
-		methodsOk := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE"})
-		httpServer.Middleware["CORS"] = handlers.CORS(methodsOk)
+	svc.Server.DefaultShutdownTimeout = cfg.GracefulShutdown
+	svc.Server.HandleOSSignals = false
+
+	// kafka error channel logging go-routine
+	if cfg.EnableAudit {
+		svc.KafkaAuditProducer.Channels().LogErrors(ctx, "kafka Audit Producer")
 	}
 
-	// CORS - only allow specified origins in publishing
+	// Start healthcheck and run the http server in a new go-routine
+	svc.HealthCheck.Start(ctx)
+	go func() {
+		if err := svc.Server.ListenAndServe(); err != nil {
+			svcErrors <- errors.Wrap(err, "failure in http listen and serve")
+		}
+	}()
+
+	return svc, nil
+}
+
+// CreateMiddleware creates an Alice middleware chain of handlers in the required order
+func (svc *Service) CreateMiddleware(cfg *config.Config) alice.Chain {
+
+	// Allow Healthcheck endpoint to skip any further middleware
+	m := alice.New(middleware.HealthcheckFilter(svc.HealthCheck.Handler))
+
+	// Audit - send kafka message to track user requests
+	if cfg.EnableAudit {
+		auditProducer := event.NewAvroProducer(svc.KafkaAuditProducer.Channels().Output, schema.AuditEvent)
+		m = m.Append(middleware.AuditHandler(auditProducer, svc.ZebedeeClient.Client, cfg.ZebedeeURL))
+	}
+
 	if cfg.EnablePrivateEndpoints {
-		httpServer.Middleware["CORS"] = middleware.SetAllowOriginHeader(cfg.AllowedOrigins)
+		// CORS - only allow specified origins in publishing
+		m = m.Append(middleware.SetAllowOriginHeader(cfg.AllowedOrigins))
+	} else {
+		// CORS - only allow certain methods in web
+		methodsOk := handlers.AllowedMethods([]string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete})
+		m = m.Append(handlers.CORS(methodsOk))
 	}
 
-	httpServer.MiddlewareOrder = append(httpServer.MiddlewareOrder, "CORS")
-	httpServer.DefaultShutdownTimeout = cfg.GracefulShutdown
-
-	hc.Start(ctx)
-	err = httpServer.ListenAndServe()
-	if err != nil {
-		log.Event(ctx, "failed to close down http server", log.FATAL, log.Data{"config": cfg}, log.Error(err))
-		return err
-	}
-	return nil
+	return m
 }
 
 // CreateRouter creates the router with the required endpoints for proxied APIs
-func CreateRouter(ctx context.Context, cfg *config.Config, hc IHealthCheck) *mux.Router {
+func CreateRouter(ctx context.Context, cfg *config.Config, hc HealthChecker) *mux.Router {
 	router := mux.NewRouter()
-
-	// Healthcheck Endpoint
-	router.HandleFunc("/health", hc.Handler)
-	router.HandleFunc(fmt.Sprintf("/%s/health", cfg.Version), hc.Handler)
 
 	// Public APIs
 	if cfg.EnableObservationAPI {
@@ -114,4 +159,76 @@ func addVersionHandler(router *mux.Router, proxy *proxy.APIProxy, path string) {
 func addLegacyHandler(router *mux.Router, proxy *proxy.APIProxy, path string) {
 	// Proxy any request after the path given to the target address
 	router.HandleFunc(path+"{rest:.*}", proxy.VersionHandle)
+}
+
+// Close gracefully shuts the service down in the required order, with timeout
+func (svc *Service) Close(ctx context.Context) error {
+	timeout := svc.Config.GracefulShutdown
+	log.Event(ctx, "commencing graceful shutdown", log.Data{"graceful_shutdown_timeout": timeout}, log.INFO)
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+
+	// track shutown gracefully closes up
+	var gracefulShutdown bool
+
+	go func() {
+		defer cancel()
+		var hasShutdownError bool
+
+		// stop healthcheck, as it depends on everything else
+		if svc.ServiceList.HealthCheck {
+			svc.HealthCheck.Stop()
+		}
+
+		// stop any incoming requests before closing any outbound connections
+		if err := svc.Server.Shutdown(ctx); err != nil {
+			log.Event(ctx, "failed to shutdown http server", log.Error(err), log.ERROR)
+			hasShutdownError = true
+		}
+
+		//Close Kafka Audit Producer, if present
+		if svc.ServiceList.KafkaAuditProducer {
+			if err := svc.KafkaAuditProducer.Close(ctx); err != nil {
+				log.Event(ctx, "failed to stop kafka audit producer", log.Error(err), log.ERROR)
+				hasShutdownError = true
+			}
+		}
+
+		if !hasShutdownError {
+			gracefulShutdown = true
+		}
+	}()
+
+	// wait for shutdown success (via cancel) or failure (timeout)
+	<-ctx.Done()
+
+	if !gracefulShutdown {
+		err := errors.New("failed to shutdown gracefully")
+		log.Event(ctx, "failed to shutdown gracefully ", log.ERROR, log.Error(err))
+		return err
+	}
+
+	log.Event(ctx, "graceful shutdown was successful", log.INFO)
+	return nil
+}
+
+// registerCheckers adds all the necessary checkers to healthcheck. Please, only call this function after all dependencies are instanciated
+func (svc *Service) registerCheckers(ctx context.Context) (err error) {
+	hasErrors := false
+
+	if svc.Config.EnableAudit {
+		if err = svc.HealthCheck.AddCheck("Kafka Audit Producer", svc.KafkaAuditProducer.Checker); err != nil {
+			hasErrors = true
+			log.Event(ctx, "failed to add kafka audit producer checker", log.ERROR, log.Error(err))
+		}
+
+		if err = svc.HealthCheck.AddCheck("Zebedee", svc.ZebedeeClient.Checker); err != nil {
+			hasErrors = true
+			log.Event(ctx, "failed to add zebedee checker", log.ERROR, log.Error(err))
+		}
+	}
+
+	if hasErrors {
+		return errors.New("Error(s) registering checkers for healthcheck")
+	}
+	return nil
 }

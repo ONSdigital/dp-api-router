@@ -15,6 +15,8 @@ type Config struct {
 	EnableV1BetaRestriction    bool          `envconfig:"ENABLE_V1_BETA_RESTRICTION"`
 	EnablePrivateEndpoints     bool          `envconfig:"ENABLE_PRIVATE_ENDPOINTS"`
 	EnableObservationAPI       bool          `envconfig:"ENABLE_OBSERVATION_API"`
+	EnableAudit                bool          `envconfig:"ENABLE_AUDIT"`
+	ZebedeeURL                 string        `envconfig:"ZEBEDEE_URL"`
 	HierarchyAPIURL            string        `envconfig:"HIERARCHY_API_URL"`
 	FilterAPIURL               string        `envconfig:"FILTER_API_URL"`
 	DatasetAPIURL              string        `envconfig:"DATASET_API_URL"`
@@ -30,6 +32,9 @@ type Config struct {
 	AllowedOrigins             []string      `envconfig:"ALLOWED_ORIGINS"`
 	HealthCheckInterval        time.Duration `envconfig:"HEALTHCHECK_INTERVAL"`
 	HealthCheckCriticalTimeout time.Duration `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`
+	Brokers                    []string      `envconfig:"KAFKA_ADDR"`
+	KafkaMaxBytes              int           `envconfig:"KAFKA_MAX_BYTES"`
+	AuditTopic                 string        `envconfig:"AUDIT_TOPIC"`
 }
 
 var configuration *Config
@@ -43,6 +48,8 @@ func Get() (*Config, error) {
 			EnablePrivateEndpoints:     true,
 			EnableV1BetaRestriction:    false,
 			EnableObservationAPI:       false,
+			EnableAudit:                false,
+			ZebedeeURL:                 "http://localhost:8082",
 			HierarchyAPIURL:            "http://localhost:22600",
 			FilterAPIURL:               "http://localhost:22100",
 			DatasetAPIURL:              "http://localhost:22000",
@@ -57,6 +64,9 @@ func Get() (*Config, error) {
 			GracefulShutdown:           5 * time.Second,
 			HealthCheckInterval:        30 * time.Second,
 			HealthCheckCriticalTimeout: 90 * time.Second,
+			Brokers:                    []string{"localhost:9092"},
+			KafkaMaxBytes:              2000000,
+			AuditTopic:                 "audit",
 		}
 		if err := envconfig.Process("", configuration); err != nil {
 			log.Event(context.Background(), "failed to parse configuration", log.ERROR, log.Data{"config": configuration}, log.Error(err))

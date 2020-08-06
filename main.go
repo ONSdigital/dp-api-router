@@ -3,10 +3,15 @@ package main
 import (
 	"context"
 	"os"
+	"os/signal"
 
+	"github.com/ONSdigital/dp-api-router/config"
 	"github.com/ONSdigital/dp-api-router/service"
 	"github.com/ONSdigital/log.go/log"
+	"github.com/pkg/errors"
 )
+
+const serviceName = "dp-api-router"
 
 var (
 	// BuildTime represents the time in which the service was built
@@ -18,13 +23,43 @@ var (
 )
 
 func main() {
-	log.Namespace = "dp-api-router"
+	log.Namespace = serviceName
 	ctx := context.Background()
 
-	if err := service.Run(ctx, BuildTime, GitCommit, Version); err != nil {
-		log.Event(ctx, "application unexpectedly failed", log.ERROR, log.Error(err))
+	if err := run(ctx); err != nil {
+		log.Event(ctx, "fatal runtime error", log.Error(err), log.FATAL)
 		os.Exit(1)
 	}
+}
 
-	os.Exit(0)
+func run(ctx context.Context) error {
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, os.Interrupt, os.Kill)
+
+	// Run the service, providing an error channel for fatal errors
+	svcErrors := make(chan error, 1)
+	svcList := service.NewServiceList(&service.Init{})
+
+	// Read config
+	cfg, err := config.Get()
+	if err != nil {
+		return errors.Wrap(err, "unable to retrieve service configuration")
+	}
+
+	// Run the service
+	svc, err := service.Run(ctx, cfg, svcList, BuildTime, GitCommit, Version, svcErrors)
+	if err != nil {
+		return errors.Wrap(err, "running service failed")
+	}
+
+	// blocks until an os interrupt or a fatal error occurs
+	select {
+	case err := <-svcErrors:
+		return errors.Wrap(err, "service error received")
+	case sig := <-signals:
+		ctx := context.Background()
+		log.Event(ctx, "os signal received", log.Data{"signal": sig}, log.INFO)
+		svc.Close(ctx)
+	}
+	return nil
 }

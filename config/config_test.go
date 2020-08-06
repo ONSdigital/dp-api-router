@@ -18,6 +18,8 @@ func TestGetRetrunsDefaultValues(t *testing.T) {
 			EnablePrivateEndpoints:     true,
 			EnableV1BetaRestriction:    false,
 			EnableObservationAPI:       false,
+			EnableAudit:                false,
+			ZebedeeURL:                 "http://localhost:8082",
 			HierarchyAPIURL:            "http://localhost:22600",
 			FilterAPIURL:               "http://localhost:22100",
 			DatasetAPIURL:              "http://localhost:22000",
@@ -32,6 +34,9 @@ func TestGetRetrunsDefaultValues(t *testing.T) {
 			GracefulShutdown:           5 * time.Second,
 			HealthCheckInterval:        30 * time.Second,
 			HealthCheckCriticalTimeout: 90 * time.Second,
+			Brokers:                    []string{"localhost:9092"},
+			KafkaMaxBytes:              2000000,
+			AuditTopic:                 "audit",
 		})
 	})
 }
