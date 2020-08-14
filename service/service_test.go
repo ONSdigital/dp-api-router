@@ -71,6 +71,8 @@ func TestRouterPublicAPIs(t *testing.T) {
 		So(err, ShouldBeNil)
 		searchAPIURL, err := url.Parse(cfg.SearchAPIURL)
 		So(err, ShouldBeNil)
+		imageAPIURL, err := url.Parse(cfg.ImageAPIURL)
+		So(err, ShouldBeNil)
 
 		expectedPublicURLs := map[string]*url.URL{
 			"/code-lists": codelistAPIURL,
@@ -80,6 +82,7 @@ func TestRouterPublicAPIs(t *testing.T) {
 			"/filter-outputs": filterAPIURL,
 			"/hierarchies":    hierarchyAPIURL,
 			"/search":         searchAPIURL,
+			"/images":         imageAPIURL,
 		}
 
 		resetProxyMocksWithExpectations(expectedPublicURLs)
@@ -169,6 +172,12 @@ func TestRouterPublicAPIs(t *testing.T) {
 				w := createRouterTest(cfg, "http://localhost:23200/v1/search/subpath", hcMock)
 				So(w.Code, ShouldEqual, http.StatusOK)
 				verifyProxied("/search/subpath", searchAPIURL)
+			})
+
+			Convey("A request to an image subpath is proxied to imageAPIURL", func() {
+				w := createRouterTest(cfg, "http://localhost:23200/v1/images/subpath", hcMock)
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/images/subpath", imageAPIURL)
 			})
 		})
 

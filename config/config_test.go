@@ -27,6 +27,7 @@ func TestGetRetrunsDefaultValues(t *testing.T) {
 			CodelistAPIURL:             "http://localhost:22400",
 			RecipeAPIURL:               "http://localhost:22300",
 			ImportAPIURL:               "http://localhost:21800",
+			ImageAPIURL:                "http://localhost:24700",
 			SearchAPIURL:               "http://localhost:23100",
 			APIPocURL:                  "http://localhost:3000",
 			ContextURL:                 "",

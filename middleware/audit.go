@@ -11,8 +11,8 @@ import (
 	clientsidentity "github.com/ONSdigital/dp-api-clients-go/identity"
 	"github.com/ONSdigital/dp-api-router/event"
 	dphttp "github.com/ONSdigital/dp-net/http"
-	"github.com/ONSdigital/go-ns/common"
-	"github.com/ONSdigital/go-ns/request"
+	dprequest "github.com/ONSdigital/dp-net/request"
+
 	"github.com/ONSdigital/log.go/log"
 )
 
@@ -45,8 +45,8 @@ func AuditHandler(auditProducer *event.AvroProducer, cli dphttp.Clienter, zebede
 
 			// Add identity to audit event. User identity takes priority over service identity.
 			// If no identity is available, then try to audit without identity and fail the request.
-			userIdentity := common.User(ctx)
-			serviceIdentity := common.Caller(ctx)
+			userIdentity := dprequest.User(ctx)
+			serviceIdentity := dprequest.Caller(ctx)
 			if userIdentity != "" {
 				auditEvent.Identity = userIdentity
 			} else if serviceIdentity != "" {
@@ -114,8 +114,8 @@ func generateAuditEvent(req *http.Request) *event.Audit {
 		Method:     req.Method,
 		QueryParam: req.URL.RawQuery,
 	}
-	auditEvent.RequestID = common.GetRequestId(req.Context())
-	if colID := req.Header.Get(dphttp.CollectionIDHeaderKey); colID != "" {
+	auditEvent.RequestID = dprequest.GetRequestId(req.Context())
+	if colID := req.Header.Get(dprequest.CollectionIDHeaderKey); colID != "" {
 		auditEvent.CollectionID = colID
 	}
 	return auditEvent
@@ -158,7 +158,7 @@ func retrieveIdentity(w http.ResponseWriter, req *http.Request, idClient *client
 // handleError adhering to the DRY principle - clean up for failed identity requests, log the error, drain the request body and write the status code.
 func handleError(ctx context.Context, w http.ResponseWriter, r *http.Request, status int, event string, err error, data log.Data) {
 	log.Event(ctx, event, log.Error(err), log.ERROR, data)
-	request.DrainBody(r)
+	dphttp.DrainBody(r)
 	w.WriteHeader(status)
 }
 
@@ -180,7 +180,7 @@ func getFlorenceTokenFromCookie(ctx context.Context, req *http.Request) (string,
 	var florenceToken string
 	var err error
 
-	c, err := req.Cookie(dphttp.FlorenceCookieKey)
+	c, err := req.Cookie(dprequest.FlorenceCookieKey)
 	if err == nil {
 		florenceToken = c.Value
 	} else if err == http.ErrNoCookie {
