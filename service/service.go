@@ -132,6 +132,9 @@ func CreateRouter(ctx context.Context, cfg *config.Config, hc HealthChecker) *mu
 	addVersionHandler(router, hierarchy, "/hierarchies")
 	addVersionHandler(router, search, "/search")
 
+	// also provide a versioned health check endpoint
+	router.HandleFunc(fmt.Sprintf("/%s/health", cfg.Version), hc.Handler)
+
 	// Private APIs
 	if cfg.EnablePrivateEndpoints {
 		recipe := proxy.NewAPIProxy(cfg.RecipeAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)

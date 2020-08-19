@@ -58,7 +58,9 @@ func TestRouterPublicAPIs(t *testing.T) {
 		cfg, err := config.Get()
 		So(err, ShouldBeNil)
 
-		hcMock := &mock.HealthCheckerMock{}
+		hcMock := &mock.HealthCheckerMock{
+			HandlerFunc: func(w http.ResponseWriter, req *http.Request) {},
+		}
 
 		hierarchyAPIURL, err := url.Parse(cfg.HierarchyAPIURL)
 		So(err, ShouldBeNil)
@@ -170,6 +172,12 @@ func TestRouterPublicAPIs(t *testing.T) {
 				w := createRouterTest(cfg, "http://localhost:23200/v1/search/subpath", hcMock)
 				So(w.Code, ShouldEqual, http.StatusOK)
 				verifyProxied("/search/subpath", searchAPIURL)
+			})
+
+			Convey("A request to the versioned health check is handled by the health check handler", func() {
+				w := createRouterTest(cfg, "http://localhost:23200/v1/health", hcMock)
+				So(w.Code, ShouldEqual, http.StatusOK)
+				So(len(hcMock.HandlerCalls()), ShouldEqual, 1)
 			})
 		})
 
