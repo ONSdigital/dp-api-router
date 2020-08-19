@@ -182,12 +182,6 @@ func TestRouterPublicAPIs(t *testing.T) {
 				So(w.Code, ShouldEqual, http.StatusOK)
 				verifyProxied("/images/subpath", imageAPIURL)
 			})
-
-			Convey("A request to the versioned health check is handled by the health check handler", func() {
-				w := createRouterTest(cfg, "http://localhost:23200/v1/health", hcMock)
-				So(w.Code, ShouldEqual, http.StatusOK)
-				So(len(hcMock.HandlerCalls()), ShouldEqual, 1)
-			})
 		})
 
 		Convey("and observation API disabled by configuration", func() {

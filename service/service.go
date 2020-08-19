@@ -90,8 +90,10 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 // CreateMiddleware creates an Alice middleware chain of handlers in the required order
 func (svc *Service) CreateMiddleware(cfg *config.Config) alice.Chain {
 
-	// Allow Healthcheck endpoint to skip any further middleware
-	m := alice.New(middleware.HealthcheckFilter(svc.HealthCheck.Handler))
+	// Allow health check endpoint to skip any further middleware
+	healthCheckFilter := middleware.HealthcheckFilter(svc.HealthCheck.Handler)
+	versionedHealthCheckFilter := middleware.VersionedHealthCheckFilter(cfg.Version, svc.HealthCheck.Handler)
+	m := alice.New(healthCheckFilter, versionedHealthCheckFilter)
 
 	// Audit - send kafka message to track user requests
 	if cfg.EnableAudit {
@@ -133,9 +135,6 @@ func CreateRouter(ctx context.Context, cfg *config.Config, hc HealthChecker) *mu
 	addVersionHandler(router, hierarchy, "/hierarchies")
 	addVersionHandler(router, search, "/search")
 	addVersionHandler(router, image, "/images")
-
-	// also provide a versioned health check endpoint
-	router.HandleFunc(fmt.Sprintf("/%s/health", cfg.Version), hc.Handler)
 
 	// Private APIs
 	if cfg.EnablePrivateEndpoints {

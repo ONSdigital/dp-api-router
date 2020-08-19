@@ -56,5 +56,44 @@ func TestHealthcheckFilterHandler(t *testing.T) {
 			c.So(b, ShouldResemble, testBody)
 		})
 	})
+}
+
+func TestVersionedHealthCheckFilterHandler(t *testing.T) {
+
+	Convey("Given a HealthCheckFilter handler with a health check handler", t, func() {
+		// prepare request
+		req, err := http.NewRequest(http.MethodGet, "/v1/health", nil)
+		So(err, ShouldBeNil)
+		w := httptest.NewRecorder()
+
+		// middleware handler under test
+		hcFilterHandler := middleware.VersionedHealthCheckFilter("v1", testHcHandler)(nil)
+
+		Convey("Then a request with '/v1/health' path results in status OK and health check body, as provided by the health check handler", func(c C) {
+			hcFilterHandler.ServeHTTP(w, req)
+			c.So(w.Code, ShouldEqual, http.StatusOK)
+			b, err := ioutil.ReadAll(w.Body)
+			So(err, ShouldBeNil)
+			c.So(b, ShouldResemble, testBodyHc)
+		})
+	})
+
+	Convey("Given a generic handler returning Forbidden status, wrapped by a HealthcheckFilter handler", t, func() {
+		// prepare request
+		req, err := http.NewRequest(http.MethodGet, "/test", nil)
+		So(err, ShouldBeNil)
+		w := httptest.NewRecorder()
+
+		// middleware handler under test
+		hcFilterHandler := middleware.VersionedHealthCheckFilter("v1", nil)(testHandler(http.StatusForbidden, testBody))
+
+		Convey("Then a request with path different than '/health' results in status Forbidden and test body, as provided by the generic handler", func(c C) {
+			hcFilterHandler.ServeHTTP(w, req)
+			c.So(w.Code, ShouldEqual, http.StatusForbidden)
+			b, err := ioutil.ReadAll(w.Body)
+			So(err, ShouldBeNil)
+			c.So(b, ShouldResemble, testBody)
+		})
+	})
 
 }
