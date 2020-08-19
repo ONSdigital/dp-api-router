@@ -17,10 +17,9 @@ import (
 	"github.com/ONSdigital/dp-api-router/middleware"
 	"github.com/ONSdigital/dp-api-router/schema"
 	kafka "github.com/ONSdigital/dp-kafka"
-	dphttp "github.com/ONSdigital/dp-net/http"
-	"github.com/ONSdigital/go-ns/common"
-
 	"github.com/ONSdigital/dp-kafka/kafkatest"
+	dphttp "github.com/ONSdigital/dp-net/http"
+	dprequest "github.com/ONSdigital/dp-net/request"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -43,7 +42,7 @@ var (
 )
 
 // valid identity response for testing
-var testIdentityResponse = &dphttp.IdentityResponse{
+var testIdentityResponse = &dprequest.IdentityResponse{
 	Identifier: testIdentity,
 }
 
@@ -151,7 +150,7 @@ func TestAuditHandlerHeaders(t *testing.T) {
 		Convey("An incoming request with a valid Florence Token", func(c C) {
 			req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", nil)
 			So(err, ShouldBeNil)
-			req.Header.Set(dphttp.FlorenceHeaderKey, testFlorenceToken)
+			req.Header.Set(dprequest.FlorenceHeaderKey, testFlorenceToken)
 			w := httptest.NewRecorder()
 
 			Convey("And a valid audit handler with successful downstream", func(c C) {
@@ -206,7 +205,7 @@ func TestAuditHandlerHeaders(t *testing.T) {
 		Convey("An incoming request with a valid Service Auth Token", func(c C) {
 			req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", nil)
 			So(err, ShouldBeNil)
-			req.Header.Set(dphttp.AuthHeaderKey, testServiceAuthToken)
+			req.Header.Set(dprequest.AuthHeaderKey, testServiceAuthToken)
 			w := httptest.NewRecorder()
 
 			Convey("And a valid audit handler with successful downstream", func(c C) {
@@ -261,10 +260,10 @@ func TestAuditHandlerHeaders(t *testing.T) {
 		Convey("An incoming request with all headers", func(c C) {
 			req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", nil)
 			So(err, ShouldBeNil)
-			req.Header.Set(dphttp.AuthHeaderKey, testServiceAuthToken)
-			req.Header.Set(dphttp.FlorenceHeaderKey, testFlorenceToken)
-			req.Header.Set(dphttp.CollectionIDHeaderKey, testCollectionID)
-			req = req.WithContext(context.WithValue(req.Context(), common.RequestIdKey, testRequestID))
+			req.Header.Set(dprequest.AuthHeaderKey, testServiceAuthToken)
+			req.Header.Set(dprequest.FlorenceHeaderKey, testFlorenceToken)
+			req.Header.Set(dprequest.CollectionIDHeaderKey, testCollectionID)
+			req = req.WithContext(context.WithValue(req.Context(), dprequest.RequestIdKey, testRequestID))
 			w := httptest.NewRecorder()
 
 			Convey("And a valid audit handler with successful downstream", func(c C) {
@@ -322,8 +321,8 @@ func TestAuditHandler(t *testing.T) {
 
 		req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", nil)
 		So(err, ShouldBeNil)
-		req.Header.Set(dphttp.FlorenceHeaderKey, testFlorenceToken)
-		req.Header.Set(dphttp.AuthHeaderKey, testServiceAuthToken)
+		req.Header.Set(dprequest.FlorenceHeaderKey, testFlorenceToken)
+		req.Header.Set(dprequest.AuthHeaderKey, testServiceAuthToken)
 		w := httptest.NewRecorder()
 
 		Convey("And a valid audit handler with unsuccessful (Forbidden) downstream", func(c C) {
