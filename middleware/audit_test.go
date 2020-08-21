@@ -413,6 +413,60 @@ func TestAuditHandler(t *testing.T) {
 	})
 }
 
+func TestAuditIgnoreSkip(t *testing.T) {
+
+	Convey("Given an incoming request to an ignored path", t, func(c C) {
+		req, err := http.NewRequest(http.MethodGet, "/ping", nil)
+		So(err, ShouldBeNil)
+		w := httptest.NewRecorder()
+
+		Convey("And a valid audit handler without downstream", func(c C) {
+
+			p, a := createValidAuditHandler()
+			auditHandler := a(testHandler(http.StatusForbidden, testBody))
+
+			// execute request and don't wait for audit events
+			serveAndCaptureAudit(c, w, req, auditHandler, p.Channels().Output, 0)
+
+			Convey("Then status Forbidden and expected body is returned", func(c C) {
+				c.So(w.Code, ShouldEqual, http.StatusForbidden)
+				b, err := ioutil.ReadAll(w.Body)
+				So(err, ShouldBeNil)
+				c.So(b, ShouldResemble, testBody)
+			})
+
+		})
+	})
+
+	Convey("Given an incoming request to a path for which identity check needs to be skipped", t, func(c C) {
+		req, err := http.NewRequest(http.MethodGet, "/login", nil)
+		So(err, ShouldBeNil)
+		w := httptest.NewRecorder()
+
+		Convey("And a valid audit handler without downstream", func(c C) {
+
+			p, a := createValidAuditHandler()
+			auditHandler := a(testHandler(http.StatusForbidden, testBody))
+
+			// execute request and don't wait for audit events
+			auditEvents := serveAndCaptureAudit(c, w, req, auditHandler, p.Channels().Output, 2)
+
+			Convey("Then status Forbidden and expected body is returned", func(c C) {
+				c.So(w.Code, ShouldEqual, http.StatusForbidden)
+				b, err := ioutil.ReadAll(w.Body)
+				So(err, ShouldBeNil)
+				c.So(b, ShouldResemble, testBody)
+			})
+
+			Convey("The expected audit events are sent before and after, without identity", func() {
+				c.So(auditEvents[0].Identity, ShouldResemble, "")
+				c.So(auditEvents[1].Identity, ShouldResemble, "")
+			})
+
+		})
+	})
+}
+
 // aux function for testing that serves HTTP, wrapping the provided handler with AuditHandler,
 // and waits for the number of expected audit events, which are then returned in an array
 func serveAndCaptureAudit(c C, w http.ResponseWriter, req *http.Request, auditHandler http.Handler, outChan chan []byte, numExpectedMessages int) (auditEvents []event.Audit) {

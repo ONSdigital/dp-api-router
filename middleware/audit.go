@@ -16,6 +16,35 @@ import (
 	"github.com/ONSdigital/log.go/log"
 )
 
+// paths that will skip auditing (note)
+var pathsToIgnore = []string{
+	"/ping",
+}
+
+// paths that will skip retrieveIdentity, and will be audited without identity
+var pathsSkipIdentity = []string{
+	"/login",
+	"/password",
+}
+
+func shallSkipIdentity(path string) bool {
+	for _, pathSkipIdentity := range pathsSkipIdentity {
+		if path == pathSkipIdentity {
+			return true
+		}
+	}
+	return false
+}
+
+func shallIgnore(path string) bool {
+	for _, pathToIgnore := range pathsToIgnore {
+		if path == pathToIgnore {
+			return true
+		}
+	}
+	return false
+}
+
 // AuditHandler is a middleware handler that keeps track of calls for auditing purposes,
 // before and after proxying calling the downstream service.
 // It obtains the user and caller information by calling Zebedee GET /identity
@@ -27,42 +56,51 @@ func AuditHandler(auditProducer *event.AvroProducer, cli dphttp.Clienter, zebede
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
+			// if path does not need to be audited, ignore it and proceed to next handler
+			if shallIgnore(r.URL.Path) {
+				h.ServeHTTP(w, r)
+				return
+			}
+
 			// Inbound audit event (before proxying).
 			auditEvent := generateAuditEvent(r)
 
-			// Retrieve Identity from Zebedee, which is stored in context.
-			// if it fails, try to audit with the statusCode before returning
-			ctx, statusCode, err := retrieveIdentity(w, r, idClient, zebedeeURL)
-			if err != nil {
-				// error already handled in retrieveIdentity. Try to audit it.
-				auditEvent.StatusCode = int32(statusCode)
-				if err := auditProducer.Audit(auditEvent); err != nil {
-					log.Event(ctx, "inbound audit event could not be sent", log.ERROR, log.Data{"event": auditEvent})
-				}
-				return
-			}
-			r = r.WithContext(ctx)
+			if !shallSkipIdentity(r.URL.Path) {
 
-			// Add identity to audit event. User identity takes priority over service identity.
-			// If no identity is available, then try to audit without identity and fail the request.
-			userIdentity := dprequest.User(ctx)
-			serviceIdentity := dprequest.Caller(ctx)
-			if userIdentity != "" {
-				auditEvent.Identity = userIdentity
-			} else if serviceIdentity != "" {
-				auditEvent.Identity = serviceIdentity
-			} else {
-				handleError(ctx, w, r, http.StatusUnauthorized, "", err, log.Data{"event": auditEvent})
-				auditEvent.StatusCode = int32(http.StatusUnauthorized)
-				if err := auditProducer.Audit(auditEvent); err != nil {
-					log.Event(ctx, "inbound audit event could not be sent", log.ERROR, log.Data{"event": auditEvent})
+				// Retrieve Identity from Zebedee, which is stored in context.
+				// if it fails, try to audit with the statusCode before returning
+				ctx, statusCode, err := retrieveIdentity(w, r, idClient, zebedeeURL)
+				if err != nil {
+					// error already handled in retrieveIdentity. Try to audit it.
+					auditEvent.StatusCode = int32(statusCode)
+					if err := auditProducer.Audit(auditEvent); err != nil {
+						log.Event(ctx, "inbound audit event could not be sent", log.ERROR, log.Data{"event": auditEvent})
+					}
+					return
 				}
-				return
+				r = r.WithContext(ctx)
+
+				// Add identity to audit event. User identity takes priority over service identity.
+				// If no identity is available, then try to audit without identity and fail the request.
+				userIdentity := dprequest.User(ctx)
+				serviceIdentity := dprequest.Caller(ctx)
+				if userIdentity != "" {
+					auditEvent.Identity = userIdentity
+				} else if serviceIdentity != "" {
+					auditEvent.Identity = serviceIdentity
+				} else {
+					handleError(ctx, w, r, http.StatusUnauthorized, "", err, log.Data{"event": auditEvent})
+					auditEvent.StatusCode = int32(http.StatusUnauthorized)
+					if err := auditProducer.Audit(auditEvent); err != nil {
+						log.Event(ctx, "inbound audit event could not be sent", log.ERROR, log.Data{"event": auditEvent})
+					}
+					return
+				}
 			}
 
 			// Acceptable request. Audit it before proxying.
 			if err := auditProducer.Audit(auditEvent); err != nil {
-				handleError(ctx, w, r, http.StatusInternalServerError, "inbound audit event could not be sent", err, log.Data{"event": auditEvent})
+				handleError(r.Context(), w, r, http.StatusInternalServerError, "inbound audit event could not be sent", err, log.Data{"event": auditEvent})
 				return
 			}
 
@@ -75,7 +113,7 @@ func AuditHandler(auditProducer *event.AvroProducer, cli dphttp.Clienter, zebede
 			auditEvent.StatusCode = int32(rec.statusCode)
 			eventBytes, err := auditProducer.Marshal(auditEvent)
 			if err != nil {
-				handleError(ctx, w, r, http.StatusInternalServerError, "outbound audit event could not be sent", err, log.Data{"event": auditEvent})
+				handleError(r.Context(), w, r, http.StatusInternalServerError, "outbound audit event could not be sent", err, log.Data{"event": auditEvent})
 				return
 			}
 

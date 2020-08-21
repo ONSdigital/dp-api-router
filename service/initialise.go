@@ -25,7 +25,7 @@ func NewServiceList(initialiser Initialiser) *ExternalServiceList {
 // Init implements the Initialiser interface to initialise dependencies
 type Init struct{}
 
-// GetHealthCheck creates a healthcheck with versionInfo and sets teh HealthCheck flag to true
+// GetHealthCheck creates a healthcheck with versionInfo and sets the HealthCheck flag to true
 func (e *ExternalServiceList) GetHealthCheck(cfg *config.Config, buildTime, gitCommit, version string) (HealthChecker, error) {
 	hc, err := e.Init.DoGetHealthCheck(cfg, buildTime, gitCommit, version)
 	if err != nil {
