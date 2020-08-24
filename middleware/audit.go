@@ -19,6 +19,7 @@ import (
 // paths that will skip auditing (note)
 var pathsToIgnore = []string{
 	"/ping",
+	"/clickEventLog",
 }
 
 // paths that will skip retrieveIdentity, and will be audited without identity

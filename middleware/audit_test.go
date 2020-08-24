@@ -448,7 +448,7 @@ func TestAuditIgnoreSkip(t *testing.T) {
 			p, a := createValidAuditHandler()
 			auditHandler := a(testHandler(http.StatusForbidden, testBody))
 
-			// execute request and don't wait for audit events
+			// execute request and wait for 2 audit events
 			auditEvents := serveAndCaptureAudit(c, w, req, auditHandler, p.Channels().Output, 2)
 
 			Convey("Then status Forbidden and expected body is returned", func(c C) {
