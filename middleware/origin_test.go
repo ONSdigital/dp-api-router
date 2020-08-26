@@ -4,8 +4,9 @@ import (
 	"net/http"
 	"testing"
 
-	. "github.com/smartystreets/goconvey/convey"
 	"net/http/httptest"
+
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 const (
@@ -39,7 +40,21 @@ func TestOriginHandler(t *testing.T) {
 		wrapped.ServeHTTP(w, req)
 		So(w.Code, ShouldEqual, 200)
 		So(w.Header().Get("Access-Control-Allow-Origin"), ShouldEqual, whiteListedOrigin1)
+	})
 
+	Convey("origin handler should serve the request where the origin is allowed because of asterisk wildchar", t, func() {
+		req, err := http.NewRequest("GET", "/", nil)
+		So(err, ShouldBeNil)
+
+		req.Header.Set("Origin", "anything")
+		w := httptest.NewRecorder()
+
+		handler := SetAllowOriginHeader([]string{"*"})
+		wrapped := handler(dummyHandler)
+
+		wrapped.ServeHTTP(w, req)
+		So(w.Code, ShouldEqual, 200)
+		So(w.Header().Get("Access-Control-Allow-Origin"), ShouldEqual, "anything")
 	})
 
 	Convey("origin handler should return 401 unauthorised where origin is not allowed", t, func() {
