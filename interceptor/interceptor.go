@@ -88,7 +88,12 @@ func (t *Transport) update(b []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	switch reflect.TypeOf(resource).Kind() {
+	resourceType := reflect.TypeOf(resource)
+	if resourceType == nil {
+		return nil, errors.New("nil resource type")
+	}
+
+	switch resourceType.Kind() {
 	case reflect.Map:
 		// Assert type onto document
 		return t.updateMap(resource.(map[string]interface{}))
