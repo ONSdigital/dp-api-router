@@ -67,6 +67,7 @@ func Get() (*Config, error) {
 			HealthCheckInterval:        30 * time.Second,
 			HealthCheckCriticalTimeout: 90 * time.Second,
 			Brokers:                    []string{"localhost:9092"},
+			AllowedOrigins:             []string{"http://localhost:8081"},
 			KafkaMaxBytes:              2000000,
 			AuditTopic:                 "audit",
 		}
