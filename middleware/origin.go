@@ -20,7 +20,7 @@ func SetAllowOriginHeader(allowedOrigins []string) func(h http.Handler) http.Han
 				acceptedOrigin := ""
 				for _, v := range allowedOrigins {
 
-					if v == origin {
+					if v == origin || v == "*" {
 						acceptedOrigin = origin
 						break
 					}
