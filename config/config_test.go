@@ -27,6 +27,7 @@ func TestGetRetrunsDefaultValues(t *testing.T) {
 			CodelistAPIURL:             "http://localhost:22400",
 			RecipeAPIURL:               "http://localhost:22300",
 			ImportAPIURL:               "http://localhost:21800",
+			ImageAPIURL:                "http://localhost:24700",
 			SearchAPIURL:               "http://localhost:23100",
 			APIPocURL:                  "http://localhost:3000",
 			ContextURL:                 "",
@@ -35,6 +36,7 @@ func TestGetRetrunsDefaultValues(t *testing.T) {
 			HealthCheckInterval:        30 * time.Second,
 			HealthCheckCriticalTimeout: 90 * time.Second,
 			Brokers:                    []string{"localhost:9092"},
+			AllowedOrigins:             []string{"http://localhost:8081"},
 			KafkaMaxBytes:              2000000,
 			AuditTopic:                 "audit",
 		})

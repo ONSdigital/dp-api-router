@@ -17,10 +17,9 @@ import (
 	"github.com/ONSdigital/dp-api-router/middleware"
 	"github.com/ONSdigital/dp-api-router/schema"
 	kafka "github.com/ONSdigital/dp-kafka"
-	dphttp "github.com/ONSdigital/dp-net/http"
-	"github.com/ONSdigital/go-ns/common"
-
 	"github.com/ONSdigital/dp-kafka/kafkatest"
+	dphttp "github.com/ONSdigital/dp-net/http"
+	dprequest "github.com/ONSdigital/dp-net/request"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -43,7 +42,7 @@ var (
 )
 
 // valid identity response for testing
-var testIdentityResponse = &dphttp.IdentityResponse{
+var testIdentityResponse = &dprequest.IdentityResponse{
 	Identifier: testIdentity,
 }
 
@@ -151,7 +150,7 @@ func TestAuditHandlerHeaders(t *testing.T) {
 		Convey("An incoming request with a valid Florence Token", func(c C) {
 			req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", nil)
 			So(err, ShouldBeNil)
-			req.Header.Set(dphttp.FlorenceHeaderKey, testFlorenceToken)
+			req.Header.Set(dprequest.FlorenceHeaderKey, testFlorenceToken)
 			w := httptest.NewRecorder()
 
 			Convey("And a valid audit handler with successful downstream", func(c C) {
@@ -206,7 +205,7 @@ func TestAuditHandlerHeaders(t *testing.T) {
 		Convey("An incoming request with a valid Service Auth Token", func(c C) {
 			req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", nil)
 			So(err, ShouldBeNil)
-			req.Header.Set(dphttp.AuthHeaderKey, testServiceAuthToken)
+			req.Header.Set(dprequest.AuthHeaderKey, testServiceAuthToken)
 			w := httptest.NewRecorder()
 
 			Convey("And a valid audit handler with successful downstream", func(c C) {
@@ -261,10 +260,10 @@ func TestAuditHandlerHeaders(t *testing.T) {
 		Convey("An incoming request with all headers", func(c C) {
 			req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", nil)
 			So(err, ShouldBeNil)
-			req.Header.Set(dphttp.AuthHeaderKey, testServiceAuthToken)
-			req.Header.Set(dphttp.FlorenceHeaderKey, testFlorenceToken)
-			req.Header.Set(dphttp.CollectionIDHeaderKey, testCollectionID)
-			req = req.WithContext(context.WithValue(req.Context(), common.RequestIdKey, testRequestID))
+			req.Header.Set(dprequest.AuthHeaderKey, testServiceAuthToken)
+			req.Header.Set(dprequest.FlorenceHeaderKey, testFlorenceToken)
+			req.Header.Set(dprequest.CollectionIDHeaderKey, testCollectionID)
+			req = req.WithContext(context.WithValue(req.Context(), dprequest.RequestIdKey, testRequestID))
 			w := httptest.NewRecorder()
 
 			Convey("And a valid audit handler with successful downstream", func(c C) {
@@ -322,8 +321,8 @@ func TestAuditHandler(t *testing.T) {
 
 		req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", nil)
 		So(err, ShouldBeNil)
-		req.Header.Set(dphttp.FlorenceHeaderKey, testFlorenceToken)
-		req.Header.Set(dphttp.AuthHeaderKey, testServiceAuthToken)
+		req.Header.Set(dprequest.FlorenceHeaderKey, testFlorenceToken)
+		req.Header.Set(dprequest.AuthHeaderKey, testServiceAuthToken)
 		w := httptest.NewRecorder()
 
 		Convey("And a valid audit handler with unsuccessful (Forbidden) downstream", func(c C) {
@@ -410,6 +409,60 @@ func TestAuditHandler(t *testing.T) {
 			Convey("The expected audit event is sent before proxying the call", func(c C) {
 				c.So(auditEvents[0], ShouldResemble, inboundAuditEvent)
 			})
+		})
+	})
+}
+
+func TestAuditIgnoreSkip(t *testing.T) {
+
+	Convey("Given an incoming request to an ignored path", t, func(c C) {
+		req, err := http.NewRequest(http.MethodGet, "/ping", nil)
+		So(err, ShouldBeNil)
+		w := httptest.NewRecorder()
+
+		Convey("And a valid audit handler without downstream", func(c C) {
+
+			p, a := createValidAuditHandler()
+			auditHandler := a(testHandler(http.StatusForbidden, testBody))
+
+			// execute request and don't wait for audit events
+			serveAndCaptureAudit(c, w, req, auditHandler, p.Channels().Output, 0)
+
+			Convey("Then status Forbidden and expected body is returned", func(c C) {
+				c.So(w.Code, ShouldEqual, http.StatusForbidden)
+				b, err := ioutil.ReadAll(w.Body)
+				So(err, ShouldBeNil)
+				c.So(b, ShouldResemble, testBody)
+			})
+
+		})
+	})
+
+	Convey("Given an incoming request to a path for which identity check needs to be skipped", t, func(c C) {
+		req, err := http.NewRequest(http.MethodGet, "/login", nil)
+		So(err, ShouldBeNil)
+		w := httptest.NewRecorder()
+
+		Convey("And a valid audit handler without downstream", func(c C) {
+
+			p, a := createValidAuditHandler()
+			auditHandler := a(testHandler(http.StatusForbidden, testBody))
+
+			// execute request and wait for 2 audit events
+			auditEvents := serveAndCaptureAudit(c, w, req, auditHandler, p.Channels().Output, 2)
+
+			Convey("Then status Forbidden and expected body is returned", func(c C) {
+				c.So(w.Code, ShouldEqual, http.StatusForbidden)
+				b, err := ioutil.ReadAll(w.Body)
+				So(err, ShouldBeNil)
+				c.So(b, ShouldResemble, testBody)
+			})
+
+			Convey("The expected audit events are sent before and after, without identity", func() {
+				c.So(auditEvents[0].Identity, ShouldResemble, "")
+				c.So(auditEvents[1].Identity, ShouldResemble, "")
+			})
+
 		})
 	})
 }

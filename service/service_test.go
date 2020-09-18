@@ -32,6 +32,9 @@ func TestNotProxied(t *testing.T) {
 		cfg, err := config.Get()
 		So(err, ShouldBeNil)
 
+		zebedeeURL, err := url.Parse(cfg.ZebedeeURL)
+		So(err, ShouldBeNil)
+
 		hcMock := &mock.HealthCheckerMock{
 			HandlerFunc: func(w http.ResponseWriter, req *http.Request) {
 				w.WriteHeader(http.StatusOK)
@@ -40,12 +43,10 @@ func TestNotProxied(t *testing.T) {
 
 		resetProxyMocksWithExpectations(map[string]*url.URL{})
 
-		Convey("A request to a not-registered endpoint fails with Status NotFound and is not proxied", func() {
+		Convey("A request to a not-registered endpoint falls through to the default zebedee handler", func() {
 			w := createRouterTest(cfg, "http://localhost:23200/v1/wrong", hcMock)
 			So(w.Code, ShouldEqual, http.StatusNotFound)
-			for _, pxy := range registeredProxies {
-				So(len(pxy.ServeHTTPCalls()), ShouldEqual, 0)
-			}
+			assertOnlyThisURLIsCalled(zebedeeURL)
 		})
 	})
 }
@@ -57,7 +58,9 @@ func TestRouterPublicAPIs(t *testing.T) {
 		cfg, err := config.Get()
 		So(err, ShouldBeNil)
 
-		hcMock := &mock.HealthCheckerMock{}
+		hcMock := &mock.HealthCheckerMock{
+			HandlerFunc: func(w http.ResponseWriter, req *http.Request) {},
+		}
 
 		hierarchyAPIURL, err := url.Parse(cfg.HierarchyAPIURL)
 		So(err, ShouldBeNil)
@@ -71,6 +74,8 @@ func TestRouterPublicAPIs(t *testing.T) {
 		So(err, ShouldBeNil)
 		searchAPIURL, err := url.Parse(cfg.SearchAPIURL)
 		So(err, ShouldBeNil)
+		imageAPIURL, err := url.Parse(cfg.ImageAPIURL)
+		So(err, ShouldBeNil)
 
 		expectedPublicURLs := map[string]*url.URL{
 			"/code-lists": codelistAPIURL,
@@ -80,6 +85,7 @@ func TestRouterPublicAPIs(t *testing.T) {
 			"/filter-outputs": filterAPIURL,
 			"/hierarchies":    hierarchyAPIURL,
 			"/search":         searchAPIURL,
+			"/images":         imageAPIURL,
 		}
 
 		resetProxyMocksWithExpectations(expectedPublicURLs)
@@ -170,6 +176,12 @@ func TestRouterPublicAPIs(t *testing.T) {
 				So(w.Code, ShouldEqual, http.StatusOK)
 				verifyProxied("/search/subpath", searchAPIURL)
 			})
+
+			Convey("A request to an image subpath is proxied to imageAPIURL", func() {
+				w := createRouterTest(cfg, "http://localhost:23200/v1/images/subpath", hcMock)
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/images/subpath", imageAPIURL)
+			})
 		})
 
 		Convey("and observation API disabled by configuration", func() {
@@ -206,6 +218,8 @@ func TestRouterPrivateAPIs(t *testing.T) {
 		recipeAPIURL, err := url.Parse(cfg.RecipeAPIURL)
 		So(err, ShouldBeNil)
 		importAPIURL, err := url.Parse(cfg.ImportAPIURL)
+		So(err, ShouldBeNil)
+		zebedeeURL, err := url.Parse(cfg.ZebedeeURL)
 		So(err, ShouldBeNil)
 
 		expectedPrivateURLs := map[string]*url.URL{
@@ -260,27 +274,18 @@ func TestRouterPrivateAPIs(t *testing.T) {
 			cfg.EnablePrivateEndpoints = false
 
 			Convey("A request to a recipes path is not proxied and fails with StatusNotFound", func() {
-				w := createRouterTest(cfg, "http://localhost:23200/v1/recipes", hcMock)
-				So(w.Code, ShouldEqual, http.StatusNotFound)
-				for _, pxy := range registeredProxies {
-					So(len(pxy.ServeHTTPCalls()), ShouldEqual, 0)
-				}
+				createRouterTest(cfg, "http://localhost:23200/v1/recipes", hcMock)
+				assertOnlyThisURLIsCalled(zebedeeURL)
 			})
 
 			Convey("A request to a jobs path is not proxied and fails with StatusNotFound", func() {
-				w := createRouterTest(cfg, "http://localhost:23200/v1/jobs", hcMock)
-				So(w.Code, ShouldEqual, http.StatusNotFound)
-				for _, pxy := range registeredProxies {
-					So(len(pxy.ServeHTTPCalls()), ShouldEqual, 0)
-				}
+				createRouterTest(cfg, "http://localhost:23200/v1/jobs", hcMock)
+				assertOnlyThisURLIsCalled(zebedeeURL)
 			})
 
 			Convey("A request to an instances path is not proxied and fails with StatusNotFound", func() {
-				w := createRouterTest(cfg, "http://localhost:23200/v1/instances", hcMock)
-				So(w.Code, ShouldEqual, http.StatusNotFound)
-				for _, pxy := range registeredProxies {
-					So(len(pxy.ServeHTTPCalls()), ShouldEqual, 0)
-				}
+				createRouterTest(cfg, "http://localhost:23200/v1/instances", hcMock)
+				assertOnlyThisURLIsCalled(zebedeeURL)
 			})
 
 		})
@@ -334,6 +339,18 @@ func TestRouterLegacyAPIs(t *testing.T) {
 	})
 }
 
+func assertOnlyThisURLIsCalled(expectedURL *url.URL) {
+	for url, pxy := range registeredProxies {
+
+		if url == *expectedURL {
+			So(len(pxy.ServeHTTPCalls()), ShouldEqual, 1)
+			continue
+		}
+
+		So(len(pxy.ServeHTTPCalls()), ShouldEqual, 0)
+	}
+}
+
 // createRouterTest calls service CreateRouter httptest request, recorder, and healthcheck mock
 func createRouterTest(cfg *config.Config, url string, hcMock *mock.HealthCheckerMock) *httptest.ResponseRecorder {
 	r := httptest.NewRequest(http.MethodGet, url, nil)
@@ -366,12 +383,13 @@ func resetProxyMocksWithExpectations(expectedURLs map[string]*url.URL) {
 	proxy.NewSingleHostReverseProxy = func(target *url.URL, version, envHost, contextURL string) proxy.IReverseProxy {
 		pxyMock := &proxyMock.IReverseProxyMock{
 			ServeHTTPFunc: func(rw http.ResponseWriter, req *http.Request) {
+
 				for path := range expectedURLs {
 					if strings.HasPrefix(req.URL.Path, path) {
 						return
 					}
 				}
-				http.Error(rw, "wrong path", http.StatusBadGateway)
+				http.Error(rw, "path not found", http.StatusNotFound)
 			},
 		}
 		registeredProxies[*target] = pxyMock

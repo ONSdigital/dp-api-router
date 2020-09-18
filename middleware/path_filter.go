@@ -31,6 +31,17 @@ var HealthcheckFilter = func(hcHandler func(w http.ResponseWriter, req *http.Req
 	})
 }
 
+// VersionedHealthCheckFilter is a middleware that executed the health endpoint directly (handler and version provided as a parameter),
+// skipping any further middleware handlers
+var VersionedHealthCheckFilter = func(version string, hcHandler func(w http.ResponseWriter, req *http.Request)) func(h http.Handler) http.Handler {
+	return PathFilter(map[string]Allowed{
+		"/" + version + "/health": {
+			Methods: []string{http.MethodGet},
+			Handler: hcHandler,
+		},
+	})
+}
+
 // PathFilter is a middleware that executes allowed endpoints, skipping any further middleware handler
 func PathFilter(allowedMap map[string]Allowed) func(h http.Handler) http.Handler {
 	return func(nextHandler http.Handler) http.Handler {

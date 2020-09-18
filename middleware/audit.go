@@ -11,10 +11,40 @@ import (
 	clientsidentity "github.com/ONSdigital/dp-api-clients-go/identity"
 	"github.com/ONSdigital/dp-api-router/event"
 	dphttp "github.com/ONSdigital/dp-net/http"
-	"github.com/ONSdigital/go-ns/common"
-	"github.com/ONSdigital/go-ns/request"
+	dprequest "github.com/ONSdigital/dp-net/request"
+
 	"github.com/ONSdigital/log.go/log"
 )
+
+// paths that will skip auditing (note)
+var pathsToIgnore = []string{
+	"/ping",
+	"/clickEventLog",
+}
+
+// paths that will skip retrieveIdentity, and will be audited without identity
+var pathsSkipIdentity = []string{
+	"/login",
+	"/password",
+}
+
+func shallSkipIdentity(path string) bool {
+	for _, pathSkipIdentity := range pathsSkipIdentity {
+		if path == pathSkipIdentity {
+			return true
+		}
+	}
+	return false
+}
+
+func shallIgnore(path string) bool {
+	for _, pathToIgnore := range pathsToIgnore {
+		if path == pathToIgnore {
+			return true
+		}
+	}
+	return false
+}
 
 // AuditHandler is a middleware handler that keeps track of calls for auditing purposes,
 // before and after proxying calling the downstream service.
@@ -27,42 +57,51 @@ func AuditHandler(auditProducer *event.AvroProducer, cli dphttp.Clienter, zebede
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
+			// if path does not need to be audited, ignore it and proceed to next handler
+			if shallIgnore(r.URL.Path) {
+				h.ServeHTTP(w, r)
+				return
+			}
+
 			// Inbound audit event (before proxying).
 			auditEvent := generateAuditEvent(r)
 
-			// Retrieve Identity from Zebedee, which is stored in context.
-			// if it fails, try to audit with the statusCode before returning
-			ctx, statusCode, err := retrieveIdentity(w, r, idClient, zebedeeURL)
-			if err != nil {
-				// error already handled in retrieveIdentity. Try to audit it.
-				auditEvent.StatusCode = int32(statusCode)
-				if err := auditProducer.Audit(auditEvent); err != nil {
-					log.Event(ctx, "inbound audit event could not be sent", log.ERROR, log.Data{"event": auditEvent})
-				}
-				return
-			}
-			r = r.WithContext(ctx)
+			if !shallSkipIdentity(r.URL.Path) {
 
-			// Add identity to audit event. User identity takes priority over service identity.
-			// If no identity is available, then try to audit without identity and fail the request.
-			userIdentity := common.User(ctx)
-			serviceIdentity := common.Caller(ctx)
-			if userIdentity != "" {
-				auditEvent.Identity = userIdentity
-			} else if serviceIdentity != "" {
-				auditEvent.Identity = serviceIdentity
-			} else {
-				handleError(ctx, w, r, http.StatusUnauthorized, "", err, log.Data{"event": auditEvent})
-				auditEvent.StatusCode = int32(http.StatusUnauthorized)
-				if err := auditProducer.Audit(auditEvent); err != nil {
-					log.Event(ctx, "inbound audit event could not be sent", log.ERROR, log.Data{"event": auditEvent})
+				// Retrieve Identity from Zebedee, which is stored in context.
+				// if it fails, try to audit with the statusCode before returning
+				ctx, statusCode, err := retrieveIdentity(w, r, idClient, zebedeeURL)
+				if err != nil {
+					// error already handled in retrieveIdentity. Try to audit it.
+					auditEvent.StatusCode = int32(statusCode)
+					if err := auditProducer.Audit(auditEvent); err != nil {
+						log.Event(ctx, "inbound audit event could not be sent", log.ERROR, log.Data{"event": auditEvent})
+					}
+					return
 				}
-				return
+				r = r.WithContext(ctx)
+
+				// Add identity to audit event. User identity takes priority over service identity.
+				// If no identity is available, then try to audit without identity and fail the request.
+				userIdentity := dprequest.User(ctx)
+				serviceIdentity := dprequest.Caller(ctx)
+				if userIdentity != "" {
+					auditEvent.Identity = userIdentity
+				} else if serviceIdentity != "" {
+					auditEvent.Identity = serviceIdentity
+				} else {
+					handleError(ctx, w, r, http.StatusUnauthorized, "", err, log.Data{"event": auditEvent})
+					auditEvent.StatusCode = int32(http.StatusUnauthorized)
+					if err := auditProducer.Audit(auditEvent); err != nil {
+						log.Event(ctx, "inbound audit event could not be sent", log.ERROR, log.Data{"event": auditEvent})
+					}
+					return
+				}
 			}
 
 			// Acceptable request. Audit it before proxying.
 			if err := auditProducer.Audit(auditEvent); err != nil {
-				handleError(ctx, w, r, http.StatusInternalServerError, "inbound audit event could not be sent", err, log.Data{"event": auditEvent})
+				handleError(r.Context(), w, r, http.StatusInternalServerError, "inbound audit event could not be sent", err, log.Data{"event": auditEvent})
 				return
 			}
 
@@ -75,7 +114,7 @@ func AuditHandler(auditProducer *event.AvroProducer, cli dphttp.Clienter, zebede
 			auditEvent.StatusCode = int32(rec.statusCode)
 			eventBytes, err := auditProducer.Marshal(auditEvent)
 			if err != nil {
-				handleError(ctx, w, r, http.StatusInternalServerError, "outbound audit event could not be sent", err, log.Data{"event": auditEvent})
+				handleError(r.Context(), w, r, http.StatusInternalServerError, "outbound audit event could not be sent", err, log.Data{"event": auditEvent})
 				return
 			}
 
@@ -114,8 +153,8 @@ func generateAuditEvent(req *http.Request) *event.Audit {
 		Method:     req.Method,
 		QueryParam: req.URL.RawQuery,
 	}
-	auditEvent.RequestID = common.GetRequestId(req.Context())
-	if colID := req.Header.Get(dphttp.CollectionIDHeaderKey); colID != "" {
+	auditEvent.RequestID = dprequest.GetRequestId(req.Context())
+	if colID := req.Header.Get(dprequest.CollectionIDHeaderKey); colID != "" {
 		auditEvent.CollectionID = colID
 	}
 	return auditEvent
@@ -158,7 +197,7 @@ func retrieveIdentity(w http.ResponseWriter, req *http.Request, idClient *client
 // handleError adhering to the DRY principle - clean up for failed identity requests, log the error, drain the request body and write the status code.
 func handleError(ctx context.Context, w http.ResponseWriter, r *http.Request, status int, event string, err error, data log.Data) {
 	log.Event(ctx, event, log.Error(err), log.ERROR, data)
-	request.DrainBody(r)
+	dphttp.DrainBody(r)
 	w.WriteHeader(status)
 }
 
@@ -180,7 +219,7 @@ func getFlorenceTokenFromCookie(ctx context.Context, req *http.Request) (string,
 	var florenceToken string
 	var err error
 
-	c, err := req.Cookie(dphttp.FlorenceCookieKey)
+	c, err := req.Cookie(dprequest.FlorenceCookieKey)
 	if err == nil {
 		florenceToken = c.Value
 	} else if err == http.ErrNoCookie {

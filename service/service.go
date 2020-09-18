@@ -12,7 +12,7 @@ import (
 	"github.com/ONSdigital/dp-api-router/proxy"
 	"github.com/ONSdigital/dp-api-router/schema"
 	kafka "github.com/ONSdigital/dp-kafka"
-	"github.com/ONSdigital/go-ns/server"
+	dphttp "github.com/ONSdigital/dp-net/http"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -25,7 +25,7 @@ type Service struct {
 	Config             *config.Config
 	ServiceList        *ExternalServiceList
 	KafkaAuditProducer kafka.IProducer
-	Server             *server.Server
+	Server             *dphttp.Server
 	HealthCheck        HealthChecker
 	ZebedeeClient      *health.Client
 }
@@ -43,9 +43,11 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		log.Event(ctx, "beta route restriction is active, /v1 api requests will only be permitted against beta domains", log.INFO)
 	}
 
-	// Get Zebedee client and Kafka Audit Producer (only if audit is enabled)
+	// Create Zebedee client
+	svc.ZebedeeClient = health.NewClient("Zebedee", cfg.ZebedeeURL)
+
+	// Get Kafka Audit Producer (only if audit is enabled)
 	if cfg.EnableAudit {
-		svc.ZebedeeClient = health.NewClient("Zebedee", cfg.ZebedeeURL)
 		svc.KafkaAuditProducer, err = serviceList.GetKafkaAuditProducer(ctx, cfg)
 		if err != nil {
 			log.Event(ctx, "could not instantiate kafka audit producer", log.FATAL, log.Error(err))
@@ -66,7 +68,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	// Create router and http server
 	r := CreateRouter(ctx, cfg, svc.HealthCheck)
 	m := svc.CreateMiddleware(cfg)
-	svc.Server = server.New(cfg.BindAddr, m.Then(r))
+	svc.Server = dphttp.NewServer(cfg.BindAddr, m.Then(r))
 
 	svc.Server.DefaultShutdownTimeout = cfg.GracefulShutdown
 	svc.Server.HandleOSSignals = false
@@ -90,8 +92,10 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 // CreateMiddleware creates an Alice middleware chain of handlers in the required order
 func (svc *Service) CreateMiddleware(cfg *config.Config) alice.Chain {
 
-	// Allow Healthcheck endpoint to skip any further middleware
-	m := alice.New(middleware.HealthcheckFilter(svc.HealthCheck.Handler))
+	// Allow health check endpoint to skip any further middleware
+	healthCheckFilter := middleware.HealthcheckFilter(svc.HealthCheck.Handler)
+	versionedHealthCheckFilter := middleware.VersionedHealthCheckFilter(cfg.Version, svc.HealthCheck.Handler)
+	m := alice.New(healthCheckFilter, versionedHealthCheckFilter)
 
 	// Audit - send kafka message to track user requests
 	if cfg.EnableAudit {
@@ -125,12 +129,14 @@ func CreateRouter(ctx context.Context, cfg *config.Config, hc HealthChecker) *mu
 	filter := proxy.NewAPIProxy(cfg.FilterAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 	hierarchy := proxy.NewAPIProxy(cfg.HierarchyAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 	search := proxy.NewAPIProxy(cfg.SearchAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+	image := proxy.NewAPIProxy(cfg.ImageAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 	addVersionHandler(router, codeList, "/code-lists")
 	addVersionHandler(router, dataset, "/datasets")
 	addVersionHandler(router, filter, "/filters")
 	addVersionHandler(router, filter, "/filter-outputs")
 	addVersionHandler(router, hierarchy, "/hierarchies")
 	addVersionHandler(router, search, "/search")
+	addVersionHandler(router, image, "/images")
 
 	// Private APIs
 	if cfg.EnablePrivateEndpoints {
@@ -147,6 +153,9 @@ func CreateRouter(ctx context.Context, cfg *config.Config, hc HealthChecker) *mu
 	addLegacyHandler(router, poc, "/dataset")
 	addLegacyHandler(router, poc, "/timeseries")
 	addLegacyHandler(router, poc, "/search")
+
+	zebedee := proxy.NewAPIProxy(cfg.ZebedeeURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+	addLegacyHandler(router, zebedee, "/{uri:.*}")
 
 	return router
 }
@@ -166,13 +175,10 @@ func (svc *Service) Close(ctx context.Context) error {
 	timeout := svc.Config.GracefulShutdown
 	log.Event(ctx, "commencing graceful shutdown", log.Data{"graceful_shutdown_timeout": timeout}, log.INFO)
 	ctx, cancel := context.WithTimeout(ctx, timeout)
-
-	// track shutown gracefully closes up
-	var gracefulShutdown bool
+	hasShutdownError := false
 
 	go func() {
 		defer cancel()
-		var hasShutdownError bool
 
 		// stop healthcheck, as it depends on everything else
 		if svc.ServiceList.HealthCheck {
@@ -192,16 +198,19 @@ func (svc *Service) Close(ctx context.Context) error {
 				hasShutdownError = true
 			}
 		}
-
-		if !hasShutdownError {
-			gracefulShutdown = true
-		}
 	}()
 
 	// wait for shutdown success (via cancel) or failure (timeout)
 	<-ctx.Done()
 
-	if !gracefulShutdown {
+	// timeout expired
+	if ctx.Err() == context.DeadlineExceeded {
+		log.Event(ctx, "shutdown timed out", log.ERROR, log.Error(ctx.Err()))
+		return ctx.Err()
+	}
+
+	// other error
+	if hasShutdownError {
 		err := errors.New("failed to shutdown gracefully")
 		log.Event(ctx, "failed to shutdown gracefully ", log.ERROR, log.Error(err))
 		return err
@@ -215,15 +224,15 @@ func (svc *Service) Close(ctx context.Context) error {
 func (svc *Service) registerCheckers(ctx context.Context) (err error) {
 	hasErrors := false
 
+	if err = svc.HealthCheck.AddCheck("Zebedee", svc.ZebedeeClient.Checker); err != nil {
+		hasErrors = true
+		log.Event(ctx, "failed to add zebedee checker", log.ERROR, log.Error(err))
+	}
+
 	if svc.Config.EnableAudit {
 		if err = svc.HealthCheck.AddCheck("Kafka Audit Producer", svc.KafkaAuditProducer.Checker); err != nil {
 			hasErrors = true
 			log.Event(ctx, "failed to add kafka audit producer checker", log.ERROR, log.Error(err))
-		}
-
-		if err = svc.HealthCheck.AddCheck("Zebedee", svc.ZebedeeClient.Checker); err != nil {
-			hasErrors = true
-			log.Event(ctx, "failed to add zebedee checker", log.ERROR, log.Error(err))
 		}
 	}
 
