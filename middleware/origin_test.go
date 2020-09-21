@@ -54,7 +54,7 @@ func TestOriginHandler(t *testing.T) {
 
 		wrapped.ServeHTTP(w, req)
 		So(w.Code, ShouldEqual, 200)
-		So(w.Header().Get("Access-Control-Allow-Origin"), ShouldEqual, "anything")
+		So(w.Header().Get("Access-Control-Allow-Origin"), ShouldEqual, "*")
 	})
 
 	Convey("origin handler should return 401 unauthorised where origin is not allowed", t, func() {
