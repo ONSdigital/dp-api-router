@@ -28,7 +28,7 @@ var pathsToIgnore = []string{
 var pathsSkipIdentity = []string{
 	"/login",
 	"/password",
-	"/hierarchies",
+	"/v1/hierarchies",
 }
 
 func shallSkipIdentity(path string) bool {
