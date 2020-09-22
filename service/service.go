@@ -107,9 +107,10 @@ func (svc *Service) CreateMiddleware(cfg *config.Config) alice.Chain {
 		// CORS - only allow specified origins in publishing
 		m = m.Append(middleware.SetAllowOriginHeader(cfg.AllowedOrigins))
 	} else {
-		// CORS - only allow certain methods in web
+		// CORS - allow all origin domains, but only allow certain methods in web
 		methodsOk := handlers.AllowedMethods([]string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete})
 		m = m.Append(handlers.CORS(methodsOk))
+		m = m.Append(middleware.SetAllowOriginHeader([]string{"*"}))
 	}
 
 	return m
@@ -154,7 +155,7 @@ func CreateRouter(ctx context.Context, cfg *config.Config, hc HealthChecker) *mu
 	addLegacyHandler(router, poc, "/timeseries")
 	addLegacyHandler(router, poc, "/search")
 
-	zebedee := proxy.NewAPIProxy(cfg.ZebedeeURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+	zebedee := proxy.NewAPIProxy(cfg.ZebedeeURL, cfg.Version, cfg.EnvironmentHost, "", false)
 	addLegacyHandler(router, zebedee, "/{uri:.*}")
 
 	return router
