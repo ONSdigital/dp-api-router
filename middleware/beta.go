@@ -39,7 +39,7 @@ func isInternalTraffic(r *http.Request) bool {
 		host = r.Host
 	}
 
-	return isValidIP(host)
+	return isValidIP(host) || host == "localhost"
 }
 
 func isValidIP(host string) bool {

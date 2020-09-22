@@ -86,6 +86,34 @@ func TestBetaHandler(t *testing.T) {
 			So(w.Code, ShouldEqual, 200)
 
 		})
+
+		Convey("a request to localhost should return 200 status", func() {
+			req, err := http.NewRequest("GET", "/", nil)
+			So(err, ShouldBeNil)
+
+			req.Host = "localhost"
+
+			w := httptest.NewRecorder()
+			wrapped := BetaApiHandler(true, dummyHandler)
+
+			wrapped.ServeHTTP(w, req)
+			So(w.Code, ShouldEqual, 200)
+
+		})
+
+		Convey("a request to localhost with a port should return 200 status", func() {
+			req, err := http.NewRequest("GET", "/", nil)
+			So(err, ShouldBeNil)
+
+			req.Host = "localhost:20300"
+
+			w := httptest.NewRecorder()
+			wrapped := BetaApiHandler(true, dummyHandler)
+
+			wrapped.ServeHTTP(w, req)
+			So(w.Code, ShouldEqual, 200)
+
+		})
 	})
 
 	Convey("where beta restrictions are not enabled", t, func() {
