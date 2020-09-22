@@ -5,6 +5,7 @@ import (
 	"context"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/ONSdigital/dp-api-clients-go/headers"
@@ -20,17 +21,19 @@ import (
 var pathsToIgnore = []string{
 	"/ping",
 	"/clickEventLog",
+	"/health",
 }
 
 // paths that will skip retrieveIdentity, and will be audited without identity
 var pathsSkipIdentity = []string{
 	"/login",
 	"/password",
+	"/hierarchies",
 }
 
 func shallSkipIdentity(path string) bool {
 	for _, pathSkipIdentity := range pathsSkipIdentity {
-		if path == pathSkipIdentity {
+		if strings.HasPrefix(path, pathSkipIdentity) {
 			return true
 		}
 	}
