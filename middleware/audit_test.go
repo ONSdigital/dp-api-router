@@ -438,6 +438,30 @@ func TestAuditIgnoreSkip(t *testing.T) {
 		})
 	})
 
+	Convey("Given an incoming hierarchies request", t, func(c C) {
+		req, err := http.NewRequest(http.MethodGet, "/hierarchies/3c19c90b-0d56-417e-aef6-6be12916d535/aggregate", nil)
+		So(err, ShouldBeNil)
+		w := httptest.NewRecorder()
+
+		Convey("And a valid audit handler without downstream", func(c C) {
+
+			p, a := createValidAuditHandler()
+			auditHandler := a(testHandler(http.StatusForbidden, testBody))
+
+			// execute request and don't wait for audit events
+			serveAndCaptureAudit(c, w, req, auditHandler, p.Channels().Output, 0)
+
+			Convey("Then status Forbidden and expected body is returned", func(c C) {
+				c.So(w.Code, ShouldEqual, http.StatusForbidden)
+				b, err := ioutil.ReadAll(w.Body)
+				So(err, ShouldBeNil)
+				c.So(b, ShouldResemble, testBody)
+			})
+
+		})
+	})
+
+
 	Convey("Given an incoming request to a path for which identity check needs to be skipped", t, func(c C) {
 		req, err := http.NewRequest(http.MethodGet, "/login", nil)
 		So(err, ShouldBeNil)
