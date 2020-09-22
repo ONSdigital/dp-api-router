@@ -155,7 +155,7 @@ func CreateRouter(ctx context.Context, cfg *config.Config, hc HealthChecker) *mu
 	addLegacyHandler(router, poc, "/timeseries")
 	addLegacyHandler(router, poc, "/search")
 
-	zebedee := proxy.NewAPIProxy(cfg.ZebedeeURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+	zebedee := proxy.NewAPIProxy(cfg.ZebedeeURL, cfg.Version, cfg.EnvironmentHost, "", false)
 	addLegacyHandler(router, zebedee, "/{uri:.*}")
 
 	return router

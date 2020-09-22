@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"net"
 	"net/http"
 	"strings"
 
@@ -12,7 +13,7 @@ func BetaApiHandler(enableBetaRestriction bool, h http.Handler) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		if enableBetaRestriction && !strings.HasPrefix(r.Host, "api.beta") {
+		if enableBetaRestriction && !isInternalTraffic(r) && !isBetaDomain(r) {
 
 			log.Event(r.Context(), "beta endpoint requested via a non beta domain, returning 404", log.WARN,
 				log.Data{"url": r.URL.String()})
@@ -23,4 +24,24 @@ func BetaApiHandler(enableBetaRestriction bool, h http.Handler) http.Handler {
 
 		h.ServeHTTP(w, r)
 	})
+}
+
+func isBetaDomain(r *http.Request) bool {
+	return strings.HasPrefix(r.Host, "api.beta")
+}
+
+func isInternalTraffic(r *http.Request) bool {
+
+	// exclude the port from the potential IP address
+	host, _, err := net.SplitHostPort(r.Host)
+	if err != nil {
+		// if we fail to split from the port, just use the original host value
+		host = r.Host
+	}
+
+	return isValidIP(host) || host == "localhost"
+}
+
+func isValidIP(host string) bool {
+	return net.ParseIP(host) != nil
 }
