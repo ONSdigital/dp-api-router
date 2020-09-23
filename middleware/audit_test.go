@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -25,6 +26,7 @@ import (
 )
 
 var (
+	testVersionPrefix            = "v1"
 	testZebedeeURL               = "myZebedeeURL"
 	testRequestID                = "myRequest"
 	testIdentity                 = "myIdentity"
@@ -59,7 +61,7 @@ func createValidAuditHandler() (kafka.IProducer, func(h http.Handler) http.Handl
 	cliMock := createHTTPClientMock(http.StatusOK, testIdentityResponse)
 	p := kafkatest.NewMessageProducer(true)
 	auditProducer := event.NewAvroProducer(p.Channels().Output, schema.AuditEvent)
-	return p, middleware.AuditHandler(auditProducer, cliMock, testZebedeeURL)
+	return p, middleware.AuditHandler(auditProducer, cliMock, testZebedeeURL, testVersionPrefix)
 }
 
 // utility function to create a producer and an audit handler that fails to marshal and send events
@@ -72,7 +74,7 @@ func createFailingAuditHandler() (kafka.IProducer, func(h http.Handler) http.Han
 	}
 	p := kafkatest.NewMessageProducer(true)
 	auditProducer := event.NewAvroProducer(p.Channels().Output, failingMarshaller)
-	return p, middleware.AuditHandler(auditProducer, cliMock, testZebedeeURL)
+	return p, middleware.AuditHandler(auditProducer, cliMock, testZebedeeURL, testVersionPrefix)
 }
 
 // utility function to generate Clienter mocks
@@ -394,7 +396,7 @@ func TestAuditHandler(t *testing.T) {
 			}
 			p := kafkatest.NewMessageProducer(true)
 			a := event.NewAvroProducer(p.Channels().Output, failingMarshaller)
-			auditHandler := middleware.AuditHandler(a, cliMock, testZebedeeURL)(testHandler(http.StatusForbidden, testBody))
+			auditHandler := middleware.AuditHandler(a, cliMock, testZebedeeURL, testVersionPrefix)(testHandler(http.StatusForbidden, testBody))
 
 			// execute request and expect only 1 audit event
 			auditEvents := serveAndCaptureAudit(c, w, req, auditHandler, p.Channels().Output, 1)
@@ -465,6 +467,22 @@ func TestAuditIgnoreSkip(t *testing.T) {
 
 		})
 	})
+}
+
+func TestShallSkipIdentity(t *testing.T) {
+	skipIdentityPaths := []string{"/password", "/login", "/hierarchies"}
+
+	for _, p := range skipIdentityPaths {
+		versionedPath := "/v1" + p
+
+		Convey(fmt.Sprintf("Should skip identity check for versioned %s requests", versionedPath), t, func() {
+			So(middleware.ShallSkipIdentity("v1", versionedPath), ShouldBeTrue)
+		})
+
+		Convey(fmt.Sprintf("Should skip identity check for non versioned %s requests", p), t, func() {
+			So(middleware.ShallSkipIdentity("v1", p), ShouldBeTrue)
+		})
+	}
 }
 
 // aux function for testing that serves HTTP, wrapping the provided handler with AuditHandler,
