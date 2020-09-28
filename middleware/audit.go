@@ -3,7 +3,7 @@ package middleware
 import (
 	"bytes"
 	"context"
-i	"fmt"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"

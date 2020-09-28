@@ -474,7 +474,6 @@ func TestShallSkipIdentity(t *testing.T) {
 
 	for _, p := range skipIdentityPaths {
 		versionedPath := "/v1" + p
-
 		Convey(fmt.Sprintf("Should skip identity check for versioned %s requests", versionedPath), t, func() {
 			So(middleware.ShallSkipIdentity("v1", versionedPath), ShouldBeTrue)
 		})
