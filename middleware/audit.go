@@ -3,6 +3,7 @@ package middleware
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -28,10 +29,13 @@ var pathsToIgnore = []string{
 var pathsSkipIdentity = []string{
 	"/login",
 	"/password",
-	"/v1/hierarchies",
+	"/hierarchies",
 }
 
-func shallSkipIdentity(path string) bool {
+func ShallSkipIdentity(versionPrefix, path string) bool {
+	// TODO need to revisit this if we start supporting multiple versions of the APIs.
+	path = strings.TrimPrefix(path, fmt.Sprintf("/%s", versionPrefix))
+
 	for _, pathSkipIdentity := range pathsSkipIdentity {
 		if strings.HasPrefix(path, pathSkipIdentity) {
 			return true
@@ -52,7 +56,7 @@ func shallIgnore(path string) bool {
 // AuditHandler is a middleware handler that keeps track of calls for auditing purposes,
 // before and after proxying calling the downstream service.
 // It obtains the user and caller information by calling Zebedee GET /identity
-func AuditHandler(auditProducer *event.AvroProducer, cli dphttp.Clienter, zebedeeURL string) func(h http.Handler) http.Handler {
+func AuditHandler(auditProducer *event.AvroProducer, cli dphttp.Clienter, zebedeeURL, versionPrefix string) func(h http.Handler) http.Handler {
 
 	// create Identity client that will be used by middleware to check callers identity
 	idClient := clientsidentity.NewAPIClient(cli, zebedeeURL)
@@ -69,7 +73,7 @@ func AuditHandler(auditProducer *event.AvroProducer, cli dphttp.Clienter, zebede
 			// Inbound audit event (before proxying).
 			auditEvent := generateAuditEvent(r)
 
-			if !shallSkipIdentity(r.URL.Path) {
+			if !ShallSkipIdentity(versionPrefix, r.URL.Path) {
 
 				// Retrieve Identity from Zebedee, which is stored in context.
 				// if it fails, try to audit with the statusCode before returning
