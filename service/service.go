@@ -100,7 +100,7 @@ func (svc *Service) CreateMiddleware(cfg *config.Config) alice.Chain {
 	// Audit - send kafka message to track user requests
 	if cfg.EnableAudit {
 		auditProducer := event.NewAvroProducer(svc.KafkaAuditProducer.Channels().Output, schema.AuditEvent)
-		m = m.Append(middleware.AuditHandler(auditProducer, svc.ZebedeeClient.Client, cfg.ZebedeeURL))
+		m = m.Append(middleware.AuditHandler(auditProducer, svc.ZebedeeClient.Client, cfg.ZebedeeURL, cfg.Version))
 	}
 
 	if cfg.EnablePrivateEndpoints {
