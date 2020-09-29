@@ -36,6 +36,8 @@ type Config struct {
 	Brokers                    []string      `envconfig:"KAFKA_ADDR"`
 	KafkaMaxBytes              int           `envconfig:"KAFKA_MAX_BYTES"`
 	AuditTopic                 string        `envconfig:"AUDIT_TOPIC"`
+	SessionsAPIURL             string        `envconfig:"SESSIONS_API_URL"`
+	EnableSessionsAPI          bool          `envconfig:"ENABLE_SESSIONS_API"`
 }
 
 var configuration *Config
@@ -70,6 +72,8 @@ func Get() (*Config, error) {
 			AllowedOrigins:             []string{"http://localhost:8081"},
 			KafkaMaxBytes:              2000000,
 			AuditTopic:                 "audit",
+			SessionsAPIURL:             "http://localhost:24400",
+			EnableSessionsAPI:          false,
 		}
 		if err := envconfig.Process("", configuration); err != nil {
 			log.Event(context.Background(), "failed to parse configuration", log.ERROR, log.Data{"config": configuration}, log.Error(err))
