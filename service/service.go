@@ -146,6 +146,12 @@ func CreateRouter(ctx context.Context, cfg *config.Config, hc HealthChecker) *mu
 		addVersionHandler(router, recipe, "/recipes")
 		addVersionHandler(router, importAPI, "/jobs")
 		addVersionHandler(router, dataset, "/instances")
+
+		// Feature flag for Sessions API
+		if cfg.EnableSessionsAPI {
+			session := proxy.NewAPIProxy(cfg.SessionsAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+			addVersionHandler(router, session, "/sessions")
+		}
 	}
 
 	// Legacy API

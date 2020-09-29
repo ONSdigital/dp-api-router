@@ -39,6 +39,8 @@ func TestGetRetrunsDefaultValues(t *testing.T) {
 			AllowedOrigins:             []string{"http://localhost:8081"},
 			KafkaMaxBytes:              2000000,
 			AuditTopic:                 "audit",
+			SessionsAPIURL:             "http://localhost:24400",
+			EnableSessionsAPI:          false,
 		})
 	})
 }
