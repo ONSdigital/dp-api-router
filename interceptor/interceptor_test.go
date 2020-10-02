@@ -26,6 +26,21 @@ func (t dummyRT) RoundTrip(req *http.Request) (resp *http.Response, err error) {
 var _ http.RoundTripper = dummyRT{}
 
 func TestUnitInterceptor(t *testing.T) {
+
+	Convey("test interceptor doesn't throw an error for an empty response", t, func() {
+		testJSON := ``
+		transp := dummyRT{testJSON}
+
+		t := NewRoundTripper(testDomain, "", transp)
+
+		resp, err := t.RoundTrip(nil)
+		So(err, ShouldBeNil)
+
+		b, _ := ioutil.ReadAll(resp.Body)
+
+		So(len(b), ShouldEqual, 0)
+	})
+
 	Convey("test interceptor correctly updates a href in links subdoc", t, func() {
 		testJSON := `{"links":{"self":{"href":"/datasets/12345"}}}`
 		transp := dummyRT{testJSON}
