@@ -219,10 +219,13 @@ func TestRouterPrivateAPIs(t *testing.T) {
 		So(err, ShouldBeNil)
 		importAPIURL, err := url.Parse(cfg.ImportAPIURL)
 		So(err, ShouldBeNil)
+		uploadServiceAPIURL, err := url.Parse(cfg.UploadServiceAPIURL)
+		So(err, ShouldBeNil)
 		zebedeeURL, err := url.Parse(cfg.ZebedeeURL)
 		So(err, ShouldBeNil)
 
 		expectedPrivateURLs := map[string]*url.URL{
+			"/upload":    uploadServiceAPIURL,
 			"/recipes":   recipeAPIURL,
 			"/jobs":      importAPIURL,
 			"/instances": datasetAPIURL,
@@ -255,6 +258,18 @@ func TestRouterPrivateAPIs(t *testing.T) {
 				w := createRouterTest(cfg, "http://localhost:23200/v1/jobs/subpath", hcMock)
 				So(w.Code, ShouldEqual, http.StatusOK)
 				verifyProxied("/jobs/subpath", importAPIURL)
+			})
+
+			Convey("A request to a jobs path is proxied to uploadServiceAPIURL", func() {
+				w := createRouterTest(cfg, "http://localhost:25100/v1/upload", hcMock)
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/upload", uploadServiceAPIURL)
+			})
+
+			Convey("A request to a jobs subpath is proxied to uploadServiceAPIURL", func() {
+				w := createRouterTest(cfg, "http://localhost:25100/v1/upload/subpath", hcMock)
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/upload/subpath", uploadServiceAPIURL)
 			})
 
 			Convey("A request to a instances path is proxied to datasetAPIURL", func() {
