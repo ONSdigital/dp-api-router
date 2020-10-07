@@ -26,6 +26,7 @@ type Config struct {
 	ImportAPIURL               string        `envconfig:"IMPORT_API_URL"`
 	SearchAPIURL               string        `envconfig:"SEARCH_API_URL"`
 	ImageAPIURL                string        `envconfig:"IMAGE_API_URL"`
+	UploadServiceAPIURL        string        `envconfig:"UPLOAD_SERVICE_API_URL"`
 	ContextURL                 string        `envconfig:"CONTEXT_URL"`
 	EnvironmentHost            string        `envconfig:"ENV_HOST"`
 	APIPocURL                  string        `envconfig:"API_POC_URL"`
@@ -62,6 +63,7 @@ func Get() (*Config, error) {
 			ImportAPIURL:               "http://localhost:21800",
 			SearchAPIURL:               "http://localhost:23100",
 			ImageAPIURL:                "http://localhost:24700",
+			UploadServiceAPIURL:        "http://localhost:25100",
 			APIPocURL:                  "http://localhost:3000",
 			ContextURL:                 "",
 			EnvironmentHost:            "http://localhost:23200",

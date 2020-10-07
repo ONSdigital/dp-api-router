@@ -143,9 +143,11 @@ func CreateRouter(ctx context.Context, cfg *config.Config, hc HealthChecker) *mu
 	if cfg.EnablePrivateEndpoints {
 		recipe := proxy.NewAPIProxy(cfg.RecipeAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 		importAPI := proxy.NewAPIProxy(cfg.ImportAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+		uploadServiceAPI := proxy.NewAPIProxy(cfg.UploadServiceAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 		addVersionHandler(router, recipe, "/recipes")
 		addVersionHandler(router, importAPI, "/jobs")
 		addVersionHandler(router, dataset, "/instances")
+		addVersionHandler(router, uploadServiceAPI, "/upload")
 
 		// Feature flag for Sessions API
 		if cfg.EnableSessionsAPI {
