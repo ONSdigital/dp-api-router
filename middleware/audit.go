@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -71,7 +72,7 @@ func AuditHandler(auditProducer *event.AvroProducer, cli dphttp.Clienter, zebede
 			}
 
 			// Inbound audit event (before proxying).
-			auditEvent := generateAuditEvent(r)
+			auditEvent := GenerateAuditEvent(r)
 
 			if !ShallSkipIdentity(versionPrefix, r.URL.Path) {
 
@@ -152,18 +153,29 @@ func (rec *responseRecorder) Write(b []byte) (int, error) {
 	return rec.body.Write(b)
 }
 
-// generateAuditEvent creates an audit event with the values from request and request context, if present.
-func generateAuditEvent(req *http.Request) *event.Audit {
+// GenerateAuditEvent creates an audit event with the values from request and request context, if present.
+func GenerateAuditEvent(req *http.Request) *event.Audit {
 	auditEvent := &event.Audit{
-		CreatedAt:  event.CreatedAtMillis(Now()),
-		Path:       req.URL.Path,
-		Method:     req.Method,
-		QueryParam: req.URL.RawQuery,
+		CreatedAt: event.CreatedAtMillis(Now()),
+		Path:      req.URL.Path,
+		Method:    req.Method,
 	}
+
+	// obtain collectionID from context
 	auditEvent.RequestID = dprequest.GetRequestId(req.Context())
 	if colID := req.Header.Get(dprequest.CollectionIDHeaderKey); colID != "" {
 		auditEvent.CollectionID = colID
 	}
+
+	// try to unescape query parameter
+	unescapedQueryParam, err := url.QueryUnescape(req.URL.RawQuery)
+	if err != nil {
+		log.Event(req.Context(), "failed to unescape query paramters", log.Data{"query_param": req.URL.RawQuery})
+		auditEvent.QueryParam = req.URL.RawQuery
+	} else {
+		auditEvent.QueryParam = unescapedQueryParam
+	}
+
 	return auditEvent
 }
 

@@ -90,6 +90,53 @@ func createHTTPClientMock(retCode int, retBody interface{}) *dphttp.ClienterMock
 	}
 }
 
+func TestGenerateAuditEvent(t *testing.T) {
+
+	Convey("Given a mocked time.Now", t, func(c C) {
+
+		middleware.Now = func() time.Time {
+			return testTimeInbound
+		}
+
+		Convey("A request with query paramters generates a valid audit event, with the expected values", func() {
+			req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", nil)
+			So(err, ShouldBeNil)
+			e := middleware.GenerateAuditEvent(req)
+			So(*e, ShouldResemble, event.Audit{
+				CreatedAt:  testTimeMillisInbound,
+				Path:       "/v1/datasets",
+				Method:     http.MethodGet,
+				QueryParam: "q1=v1&q2=v2",
+			})
+		})
+
+		Convey("A request with query paramters including escaped characters generates a valid audit event, with the expected unescaped values", func() {
+			req, err := http.NewRequest(http.MethodGet, "/v1/data?lang=en\u0026uri=%2Fhealth", nil)
+			So(err, ShouldBeNil)
+			e := middleware.GenerateAuditEvent(req)
+			So(*e, ShouldResemble, event.Audit{
+				CreatedAt:  testTimeMillisInbound,
+				Path:       "/v1/data",
+				Method:     http.MethodGet,
+				QueryParam: "lang=en&uri=/health",
+			})
+		})
+
+		Convey("A request with query paramters including incorrectly escaped characters defaults to the raw query value when generating the audit event", func() {
+			req, err := http.NewRequest(http.MethodGet, "/v1/data?uri=%wxhealth", nil)
+			So(err, ShouldBeNil)
+			e := middleware.GenerateAuditEvent(req)
+			So(*e, ShouldResemble, event.Audit{
+				CreatedAt:  testTimeMillisInbound,
+				Path:       "/v1/data",
+				Method:     http.MethodGet,
+				QueryParam: "uri=%wxhealth",
+			})
+		})
+
+	})
+}
+
 func TestAuditHandlerHeaders(t *testing.T) {
 
 	Convey("Given deterministic inbound and outbound timestamps", t, func(c C) {
