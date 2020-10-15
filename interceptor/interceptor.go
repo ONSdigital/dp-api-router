@@ -60,6 +60,10 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 		return nil, err
 	}
 
+	if len(b) == 0 {
+		return resp, nil
+	}
+
 	updatedB, err := t.update(b)
 	if err != nil {
 		log.Event(context.Background(), "could not update response body with correct links", log.ERROR, log.Error(err))
