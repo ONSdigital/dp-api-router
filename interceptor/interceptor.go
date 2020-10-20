@@ -61,6 +61,7 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 	}
 
 	if len(b) == 0 {
+		resp.Body = ioutil.NopCloser(bytes.NewReader([]byte{}))
 		return resp, nil
 	}
 
