@@ -16,6 +16,7 @@ type Config struct {
 	EnablePrivateEndpoints     bool          `envconfig:"ENABLE_PRIVATE_ENDPOINTS"`
 	EnableObservationAPI       bool          `envconfig:"ENABLE_OBSERVATION_API"`
 	EnableAudit                bool          `envconfig:"ENABLE_AUDIT"`
+	EnableZebedeeAudit         bool          `envconfig:"ENABLE_ZEBEDEE_AUDIT"`
 	ZebedeeURL                 string        `envconfig:"ZEBEDEE_URL"`
 	HierarchyAPIURL            string        `envconfig:"HIERARCHY_API_URL"`
 	FilterAPIURL               string        `envconfig:"FILTER_API_URL"`
@@ -53,6 +54,7 @@ func Get() (*Config, error) {
 			EnableV1BetaRestriction:    false,
 			EnableObservationAPI:       false,
 			EnableAudit:                false,
+			EnableZebedeeAudit:         false,
 			ZebedeeURL:                 "http://localhost:8082",
 			HierarchyAPIURL:            "http://localhost:22600",
 			FilterAPIURL:               "http://localhost:22100",

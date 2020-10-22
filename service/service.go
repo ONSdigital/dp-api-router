@@ -67,7 +67,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 
 	// Create router and http server
 	r := CreateRouter(ctx, cfg, svc.HealthCheck)
-	m := svc.CreateMiddleware(cfg)
+	m := svc.CreateMiddleware(cfg, r)
 	svc.Server = dphttp.NewServer(cfg.BindAddr, m.Then(r))
 
 	svc.Server.DefaultShutdownTimeout = cfg.GracefulShutdown
@@ -90,7 +90,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 }
 
 // CreateMiddleware creates an Alice middleware chain of handlers in the required order
-func (svc *Service) CreateMiddleware(cfg *config.Config) alice.Chain {
+func (svc *Service) CreateMiddleware(cfg *config.Config, router *mux.Router) alice.Chain {
 
 	// Allow health check endpoint to skip any further middleware
 	healthCheckFilter := middleware.HealthcheckFilter(svc.HealthCheck.Handler)
@@ -100,7 +100,13 @@ func (svc *Service) CreateMiddleware(cfg *config.Config) alice.Chain {
 	// Audit - send kafka message to track user requests
 	if cfg.EnableAudit {
 		auditProducer := event.NewAvroProducer(svc.KafkaAuditProducer.Channels().Output, schema.AuditEvent)
-		m = m.Append(middleware.AuditHandler(auditProducer, svc.ZebedeeClient.Client, cfg.ZebedeeURL, cfg.Version))
+		m = m.Append(middleware.AuditHandler(
+			auditProducer,
+			svc.ZebedeeClient.Client,
+			cfg.ZebedeeURL,
+			cfg.Version,
+			cfg.EnableZebedeeAudit,
+			router))
 	}
 
 	if cfg.EnablePrivateEndpoints {
@@ -164,7 +170,7 @@ func CreateRouter(ctx context.Context, cfg *config.Config, hc HealthChecker) *mu
 	addLegacyHandler(router, poc, "/search")
 
 	zebedee := proxy.NewAPIProxy(cfg.ZebedeeURL, cfg.Version, cfg.EnvironmentHost, "", false)
-	addLegacyHandler(router, zebedee, "/{uri:.*}")
+	router.NotFoundHandler = http.HandlerFunc(zebedee.VersionHandle)
 
 	return router
 }
