@@ -125,6 +125,10 @@ func CreateRouter(ctx context.Context, cfg *config.Config, hc HealthChecker) *mu
 		observation := proxy.NewAPIProxy(cfg.ObservationAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.ContextURL, cfg.EnableV1BetaRestriction)
 		addVersionHandler(router, observation, "/datasets/{dataset_id}/editions/{edition}/versions/{version}/observations")
 	}
+	if cfg.EnableTopicAPI {
+		topic := proxy.NewAPIProxy(cfg.TopicAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.ContextURL, cfg.EnableV1BetaRestriction)
+		addVersionHandler(router, topic, "/topics/{id}")
+	}
 	codeList := proxy.NewAPIProxy(cfg.CodelistAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 	dataset := proxy.NewAPIProxy(cfg.DatasetAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.ContextURL, cfg.EnableV1BetaRestriction)
 	filter := proxy.NewAPIProxy(cfg.FilterAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)

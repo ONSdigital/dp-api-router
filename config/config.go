@@ -39,6 +39,8 @@ type Config struct {
 	AuditTopic                 string        `envconfig:"AUDIT_TOPIC"`
 	SessionsAPIURL             string        `envconfig:"SESSIONS_API_URL"`
 	EnableSessionsAPI          bool          `envconfig:"ENABLE_SESSIONS_API"`
+	TopicAPIURL                string        `envconfig:"TOPIC_API_URL"`
+	EnableTopicAPI             bool          `envconfig:"ENABLE_TOPIC_API"`
 }
 
 var configuration *Config
@@ -76,6 +78,7 @@ func Get() (*Config, error) {
 			AuditTopic:                 "audit",
 			SessionsAPIURL:             "http://localhost:24400",
 			EnableSessionsAPI:          false,
+			EnableTopicAPI:             true,
 		}
 		if err := envconfig.Process("", configuration); err != nil {
 			log.Event(context.Background(), "failed to parse configuration", log.ERROR, log.Data{"config": configuration}, log.Error(err))
