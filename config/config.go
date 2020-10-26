@@ -78,6 +78,7 @@ func Get() (*Config, error) {
 			AuditTopic:                 "audit",
 			SessionsAPIURL:             "http://localhost:24400",
 			EnableSessionsAPI:          false,
+			TopicAPIURL:                "http://localhost:25300",
 			EnableTopicAPI:             true,
 		}
 		if err := envconfig.Process("", configuration); err != nil {
