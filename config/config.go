@@ -79,7 +79,7 @@ func Get() (*Config, error) {
 			SessionsAPIURL:             "http://localhost:24400",
 			EnableSessionsAPI:          false,
 			TopicAPIURL:                "http://localhost:25300",
-			EnableTopicAPI:             true,
+			EnableTopicAPI:             false,
 		}
 		if err := envconfig.Process("", configuration); err != nil {
 			log.Event(context.Background(), "failed to parse configuration", log.ERROR, log.Data{"config": configuration}, log.Error(err))
