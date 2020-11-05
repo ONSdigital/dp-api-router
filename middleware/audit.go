@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/gorilla/mux"
 	"io"
 	"net/http"
 	"net/url"
@@ -18,6 +19,11 @@ import (
 
 	"github.com/ONSdigital/log.go/log"
 )
+
+//go:generate moq -out ./mock/router.go -pkg mock . Router
+type Router interface {
+	Match(req *http.Request, match *mux.RouteMatch) bool
+}
 
 // paths that will skip auditing (note)
 var pathsToIgnore = []string{
@@ -57,7 +63,11 @@ func shallIgnore(path string) bool {
 // AuditHandler is a middleware handler that keeps track of calls for auditing purposes,
 // before and after proxying calling the downstream service.
 // It obtains the user and caller information by calling Zebedee GET /identity
-func AuditHandler(auditProducer *event.AvroProducer, cli dphttp.Clienter, zebedeeURL, versionPrefix string) func(h http.Handler) http.Handler {
+func AuditHandler(auditProducer *event.AvroProducer,
+	cli dphttp.Clienter,
+	zebedeeURL, versionPrefix string,
+	enableZebedeeAudit bool,
+	router Router) func(h http.Handler) http.Handler {
 
 	// create Identity client that will be used by middleware to check callers identity
 	idClient := clientsidentity.NewAPIClient(cli, zebedeeURL)
@@ -69,6 +79,17 @@ func AuditHandler(auditProducer *event.AvroProducer, cli dphttp.Clienter, zebede
 			if shallIgnore(r.URL.Path) {
 				h.ServeHTTP(w, r)
 				return
+			}
+
+			if !enableZebedeeAudit {
+				// Zebedee is the fallback route, so we can only determine a request is for Zebedee
+				// if it does not match any of the configured routes.
+				var matchedRoute = &mux.RouteMatch{}
+				router.Match(r, matchedRoute) // bool return value still returns true for NotFoundHandler
+				if matchedRoute.MatchErr == mux.ErrNotFound {
+					h.ServeHTTP(w, r)
+					return
+				}
 			}
 
 			// Inbound audit event (before proxying).

@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/ONSdigital/dp-api-router/middleware/mock"
+	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -40,7 +42,6 @@ var (
 	testBody                     = []byte{1, 2, 3, 4}
 	errMarshal                   = errors.New("avro marshal error")
 	errDo                        = errors.New("identity client Do failed")
-	// errCopy                = errors.New("io.Copy error")
 )
 
 // valid identity response for testing
@@ -61,7 +62,8 @@ func createValidAuditHandler() (kafka.IProducer, func(h http.Handler) http.Handl
 	cliMock := createHTTPClientMock(http.StatusOK, testIdentityResponse)
 	p := kafkatest.NewMessageProducer(true)
 	auditProducer := event.NewAvroProducer(p.Channels().Output, schema.AuditEvent)
-	return p, middleware.AuditHandler(auditProducer, cliMock, testZebedeeURL, testVersionPrefix)
+	enableZebedeeAudit := true
+	return p, middleware.AuditHandler(auditProducer, cliMock, testZebedeeURL, testVersionPrefix, enableZebedeeAudit, nil)
 }
 
 // utility function to create a producer and an audit handler that fails to marshal and send events
@@ -74,7 +76,8 @@ func createFailingAuditHandler() (kafka.IProducer, func(h http.Handler) http.Han
 	}
 	p := kafkatest.NewMessageProducer(true)
 	auditProducer := event.NewAvroProducer(p.Channels().Output, failingMarshaller)
-	return p, middleware.AuditHandler(auditProducer, cliMock, testZebedeeURL, testVersionPrefix)
+	enableZebedeeAudit := true
+	return p, middleware.AuditHandler(auditProducer, cliMock, testZebedeeURL, testVersionPrefix, enableZebedeeAudit, nil)
 }
 
 // utility function to generate Clienter mocks
@@ -443,7 +446,8 @@ func TestAuditHandler(t *testing.T) {
 			}
 			p := kafkatest.NewMessageProducer(true)
 			a := event.NewAvroProducer(p.Channels().Output, failingMarshaller)
-			auditHandler := middleware.AuditHandler(a, cliMock, testZebedeeURL, testVersionPrefix)(testHandler(http.StatusForbidden, testBody))
+			enableZebedeeAudit := true
+			auditHandler := middleware.AuditHandler(a, cliMock, testZebedeeURL, testVersionPrefix, enableZebedeeAudit, nil)(testHandler(http.StatusForbidden, testBody))
 
 			// execute request and expect only 1 audit event
 			auditEvents := serveAndCaptureAudit(c, w, req, auditHandler, p.Channels().Output, 1)
@@ -483,7 +487,6 @@ func TestAuditIgnoreSkip(t *testing.T) {
 				So(err, ShouldBeNil)
 				c.So(b, ShouldResemble, testBody)
 			})
-
 		})
 	})
 
@@ -512,6 +515,100 @@ func TestAuditIgnoreSkip(t *testing.T) {
 				c.So(auditEvents[1].Identity, ShouldResemble, "")
 			})
 
+		})
+	})
+}
+
+func TestSkipZebedeeAudit(t *testing.T) {
+
+	Convey("Given an audit handler configured to not audit zebedee requests", t, func(c C) {
+
+		cliMock := createHTTPClientMock(http.StatusOK, testIdentityResponse)
+		p := kafkatest.NewMessageProducer(true)
+		auditProducer := event.NewAvroProducer(p.Channels().Output, schema.AuditEvent)
+		enableZebedeeAudit := false
+		routerMock := &mock.RouterMock{
+			MatchFunc: func(req *http.Request, match *mux.RouteMatch) bool {
+				match.MatchErr = mux.ErrNotFound
+				return true
+			},
+		}
+		auditMiddleware := middleware.AuditHandler(auditProducer, cliMock, testZebedeeURL, testVersionPrefix, enableZebedeeAudit, routerMock)
+		auditHandler := auditMiddleware(testHandler(http.StatusOK, testBody))
+
+		Convey("When the handler receives a Zebedee request", func(c C) {
+			req, err := http.NewRequest(http.MethodGet, "/data", nil)
+			So(err, ShouldBeNil)
+			w := httptest.NewRecorder()
+
+			// execute request and don't wait for audit events
+			serveAndCaptureAudit(c, w, req, auditHandler, p.Channels().Output, 0)
+
+			Convey("Then status OK and expected body is returned", func(c C) {
+				c.So(w.Code, ShouldEqual, http.StatusOK)
+				b, err := ioutil.ReadAll(w.Body)
+				So(err, ShouldBeNil)
+				c.So(b, ShouldResemble, testBody)
+			})
+		})
+	})
+
+	Convey("Given an audit handler configured to not audit zebedee requests", t, func(c C) {
+		isInbound := true
+		middleware.Now = func() time.Time {
+			if isInbound {
+				isInbound = false
+				return testTimeInbound
+			}
+			return testTimeOutbound
+		}
+
+		cliMock := createHTTPClientMock(http.StatusOK, testIdentityResponse)
+		p := kafkatest.NewMessageProducer(true)
+		auditProducer := event.NewAvroProducer(p.Channels().Output, schema.AuditEvent)
+		enableZebedeeAudit := false
+		routerMock := &mock.RouterMock{
+			MatchFunc: func(req *http.Request, match *mux.RouteMatch) bool {
+				return true
+			},
+		}
+		auditMiddleware := middleware.AuditHandler(auditProducer, cliMock, testZebedeeURL, testVersionPrefix, enableZebedeeAudit, routerMock)
+		auditHandler := auditMiddleware(testHandler(http.StatusOK, testBody))
+
+		Convey("When the handler receives a request for a known route (not zebedee)", func(c C) {
+			req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", nil)
+			req.Header.Set(dprequest.FlorenceHeaderKey, testFlorenceToken)
+			req.Header.Set(dprequest.AuthHeaderKey, testServiceAuthToken)
+			So(err, ShouldBeNil)
+			w := httptest.NewRecorder()
+
+			// execute request and wait for audit event
+			auditEvents := serveAndCaptureAudit(c, w, req, auditHandler, p.Channels().Output, 2)
+
+			Convey("Then status OK and expected body is returned", func(c C) {
+				c.So(w.Code, ShouldEqual, http.StatusOK)
+				b, err := ioutil.ReadAll(w.Body)
+				So(err, ShouldBeNil)
+				c.So(b, ShouldResemble, testBody)
+			})
+
+			Convey("The expected audit events are sent before and after proxying the call", func() {
+				c.So(auditEvents[0], ShouldResemble, event.Audit{
+					CreatedAt:  testTimeMillisInbound,
+					Path:       "/v1/datasets",
+					Method:     http.MethodGet,
+					QueryParam: "q1=v1&q2=v2",
+					Identity:   testIdentity,
+				})
+				c.So(auditEvents[1], ShouldResemble, event.Audit{
+					CreatedAt:  testTimeMillisOutbound,
+					StatusCode: int32(http.StatusOK),
+					Path:       "/v1/datasets",
+					Method:     http.MethodGet,
+					QueryParam: "q1=v1&q2=v2",
+					Identity:   testIdentity,
+				})
+			})
 		})
 	})
 }
