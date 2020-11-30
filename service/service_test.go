@@ -57,6 +57,7 @@ func TestRouterPublicAPIs(t *testing.T) {
 
 		cfg, err := config.Get()
 		So(err, ShouldBeNil)
+		cfg.SearchAPIURL = "http://justForTests:1234"
 
 		hcMock := &mock.HealthCheckerMock{
 			HandlerFunc: func(w http.ResponseWriter, req *http.Request) {},
