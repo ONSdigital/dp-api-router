@@ -57,6 +57,8 @@ func TestRouterPublicAPIs(t *testing.T) {
 
 		cfg, err := config.Get()
 		So(err, ShouldBeNil)
+
+		//This is temporary and needs to be removed when it is ready for SearchAPIURL to point to dp-search-query
 		cfg.SearchAPIURL = "http://justForTests:1234"
 
 		hcMock := &mock.HealthCheckerMock{
