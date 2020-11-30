@@ -58,6 +58,9 @@ func TestRouterPublicAPIs(t *testing.T) {
 		cfg, err := config.Get()
 		So(err, ShouldBeNil)
 
+		//This is temporary and needs to be removed when it is ready for SearchAPIURL to point to dp-search-query
+		cfg.SearchAPIURL = "http://justForTests:1234"
+
 		hcMock := &mock.HealthCheckerMock{
 			HandlerFunc: func(w http.ResponseWriter, req *http.Request) {},
 		}
@@ -74,6 +77,8 @@ func TestRouterPublicAPIs(t *testing.T) {
 		So(err, ShouldBeNil)
 		searchAPIURL, err := url.Parse(cfg.SearchAPIURL)
 		So(err, ShouldBeNil)
+		dimensionSearchAPIURL, err := url.Parse(cfg.DimensionSearchAPIURL)
+		So(err, ShouldBeNil)
 		imageAPIURL, err := url.Parse(cfg.ImageAPIURL)
 		So(err, ShouldBeNil)
 
@@ -81,11 +86,12 @@ func TestRouterPublicAPIs(t *testing.T) {
 			"/code-lists": codelistAPIURL,
 			"/datasets":   datasetAPIURL,
 			"/datasets/{dataset_id}/editions/{edition}/versions/{version}/observations": observationAPIURL,
-			"/filters":        filterAPIURL,
-			"/filter-outputs": filterAPIURL,
-			"/hierarchies":    hierarchyAPIURL,
-			"/search":         searchAPIURL,
-			"/images":         imageAPIURL,
+			"/filters":          filterAPIURL,
+			"/filter-outputs":   filterAPIURL,
+			"/hierarchies":      hierarchyAPIURL,
+			"/search":           searchAPIURL,
+			"/dimension-search": dimensionSearchAPIURL,
+			"/images":           imageAPIURL,
 		}
 
 		resetProxyMocksWithExpectations(expectedPublicURLs)
@@ -175,6 +181,18 @@ func TestRouterPublicAPIs(t *testing.T) {
 				w := createRouterTest(cfg, "http://localhost:23200/v1/search/subpath", hcMock)
 				So(w.Code, ShouldEqual, http.StatusOK)
 				verifyProxied("/search/subpath", searchAPIURL)
+			})
+
+			Convey("A request to a dimension search path is proxied to dimensionSearchAPIURL", func() {
+				w := createRouterTest(cfg, "http://localhost:23200/v1/dimension-search", hcMock)
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/dimension-search", dimensionSearchAPIURL)
+			})
+
+			Convey("A request to a dimension search subpath is proxied to dimensionSearchAPIURL", func() {
+				w := createRouterTest(cfg, "http://localhost:23200/v1/dimension-search/subpath", hcMock)
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/dimension-search/subpath", dimensionSearchAPIURL)
 			})
 
 			Convey("A request to an image subpath is proxied to imageAPIURL", func() {

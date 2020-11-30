@@ -26,6 +26,7 @@ type Config struct {
 	RecipeAPIURL               string        `envconfig:"RECIPE_API_URL"`
 	ImportAPIURL               string        `envconfig:"IMPORT_API_URL"`
 	SearchAPIURL               string        `envconfig:"SEARCH_API_URL"`
+	DimensionSearchAPIURL      string        `envconfig:"DIMENSION_SEARCH_API_URL"`
 	ImageAPIURL                string        `envconfig:"IMAGE_API_URL"`
 	UploadServiceAPIURL        string        `envconfig:"UPLOAD_SERVICE_API_URL"`
 	ContextURL                 string        `envconfig:"CONTEXT_URL"`
@@ -66,6 +67,7 @@ func Get() (*Config, error) {
 			RecipeAPIURL:               "http://localhost:22300",
 			ImportAPIURL:               "http://localhost:21800",
 			SearchAPIURL:               "http://localhost:23100",
+			DimensionSearchAPIURL:      "http://localhost:23100",
 			ImageAPIURL:                "http://localhost:24700",
 			UploadServiceAPIURL:        "http://localhost:25100",
 			APIPocURL:                  "http://localhost:3000",

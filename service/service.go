@@ -140,6 +140,7 @@ func CreateRouter(ctx context.Context, cfg *config.Config, hc HealthChecker) *mu
 	filter := proxy.NewAPIProxy(cfg.FilterAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 	hierarchy := proxy.NewAPIProxy(cfg.HierarchyAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 	search := proxy.NewAPIProxy(cfg.SearchAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+	dimensionSearch := proxy.NewAPIProxy(cfg.DimensionSearchAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 	image := proxy.NewAPIProxy(cfg.ImageAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 	addVersionHandler(router, codeList, "/code-lists")
 	addVersionHandler(router, dataset, "/datasets")
@@ -147,7 +148,7 @@ func CreateRouter(ctx context.Context, cfg *config.Config, hc HealthChecker) *mu
 	addVersionHandler(router, filter, "/filter-outputs")
 	addVersionHandler(router, hierarchy, "/hierarchies")
 	addVersionHandler(router, search, "/search")
-	addVersionHandler(router, search, "/dimension-search")
+	addVersionHandler(router, dimensionSearch, "/dimension-search")
 	addVersionHandler(router, image, "/images")
 
 	// Private APIs
@@ -173,7 +174,6 @@ func CreateRouter(ctx context.Context, cfg *config.Config, hc HealthChecker) *mu
 	addLegacyHandler(router, poc, "/dataset")
 	addLegacyHandler(router, poc, "/timeseries")
 	addLegacyHandler(router, poc, "/search")
-	addLegacyHandler(router, poc, "/dimension-search")
 
 	zebedee := proxy.NewAPIProxy(cfg.ZebedeeURL, cfg.Version, cfg.EnvironmentHost, "", false)
 	router.NotFoundHandler = http.HandlerFunc(zebedee.VersionHandle)
