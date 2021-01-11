@@ -12,7 +12,6 @@ job "dp-api-router" {
   }  
 
   group "web" {
-    count = "{{WEB_TASK_COUNT}}"
 
     constraint {
       attribute = "${node.class}"
