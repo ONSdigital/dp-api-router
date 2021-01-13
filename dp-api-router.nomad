@@ -48,6 +48,9 @@ job "dp-api-router" {
         name = "dp-api-router"
         port = "http"
         tags = ["web"]
+        meta {
+          job_type = "system"
+        }
         check {
           type     = "http"
           path     = "/health"
@@ -114,6 +117,9 @@ job "dp-api-router" {
         name = "dp-api-router"
         port = "http"
         tags = ["publishing"]
+        meta {
+          job_type = "system"
+        }
         check {
           type     = "http"
           path     = "/health"
