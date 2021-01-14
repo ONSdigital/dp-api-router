@@ -9,7 +9,7 @@ job "dp-api-router" {
     healthy_deadline = "2m"
     max_parallel     = 1
     auto_revert      = true
-  }  
+  }
 
   group "web" {
 
@@ -80,7 +80,6 @@ job "dp-api-router" {
   }
 
   group "publishing" {
-    count = "{{PUBLISHING_TASK_COUNT}}"
 
     constraint {
       attribute = "${node.class}"
