@@ -2,6 +2,7 @@ job "dp-api-router" {
   datacenters = ["eu-west-1"]
   region      = "eu"
   type        = "system"
+  priority    = 100
 
   update {
     stagger          = "60s"
