@@ -41,6 +41,20 @@ func TestUnitInterceptor(t *testing.T) {
 		So(len(b), ShouldEqual, 0)
 	})
 
+	Convey("test interceptor doesn't change an already correct link", t, func() {
+		testJSON := `{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}`
+		transp := dummyRT{testJSON}
+
+		t := NewRoundTripper(testDomain, "", transp)
+
+		resp, err := t.RoundTrip(nil)
+		So(err, ShouldBeNil)
+
+		b, _ := ioutil.ReadAll(resp.Body)
+
+		So(string(b), ShouldEqual, `{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}`+"\n")
+	})
+
 	Convey("test interceptor correctly updates a href in links subdoc", t, func() {
 		testJSON := `{"links":{"self":{"href":"/datasets/12345"}}}`
 		transp := dummyRT{testJSON}
