@@ -4,6 +4,10 @@ job "dp-api-router" {
   type        = "system"
   priority    = 100
 
+  meta {
+    job_type = "system"
+  }
+
   update {
     stagger          = "60s"
     min_healthy_time = "30s"
@@ -49,9 +53,6 @@ job "dp-api-router" {
         name = "dp-api-router"
         port = "http"
         tags = ["web"]
-        meta {
-          job_type = "system"
-        }
         check {
           type     = "http"
           path     = "/health"
@@ -117,9 +118,6 @@ job "dp-api-router" {
         name = "dp-api-router"
         port = "http"
         tags = ["publishing"]
-        meta {
-          job_type = "system"
-        }
         check {
           type     = "http"
           path     = "/health"
