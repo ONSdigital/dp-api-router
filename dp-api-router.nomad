@@ -2,6 +2,11 @@ job "dp-api-router" {
   datacenters = ["eu-west-1"]
   region      = "eu"
   type        = "system"
+  priority    = 100
+
+  meta {
+    job_type = "system"
+  }
 
   update {
     stagger          = "60s"
@@ -9,7 +14,7 @@ job "dp-api-router" {
     healthy_deadline = "2m"
     max_parallel     = 1
     auto_revert      = true
-  }  
+  }
 
   group "web" {
 
@@ -48,9 +53,6 @@ job "dp-api-router" {
         name = "dp-api-router"
         port = "http"
         tags = ["web"]
-        meta {
-          job_type = "system"
-        }
         check {
           type     = "http"
           path     = "/health"
@@ -80,7 +82,6 @@ job "dp-api-router" {
   }
 
   group "publishing" {
-    count = "{{PUBLISHING_TASK_COUNT}}"
 
     constraint {
       attribute = "${node.class}"
@@ -117,9 +118,6 @@ job "dp-api-router" {
         name = "dp-api-router"
         port = "http"
         tags = ["publishing"]
-        meta {
-          job_type = "system"
-        }
         check {
           type     = "http"
           path     = "/health"
