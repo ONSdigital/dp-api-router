@@ -4,6 +4,10 @@ job "dp-api-router" {
   type        = "system"
   priority    = 100
 
+  meta {
+    job_type = "system"
+  }
+
   update {
     stagger          = "60s"
     min_healthy_time = "30s"
