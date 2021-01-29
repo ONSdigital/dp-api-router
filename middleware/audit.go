@@ -70,7 +70,6 @@ func AuditHandler(auditProducer *event.AvroProducer,
 	zebedeeURL, versionPrefix string,
 	enableZebedeeAudit bool,
 	router Router) func(h http.Handler) http.Handler {
-	log.Event(context.Background(), "========================= we got here =========================", log.INFO)
 
 	// create Identity client that will be used by middleware to check callers identity
 	idClient := clientsidentity.New(zebedeeURL)
