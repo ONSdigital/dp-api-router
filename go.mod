@@ -3,12 +3,13 @@ module github.com/ONSdigital/dp-api-router
 go 1.15
 
 require (
-	github.com/ONSdigital/dp-api-clients-go v1.24.0
+	github.com/ONSdigital/dp-api-clients-go v1.32.10
 	github.com/ONSdigital/dp-healthcheck v1.0.5
 	github.com/ONSdigital/dp-kafka v1.1.7
-	github.com/ONSdigital/dp-net v1.0.7
+	github.com/ONSdigital/dp-net v1.0.11
 	github.com/ONSdigital/go-ns v0.0.0-20200902154605-290c8b5ba5eb
 	github.com/ONSdigital/log.go v1.0.1
+	github.com/Shopify/sarama v1.27.2 // indirect
 	github.com/fatih/color v1.10.0 // indirect
 	github.com/golang/protobuf v1.3.2 // indirect
 	github.com/golang/snappy v0.0.2 // indirect
