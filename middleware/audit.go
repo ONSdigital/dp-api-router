@@ -13,6 +13,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/ONSdigital/dp-api-clients-go/headers"
+	"github.com/ONSdigital/dp-api-clients-go/health"
 	clientsidentity "github.com/ONSdigital/dp-api-clients-go/identity"
 	"github.com/ONSdigital/dp-api-router/event"
 	dphttp "github.com/ONSdigital/dp-net/http"
@@ -72,7 +73,11 @@ func AuditHandler(auditProducer *event.AvroProducer,
 	router Router) func(h http.Handler) http.Handler {
 
 	// create Identity client that will be used by middleware to check callers identity
-	idClient := clientsidentity.New(zebedeeURL)
+	idClient := clientsidentity.NewWithHealthClient(&health.Client{
+		Client: cli,
+		URL:    zebedeeURL,
+		Name:   "identity",
+	})
 
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

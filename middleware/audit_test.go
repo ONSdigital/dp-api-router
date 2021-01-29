@@ -6,14 +6,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/ONSdigital/dp-api-router/middleware/mock"
-	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/ONSdigital/dp-api-router/middleware/mock"
+	"github.com/gorilla/mux"
 
 	"github.com/ONSdigital/dp-api-router/event"
 	eventmock "github.com/ONSdigital/dp-api-router/event/mock"
@@ -83,6 +84,12 @@ func createFailingAuditHandler() (kafka.IProducer, func(h http.Handler) http.Han
 // utility function to generate Clienter mocks
 func createHTTPClientMock(retCode int, retBody interface{}) *dphttp.ClienterMock {
 	return &dphttp.ClienterMock{
+		GetPathsWithNoRetriesFunc: func() []string {
+			return []string{}
+		},
+		SetPathsWithNoRetriesFunc: func([]string) {
+			return
+		},
 		DoFunc: func(ctx context.Context, req *http.Request) (*http.Response, error) {
 			body, _ := json.Marshal(retBody)
 			return &http.Response{
