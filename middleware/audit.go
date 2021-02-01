@@ -4,14 +4,16 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/gorilla/mux"
 	"io"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
+	"github.com/gorilla/mux"
+
 	"github.com/ONSdigital/dp-api-clients-go/headers"
+	"github.com/ONSdigital/dp-api-clients-go/health"
 	clientsidentity "github.com/ONSdigital/dp-api-clients-go/identity"
 	"github.com/ONSdigital/dp-api-router/event"
 	dphttp "github.com/ONSdigital/dp-net/http"
@@ -21,6 +23,7 @@ import (
 )
 
 //go:generate moq -out ./mock/router.go -pkg mock . Router
+
 type Router interface {
 	Match(req *http.Request, match *mux.RouteMatch) bool
 }
@@ -70,7 +73,11 @@ func AuditHandler(auditProducer *event.AvroProducer,
 	router Router) func(h http.Handler) http.Handler {
 
 	// create Identity client that will be used by middleware to check callers identity
-	idClient := clientsidentity.NewAPIClient(cli, zebedeeURL)
+	idClient := clientsidentity.NewWithHealthClient(&health.Client{
+		Client: cli,
+		URL:    zebedeeURL,
+		Name:   "identity",
+	})
 
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -200,7 +207,7 @@ func GenerateAuditEvent(req *http.Request) *event.Audit {
 	return auditEvent
 }
 
-// retrieveIdentity requests the user and caller identity from Zebedee, using hte provided client and url.
+// retrieveIdentity requests the user and caller identity from Zebedee, using the provided client and url.
 func retrieveIdentity(w http.ResponseWriter, req *http.Request, idClient *clientsidentity.Client, zebedeeURL string) (ctx context.Context, status int, err error) {
 	ctx = req.Context()
 	log.Event(ctx, "executing identity check for auditing purposes", log.INFO)

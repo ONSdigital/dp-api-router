@@ -43,6 +43,7 @@ type Config struct {
 	EnableSessionsAPI          bool          `envconfig:"ENABLE_SESSIONS_API"`
 	TopicAPIURL                string        `envconfig:"TOPIC_API_URL"`
 	EnableTopicAPI             bool          `envconfig:"ENABLE_TOPIC_API"`
+	KafkaVersion               string        `envconfig:"KAFKA_VERSION"`
 }
 
 var configuration *Config
@@ -84,6 +85,7 @@ func Get() (*Config, error) {
 			EnableSessionsAPI:          false,
 			TopicAPIURL:                "http://localhost:25300",
 			EnableTopicAPI:             false,
+			KafkaVersion:               "1.0.2",
 		}
 		if err := envconfig.Process("", configuration); err != nil {
 			log.Event(context.Background(), "failed to parse configuration", log.ERROR, log.Data{"config": configuration}, log.Error(err))

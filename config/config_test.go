@@ -45,6 +45,7 @@ func TestGetRetrunsDefaultValues(t *testing.T) {
 			EnableSessionsAPI:          false,
 			TopicAPIURL:                "http://localhost:25300",
 			EnableTopicAPI:             false,
+			KafkaVersion:               "1.0.2",
 		})
 	})
 }
