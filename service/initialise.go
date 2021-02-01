@@ -5,7 +5,7 @@ import (
 
 	"github.com/ONSdigital/dp-api-router/config"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
-	kafka "github.com/ONSdigital/dp-kafka/v2"
+	"github.com/ONSdigital/dp-kafka/v2"
 )
 
 // ExternalServiceList holds the initialiser and initialisation state of external services.
