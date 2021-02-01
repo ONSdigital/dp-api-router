@@ -20,8 +20,9 @@ import (
 	eventmock "github.com/ONSdigital/dp-api-router/event/mock"
 	"github.com/ONSdigital/dp-api-router/middleware"
 	"github.com/ONSdigital/dp-api-router/schema"
-	kafka "github.com/ONSdigital/dp-kafka"
-	"github.com/ONSdigital/dp-kafka/kafkatest"
+
+	kafka "github.com/ONSdigital/dp-kafka/v2"
+	"github.com/ONSdigital/dp-kafka/v2/kafkatest"
 	dphttp "github.com/ONSdigital/dp-net/http"
 	dprequest "github.com/ONSdigital/dp-net/request"
 
