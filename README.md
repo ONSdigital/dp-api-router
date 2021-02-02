@@ -18,22 +18,22 @@ This service is responsible for serving a JSON-LD `@context` field on configured
 | ENABLE_OBSERVATION_API       | false                                     | 
 | ENABLE_PRIVATE_ENDPOINTS     | true                                      | If private endpoints should be routed
 | ENABLE_V1_BETA_RESTRICTION   | false                                     | 
-| ENABLE_SESSIONS_API          | false                                     | 
-| ENABLE_TOPIC_API          | false                                     | 
-| ENABLE_ZEBEDEE_AUDIT         | false                                     | 
-| API_POC_URL                  | "http://localhost:3000"                   | A URL to the poc api
-| CODE_LIST_API_URL            | "http://localhost:22400"                  | A URL to the code list api
+| ENABLE_SESSIONS_API          | false                                     |
+| ENABLE_TOPIC_API             | false                                     |
+| ENABLE_ZEBEDEE_AUDIT         | false                                     |
 | CONTEXT_URL                  | ""                                        | A URL to the JSON-LD context file describing the APIs
-| DATASET_API_URL              | "http://localhost:22000"                  | A URL to the dataset api
-| DIMENSION_SEARCH_API_URL     | "http://localhost:23100"                  | A URL to the dimension search api
-| FILTER_API_URL               | "http://localhost:22100"                  | A URL to the filter api
-| HIERARCHY_API_URL            | "http://localhost:22600"                  | A URL to the hierarchy api
-| IMAGE_API_URL                | "http://localhost:24700"                  | A URL to the image api
+| API_POC_URL                  | "http://localhost:3000"                   | A URL to the poc api
 | IMPORT_API_URL               | "http://localhost:21800"                  | A URL to the import api
-| OBSERVATION_API_URL          | "http://localhost:24500"                  | A URL to the observation api
+| DATASET_API_URL              | "http://localhost:22000"                  | A URL to the dataset api
+| FILTER_API_URL               | "http://localhost:22100"                  | A URL to the filter api
 | RECIPE_API_URL               | "http://localhost:22300"                  | A URL to the recipe api
+| CODE_LIST_API_URL            | "http://localhost:22400"                  | A URL to the code list api
+| HIERARCHY_API_URL            | "http://localhost:22600"                  | A URL to the hierarchy api
 | SEARCH_API_URL               | "http://localhost:23100"                  | A URL to the search api
+| DIMENSION_SEARCH_API_URL     | "http://localhost:23100"                  | A URL to the dimension search api
 | SESSIONS_API_URL             | "http://localhost:24400"                  | A URL to the sessions api
+| OBSERVATION_API_URL          | "http://localhost:24500"                  | A URL to the observation api
+| IMAGE_API_URL                | "http://localhost:24700"                  | A URL to the image api
 | UPLOAD_SERVICE_API_URL:      | "http://localhost:25100"                  | A URL to the upload service api
 | ZEBEDEE_URL                  | "http://localhost:8082"                   | A URL to the zebedee service api
 | KAFKA_ADDR                   | localhost:9092                            | The list of kafka hosts
