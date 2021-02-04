@@ -6,7 +6,7 @@ import (
 
 	"github.com/ONSdigital/dp-api-router/config"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
-	kafka "github.com/ONSdigital/dp-kafka"
+	"github.com/ONSdigital/dp-kafka/v2"
 )
 
 //go:generate moq -out ./mock/initialiser.go -pkg mock . Initialiser
@@ -15,7 +15,7 @@ import (
 // Initialiser defines the methods to initialise external services
 type Initialiser interface {
 	DoGetHealthCheck(cfg *config.Config, buildTime, gitCommit, version string) (HealthChecker, error)
-	DoGetKafkaProducer(ctx context.Context, brokers []string, topic string, maxBytes int) (kafka.IProducer, error)
+	DoGetKafkaProducer(ctx context.Context, brokers []string, kafkaVersion, topic string, maxBytes int) (kafka.IProducer, error)
 }
 
 // HealthChecker defines the required methods from Healthcheck

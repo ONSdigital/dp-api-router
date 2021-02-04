@@ -12,6 +12,7 @@ import (
 	"reflect"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/ONSdigital/log.go/log"
 )
@@ -259,6 +260,12 @@ func updateArray(docArray []interface{}, domain string) ([]interface{}, error) {
 }
 
 func getLink(field, domain string) (string, error) {
+
+	// if the URL is already correct, return it
+	if strings.HasPrefix(field, domain) {
+		return field, nil
+	}
+
 	uri, err := url.Parse(field)
 	if err != nil {
 		return "", err

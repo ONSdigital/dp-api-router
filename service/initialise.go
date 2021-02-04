@@ -5,7 +5,7 @@ import (
 
 	"github.com/ONSdigital/dp-api-router/config"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
-	kafka "github.com/ONSdigital/dp-kafka"
+	"github.com/ONSdigital/dp-kafka/v2"
 )
 
 // ExternalServiceList holds the initialiser and initialisation state of external services.
@@ -37,7 +37,7 @@ func (e *ExternalServiceList) GetHealthCheck(cfg *config.Config, buildTime, gitC
 
 // GetKafkaAuditProducer returns a kafka producer for auditing
 func (e *ExternalServiceList) GetKafkaAuditProducer(ctx context.Context, cfg *config.Config) (kafkaProducer kafka.IProducer, err error) {
-	kafkaProducer, err = e.Init.DoGetKafkaProducer(ctx, cfg.Brokers, cfg.AuditTopic, cfg.KafkaMaxBytes)
+	kafkaProducer, err = e.Init.DoGetKafkaProducer(ctx, cfg.Brokers, cfg.KafkaVersion, cfg.AuditTopic, cfg.KafkaMaxBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,11 @@ func (e *Init) DoGetHealthCheck(cfg *config.Config, buildTime, gitCommit, versio
 }
 
 // DoGetKafkaProducer creates a kafka producer for the provided broker addresses, topic and envMax values in config
-func (e *Init) DoGetKafkaProducer(ctx context.Context, brokers []string, topic string, maxBytes int) (kafka.IProducer, error) {
+func (e *Init) DoGetKafkaProducer(ctx context.Context, brokers []string, kafkaVersion, topic string, maxBytes int) (kafka.IProducer, error) {
 	producerChannels := kafka.CreateProducerChannels()
-	return kafka.NewProducer(ctx, brokers, topic, maxBytes, producerChannels)
+	pConfig := &kafka.ProducerConfig{
+		KafkaVersion:    &kafkaVersion,
+		MaxMessageBytes: &maxBytes,
+	}
+	return kafka.NewProducer(ctx, brokers, topic, producerChannels, pConfig)
 }

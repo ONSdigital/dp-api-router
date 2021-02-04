@@ -9,7 +9,7 @@ job "dp-api-router" {
     healthy_deadline = "2m"
     max_parallel     = 1
     auto_revert      = true
-  }  
+  }
 
   group "web" {
     count = "{{WEB_TASK_COUNT}}"

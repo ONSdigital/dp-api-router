@@ -6,8 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/ONSdigital/dp-api-router/middleware/mock"
-	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -15,12 +13,16 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ONSdigital/dp-api-router/middleware/mock"
+	"github.com/gorilla/mux"
+
 	"github.com/ONSdigital/dp-api-router/event"
 	eventmock "github.com/ONSdigital/dp-api-router/event/mock"
 	"github.com/ONSdigital/dp-api-router/middleware"
 	"github.com/ONSdigital/dp-api-router/schema"
-	kafka "github.com/ONSdigital/dp-kafka"
-	"github.com/ONSdigital/dp-kafka/kafkatest"
+
+	"github.com/ONSdigital/dp-kafka/v2"
+	"github.com/ONSdigital/dp-kafka/v2/kafkatest"
 	dphttp "github.com/ONSdigital/dp-net/http"
 	dprequest "github.com/ONSdigital/dp-net/request"
 
@@ -83,6 +85,12 @@ func createFailingAuditHandler() (kafka.IProducer, func(h http.Handler) http.Han
 // utility function to generate Clienter mocks
 func createHTTPClientMock(retCode int, retBody interface{}) *dphttp.ClienterMock {
 	return &dphttp.ClienterMock{
+		GetPathsWithNoRetriesFunc: func() []string {
+			return []string{}
+		},
+		SetPathsWithNoRetriesFunc: func([]string) {
+			return
+		},
 		DoFunc: func(ctx context.Context, req *http.Request) (*http.Response, error) {
 			body, _ := json.Marshal(retBody)
 			return &http.Response{

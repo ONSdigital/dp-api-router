@@ -14,7 +14,7 @@ var (
 	lockRouterMockMatch sync.RWMutex
 )
 
-// Ensure, that RouterMock does implement Router.
+// Ensure, that RouterMock does implement middleware.Router.
 // If this is not the case, regenerate this file with moq.
 var _ middleware.Router = &RouterMock{}
 
