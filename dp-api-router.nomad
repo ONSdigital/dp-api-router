@@ -1,7 +1,12 @@
-job "dp-api-router" {
+job "dp-api-router-system" {
   datacenters = ["eu-west-1"]
   region      = "eu"
-  type        = "service"
+  type        = "system"
+  priority    = 100
+
+  meta {
+    job_type = "system"
+  }
 
   update {
     stagger          = "60s"
@@ -12,8 +17,6 @@ job "dp-api-router" {
   }
 
   group "web" {
-    count = "{{WEB_TASK_COUNT}}"
-
     constraint {
       attribute = "${node.class}"
       value     = "web"
@@ -78,8 +81,6 @@ job "dp-api-router" {
   }
 
   group "publishing" {
-    count = "{{PUBLISHING_TASK_COUNT}}"
-
     constraint {
       attribute = "${node.class}"
       value     = "publishing"
