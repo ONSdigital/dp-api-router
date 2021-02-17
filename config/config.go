@@ -67,7 +67,7 @@ func Get() (*Config, error) {
 			CodelistAPIURL:             "http://localhost:22400",
 			RecipeAPIURL:               "http://localhost:22300",
 			ImportAPIURL:               "http://localhost:21800",
-			SearchAPIURL:               "http://localhost:23100",
+			SearchAPIURL:               "http://localhost:23900",
 			DimensionSearchAPIURL:      "http://localhost:23100",
 			ImageAPIURL:                "http://localhost:24700",
 			UploadServiceAPIURL:        "http://localhost:25100",

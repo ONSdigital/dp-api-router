@@ -29,7 +29,7 @@ func TestGetRetrunsDefaultValues(t *testing.T) {
 			ImportAPIURL:               "http://localhost:21800",
 			ImageAPIURL:                "http://localhost:24700",
 			UploadServiceAPIURL:        "http://localhost:25100",
-			SearchAPIURL:               "http://localhost:23100",
+			SearchAPIURL:               "http://localhost:23900",
 			DimensionSearchAPIURL:      "http://localhost:23100",
 			APIPocURL:                  "http://localhost:3000",
 			ContextURL:                 "",
