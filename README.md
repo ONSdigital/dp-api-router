@@ -29,7 +29,7 @@ This service is responsible for serving a JSON-LD `@context` field on configured
 | RECIPE_API_URL               | "http://localhost:22300"                  | A URL to the recipe api
 | CODE_LIST_API_URL            | "http://localhost:22400"                  | A URL to the code list api
 | HIERARCHY_API_URL            | "http://localhost:22600"                  | A URL to the hierarchy api
-| SEARCH_API_URL               | "http://localhost:23100"                  | A URL to the search api
+| SEARCH_API_URL               | "http://localhost:23900"                  | A URL to the search api
 | DIMENSION_SEARCH_API_URL     | "http://localhost:23100"                  | A URL to the dimension search api
 | SESSIONS_API_URL             | "http://localhost:24400"                  | A URL to the sessions api
 | OBSERVATION_API_URL          | "http://localhost:24500"                  | A URL to the observation api
