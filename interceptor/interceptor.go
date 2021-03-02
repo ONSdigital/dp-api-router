@@ -41,7 +41,7 @@ const (
 )
 
 var (
-	re = regexp.MustCompile(`^(.+:\/\/)(.+)(\/v\d)$`)
+	re = regexp.MustCompile(`^(.+://)(.+)(/v\d)$`)
 )
 
 // RoundTrip intercepts the response body and post processes to add the correct enviornment

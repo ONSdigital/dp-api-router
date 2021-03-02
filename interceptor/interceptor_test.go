@@ -38,6 +38,8 @@ func TestUnitInterceptor(t *testing.T) {
 
 		b, _ := ioutil.ReadAll(resp.Body)
 
+		err = resp.Body.Close()
+		So(err, ShouldBeNil)
 		So(len(b), ShouldEqual, 0)
 	})
 
@@ -52,6 +54,8 @@ func TestUnitInterceptor(t *testing.T) {
 
 		b, _ := ioutil.ReadAll(resp.Body)
 
+		err = resp.Body.Close()
+		So(err, ShouldBeNil)
 		So(string(b), ShouldEqual, `{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}`+"\n")
 	})
 
@@ -66,8 +70,9 @@ func TestUnitInterceptor(t *testing.T) {
 
 		b, _ := ioutil.ReadAll(resp.Body)
 
+		err = resp.Body.Close()
+		So(err, ShouldBeNil)
 		So(len(b), ShouldEqual, 76)
-
 		So(string(b), ShouldEqual, `{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}`+"\n")
 	})
 
@@ -82,8 +87,9 @@ func TestUnitInterceptor(t *testing.T) {
 
 		b, _ := ioutil.ReadAll(resp.Body)
 
+		err = resp.Body.Close()
+		So(err, ShouldBeNil)
 		So(len(b), ShouldEqual, 102)
-
 		So(string(b), ShouldEqual, `{"@context":"context.json","links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}`+"\n")
 	})
 
@@ -98,8 +104,9 @@ func TestUnitInterceptor(t *testing.T) {
 
 		b, _ := ioutil.ReadAll(resp.Body)
 
+		err = resp.Body.Close()
+		So(err, ShouldBeNil)
 		So(len(b), ShouldEqual, 77)
-
 		So(string(b), ShouldEqual, `{"downloads":{"csv":{"href":"https://download.beta.ons.gov.uk/myfile.csv"}}}`+"\n")
 	})
 
@@ -113,8 +120,9 @@ func TestUnitInterceptor(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		b, _ := ioutil.ReadAll(resp.Body)
+		err = resp.Body.Close()
+		So(err, ShouldBeNil)
 		So(len(b), ShouldEqual, 77)
-
 		So(string(b), ShouldEqual, `{"dimensions":[{"href":"https://api.beta.ons.gov.uk/v1/codelists/1234567"}]}`+"\n")
 	})
 
@@ -128,8 +136,9 @@ func TestUnitInterceptor(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		b, _ := ioutil.ReadAll(resp.Body)
+		err = resp.Body.Close()
+		So(err, ShouldBeNil)
 		So(len(b), ShouldEqual, 88)
-
 		So(string(b), ShouldEqual, `{"items":[{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}]}`+"\n")
 	})
 
@@ -143,8 +152,9 @@ func TestUnitInterceptor(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		b, _ := ioutil.ReadAll(resp.Body)
+		err = resp.Body.Close()
+		So(err, ShouldBeNil)
 		So(len(b), ShouldEqual, 83)
-
 		So(string(b), ShouldEqual, `{"links":{"instances":[{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}]}}`+"\n")
 	})
 
@@ -158,8 +168,9 @@ func TestUnitInterceptor(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		b, _ := ioutil.ReadAll(resp.Body)
+		err = resp.Body.Close()
+		So(err, ShouldBeNil)
 		So(len(b), ShouldEqual, 91)
-
 		So(string(b), ShouldEqual, `{"dimensions":{"time":{"option":{"href":"https://api.beta.ons.gov.uk/v1/datasets/time"}}}}`+"\n")
 	})
 
@@ -173,8 +184,9 @@ func TestUnitInterceptor(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		b, _ := ioutil.ReadAll(resp.Body)
+		err = resp.Body.Close()
+		So(err, ShouldBeNil)
 		So(len(b), ShouldEqual, 116)
-
 		So(string(b), ShouldEqual, `{"dimensions":{"time":{"option":{"href":"https://api.beta.ons.gov.uk/v1/datasets/time?hello=world&mobile=phone"}}}}`+"\n")
 	})
 
@@ -189,8 +201,9 @@ func TestUnitInterceptor(t *testing.T) {
 
 		b, _ := ioutil.ReadAll(resp.Body)
 
+		err = resp.Body.Close()
+		So(err, ShouldBeNil)
 		So(len(b), ShouldEqual, 154)
-
 		So(string(b), ShouldEqual, `[{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}},{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}]`+"\n")
 	})
 }

@@ -21,7 +21,7 @@ import (
 	"github.com/ONSdigital/dp-api-router/middleware"
 	"github.com/ONSdigital/dp-api-router/schema"
 
-	"github.com/ONSdigital/dp-kafka/v2"
+	kafka "github.com/ONSdigital/dp-kafka/v2"
 	"github.com/ONSdigital/dp-kafka/v2/kafkatest"
 	dphttp "github.com/ONSdigital/dp-net/http"
 	dprequest "github.com/ONSdigital/dp-net/request"
@@ -43,7 +43,6 @@ var (
 	testTimeMillisOutbound int64 = 1587884752456
 	testBody                     = []byte{1, 2, 3, 4}
 	errMarshal                   = errors.New("avro marshal error")
-	errDo                        = errors.New("identity client Do failed")
 )
 
 // valid identity response for testing
@@ -52,10 +51,11 @@ var testIdentityResponse = &dprequest.IdentityResponse{
 }
 
 // utility function to generate handlers for testing, which return the provided status code and body
-func testHandler(statusCode int, body []byte) http.Handler {
+func testHandler(statusCode int, body []byte, c C) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(statusCode)
-		w.Write(body)
+		_, err := w.Write(body)
+		c.So(err, ShouldBeNil)
 	})
 }
 
@@ -89,7 +89,6 @@ func createHTTPClientMock(retCode int, retBody interface{}) *dphttp.ClienterMock
 			return []string{}
 		},
 		SetPathsWithNoRetriesFunc: func([]string) {
-			return
 		},
 		DoFunc: func(ctx context.Context, req *http.Request) (*http.Response, error) {
 			body, _ := json.Marshal(retBody)
@@ -215,7 +214,7 @@ func TestAuditHandlerHeaders(t *testing.T) {
 
 			Convey("And a valid audit handler with successful downstream", func(c C) {
 				p, a := createValidAuditHandler()
-				auditHandler := a(testHandler(http.StatusOK, testBody))
+				auditHandler := a(testHandler(http.StatusOK, testBody, c))
 
 				// execute request and wait for 2 audit events
 				auditEvents := serveAndCaptureAudit(c, w, req, auditHandler, p.Channels().Output, 2)
@@ -248,7 +247,7 @@ func TestAuditHandlerHeaders(t *testing.T) {
 
 			Convey("And a failing audit handler with successful downstream", func(c C) {
 				p, a := createFailingAuditHandler()
-				auditHandler := a(testHandler(http.StatusOK, testBody))
+				auditHandler := a(testHandler(http.StatusOK, testBody, c))
 
 				// execute request and don't expect audit events
 				serveAndCaptureAudit(c, w, req, auditHandler, p.Channels().Output, 0)
@@ -270,7 +269,7 @@ func TestAuditHandlerHeaders(t *testing.T) {
 
 			Convey("And a valid audit handler with successful downstream", func(c C) {
 				p, a := createValidAuditHandler()
-				auditHandler := a(testHandler(http.StatusOK, testBody))
+				auditHandler := a(testHandler(http.StatusOK, testBody, c))
 
 				// execute request and wait for 2 audit events
 				auditEvents := serveAndCaptureAudit(c, w, req, auditHandler, p.Channels().Output, 2)
@@ -303,7 +302,7 @@ func TestAuditHandlerHeaders(t *testing.T) {
 
 			Convey("And a failing audit handler with successful downstream", func(c C) {
 				p, a := createFailingAuditHandler()
-				auditHandler := a(testHandler(http.StatusOK, testBody))
+				auditHandler := a(testHandler(http.StatusOK, testBody, c))
 
 				// execute request and don't expect audit events
 				serveAndCaptureAudit(c, w, req, auditHandler, p.Channels().Output, 0)
@@ -328,7 +327,7 @@ func TestAuditHandlerHeaders(t *testing.T) {
 
 			Convey("And a valid audit handler with successful downstream", func(c C) {
 				p, a := createValidAuditHandler()
-				auditHandler := a(testHandler(http.StatusOK, testBody))
+				auditHandler := a(testHandler(http.StatusOK, testBody, c))
 
 				// execute request and wait for 2 audit events
 				auditEvents := serveAndCaptureAudit(c, w, req, auditHandler, p.Channels().Output, 2)
@@ -387,7 +386,7 @@ func TestAuditHandler(t *testing.T) {
 
 		Convey("And a valid audit handler with unsuccessful (Forbidden) downstream", func(c C) {
 			p, a := createValidAuditHandler()
-			auditHandler := a(testHandler(http.StatusForbidden, testBody))
+			auditHandler := a(testHandler(http.StatusForbidden, testBody, c))
 
 			// execute request and wait for 2 audit events
 			auditEvents := serveAndCaptureAudit(c, w, req, auditHandler, p.Channels().Output, 2)
@@ -420,7 +419,7 @@ func TestAuditHandler(t *testing.T) {
 
 		Convey("And a failing audit handler with unsuccessful (Forbidden) downstream", func(c C) {
 			p, a := createFailingAuditHandler()
-			auditHandler := a(testHandler(http.StatusForbidden, testBody))
+			auditHandler := a(testHandler(http.StatusForbidden, testBody, c))
 
 			// execute request and don't expect audit events
 			serveAndCaptureAudit(c, w, req, auditHandler, p.Channels().Output, 0)
@@ -455,7 +454,7 @@ func TestAuditHandler(t *testing.T) {
 			p := kafkatest.NewMessageProducer(true)
 			a := event.NewAvroProducer(p.Channels().Output, failingMarshaller)
 			enableZebedeeAudit := true
-			auditHandler := middleware.AuditHandler(a, cliMock, testZebedeeURL, testVersionPrefix, enableZebedeeAudit, nil)(testHandler(http.StatusForbidden, testBody))
+			auditHandler := middleware.AuditHandler(a, cliMock, testZebedeeURL, testVersionPrefix, enableZebedeeAudit, nil)(testHandler(http.StatusForbidden, testBody, c))
 
 			// execute request and expect only 1 audit event
 			auditEvents := serveAndCaptureAudit(c, w, req, auditHandler, p.Channels().Output, 1)
@@ -484,7 +483,7 @@ func TestAuditIgnoreSkip(t *testing.T) {
 		Convey("And a valid audit handler without downstream", func(c C) {
 
 			p, a := createValidAuditHandler()
-			auditHandler := a(testHandler(http.StatusForbidden, testBody))
+			auditHandler := a(testHandler(http.StatusForbidden, testBody, c))
 
 			// execute request and don't wait for audit events
 			serveAndCaptureAudit(c, w, req, auditHandler, p.Channels().Output, 0)
@@ -506,7 +505,7 @@ func TestAuditIgnoreSkip(t *testing.T) {
 		Convey("And a valid audit handler without downstream", func(c C) {
 
 			p, a := createValidAuditHandler()
-			auditHandler := a(testHandler(http.StatusForbidden, testBody))
+			auditHandler := a(testHandler(http.StatusForbidden, testBody, c))
 
 			// execute request and wait for 2 audit events
 			auditEvents := serveAndCaptureAudit(c, w, req, auditHandler, p.Channels().Output, 2)
@@ -542,7 +541,7 @@ func TestSkipZebedeeAudit(t *testing.T) {
 			},
 		}
 		auditMiddleware := middleware.AuditHandler(auditProducer, cliMock, testZebedeeURL, testVersionPrefix, enableZebedeeAudit, routerMock)
-		auditHandler := auditMiddleware(testHandler(http.StatusOK, testBody))
+		auditHandler := auditMiddleware(testHandler(http.StatusOK, testBody, c))
 
 		Convey("When the handler receives a Zebedee request", func(c C) {
 			req, err := http.NewRequest(http.MethodGet, "/data", nil)
@@ -581,7 +580,7 @@ func TestSkipZebedeeAudit(t *testing.T) {
 			},
 		}
 		auditMiddleware := middleware.AuditHandler(auditProducer, cliMock, testZebedeeURL, testVersionPrefix, enableZebedeeAudit, routerMock)
-		auditHandler := auditMiddleware(testHandler(http.StatusOK, testBody))
+		auditHandler := auditMiddleware(testHandler(http.StatusOK, testBody, c))
 
 		Convey("When the handler receives a request for a known route (not zebedee)", func(c C) {
 			req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", nil)

@@ -106,7 +106,7 @@ func AuditHandler(auditProducer *event.AvroProducer,
 
 				// Retrieve Identity from Zebedee, which is stored in context.
 				// if it fails, try to audit with the statusCode before returning
-				ctx, statusCode, err := retrieveIdentity(w, r, idClient, zebedeeURL)
+				ctx, statusCode, err := retrieveIdentity(w, r, idClient)
 				if err != nil {
 					// error already handled in retrieveIdentity. Try to audit it.
 					auditEvent.StatusCode = int32(statusCode)
@@ -156,7 +156,11 @@ func AuditHandler(auditProducer *event.AvroProducer,
 
 			// Copy the intercepted body and header to the original response writer
 			w.WriteHeader(rec.statusCode)
-			io.Copy(w, rec.body)
+			_, err = io.Copy(w, rec.body)
+			if err != nil {
+				handleError(r.Context(), w, r, http.StatusInternalServerError, "failed to copy intercepted response to original response writer", err, log.Data{"event": auditEvent})
+				return
+			}
 
 			// Finally send the outbound audit message
 			auditProducer.Send(eventBytes)
@@ -207,10 +211,9 @@ func GenerateAuditEvent(req *http.Request) *event.Audit {
 	return auditEvent
 }
 
-// retrieveIdentity requests the user and caller identity from Zebedee, using the provided client and url.
-func retrieveIdentity(w http.ResponseWriter, req *http.Request, idClient *clientsidentity.Client, zebedeeURL string) (ctx context.Context, status int, err error) {
+// retrieveIdentity requests the user and caller identity from Zebedee, using the provided client.
+func retrieveIdentity(w http.ResponseWriter, req *http.Request, idClient *clientsidentity.Client) (ctx context.Context, status int, err error) {
 	ctx = req.Context()
-	log.Event(ctx, "executing identity check for auditing purposes", log.INFO)
 
 	florenceToken, err := getFlorenceToken(ctx, req)
 	if err != nil {
@@ -224,7 +227,7 @@ func retrieveIdentity(w http.ResponseWriter, req *http.Request, idClient *client
 		return ctx, http.StatusInternalServerError, err
 	}
 
-	// CheckRequest performs the call to Zebedee GET /identity and stores the values  in context
+	// CheckRequest performs the call to Zebedee GET /identity and stores the values in context
 	ctx, statusCode, authFailure, err := idClient.CheckRequest(req, florenceToken, serviceAuthToken)
 	logData := log.Data{"auth_status_code": statusCode}
 	if err != nil {
@@ -291,7 +294,7 @@ func getServiceAuthToken(ctx context.Context, req *http.Request) (string, error)
 	return authToken, err
 }
 
-// Now is a time.Now wrapper
+// Now is a time.Now wrapper specifically for testing purposes, and should not me unlambda'd - despite what golangci-lint says
 var Now = func() time.Time {
 	return time.Now()
 }
