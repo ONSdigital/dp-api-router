@@ -66,7 +66,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	}
 
 	// Create router and http server
-	r := CreateRouter(ctx, cfg, svc.HealthCheck)
+	r := CreateRouter(ctx, cfg)
 	m := svc.CreateMiddleware(cfg, r)
 	svc.Server = dphttp.NewServer(cfg.BindAddr, m.Then(r))
 
@@ -123,7 +123,7 @@ func (svc *Service) CreateMiddleware(cfg *config.Config, router *mux.Router) ali
 }
 
 // CreateRouter creates the router with the required endpoints for proxied APIs
-func CreateRouter(ctx context.Context, cfg *config.Config, hc HealthChecker) *mux.Router {
+func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 	router := mux.NewRouter()
 
 	// Public APIs
@@ -212,7 +212,7 @@ func (svc *Service) Close(ctx context.Context) error {
 			hasShutdownError = true
 		}
 
-		//Close Kafka Audit Producer, if present
+		// Close Kafka Audit Producer, if present
 		if svc.ServiceList.KafkaAuditProducer {
 			if err := svc.KafkaAuditProducer.Close(ctx); err != nil {
 				log.Event(ctx, "failed to stop kafka audit producer", log.Error(err), log.ERROR)
