@@ -51,7 +51,7 @@ job "dp-api-router" {
       service {
         name = "dp-api-router"
         port = "http"
-        tags = ["web"]
+        tags = ["web", "system_job"]
         check {
           type     = "http"
           path     = "/health"
@@ -115,7 +115,7 @@ job "dp-api-router" {
       service {
         name = "dp-api-router"
         port = "http"
-        tags = ["publishing"]
+        tags = ["publishing", "system_job"]
         check {
           type     = "http"
           path     = "/health"
