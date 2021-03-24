@@ -11,7 +11,7 @@ import (
 	"github.com/ONSdigital/dp-api-router/middleware"
 	"github.com/ONSdigital/dp-api-router/proxy"
 	"github.com/ONSdigital/dp-api-router/schema"
-	"github.com/ONSdigital/dp-kafka/v2"
+	kafka "github.com/ONSdigital/dp-kafka/v2"
 	dphttp "github.com/ONSdigital/dp-net/http"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/handlers"
@@ -66,7 +66,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	}
 
 	// Create router and http server
-	r := CreateRouter(ctx, cfg, svc.HealthCheck)
+	r := CreateRouter(ctx, cfg)
 	m := svc.CreateMiddleware(cfg, r)
 	svc.Server = dphttp.NewServer(cfg.BindAddr, m.Then(r))
 
@@ -123,7 +123,7 @@ func (svc *Service) CreateMiddleware(cfg *config.Config, router *mux.Router) ali
 }
 
 // CreateRouter creates the router with the required endpoints for proxied APIs
-func CreateRouter(ctx context.Context, cfg *config.Config, hc HealthChecker) *mux.Router {
+func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 	router := mux.NewRouter()
 
 	// Public APIs
@@ -133,7 +133,7 @@ func CreateRouter(ctx context.Context, cfg *config.Config, hc HealthChecker) *mu
 	}
 	if cfg.EnableTopicAPI {
 		topic := proxy.NewAPIProxy(cfg.TopicAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.ContextURL, cfg.EnableV1BetaRestriction)
-		addVersionHandler(router, topic, "/topics/{id}")
+		addVersionHandler(router, topic, "/topics")
 	}
 	codeList := proxy.NewAPIProxy(cfg.CodelistAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 	dataset := proxy.NewAPIProxy(cfg.DatasetAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.ContextURL, cfg.EnableV1BetaRestriction)
@@ -212,7 +212,7 @@ func (svc *Service) Close(ctx context.Context) error {
 			hasShutdownError = true
 		}
 
-		//Close Kafka Audit Producer, if present
+		// Close Kafka Audit Producer, if present
 		if svc.ServiceList.KafkaAuditProducer {
 			if err := svc.KafkaAuditProducer.Close(ctx); err != nil {
 				log.Event(ctx, "failed to stop kafka audit producer", log.Error(err), log.ERROR)
