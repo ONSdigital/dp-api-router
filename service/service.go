@@ -129,11 +129,11 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 	// Public APIs
 	if cfg.EnableObservationAPI {
 		observation := proxy.NewAPIProxy(cfg.ObservationAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.ContextURL, cfg.EnableV1BetaRestriction)
-		addVersionHandler(router, observation, "/datasets/{dataset_id}/editions/{edition}/versions/{version}/observations")
+		addTransitionalHandler(router, observation, "/datasets/{dataset_id}/editions/{edition}/versions/{version}/observations")
 	}
 	if cfg.EnableTopicAPI {
 		topic := proxy.NewAPIProxy(cfg.TopicAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.ContextURL, cfg.EnableV1BetaRestriction)
-		addVersionHandler(router, topic, "/topics")
+		addTransitionalHandler(router, topic, "/topics")
 	}
 	codeList := proxy.NewAPIProxy(cfg.CodelistAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 	dataset := proxy.NewAPIProxy(cfg.DatasetAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.ContextURL, cfg.EnableV1BetaRestriction)
@@ -156,10 +156,16 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 		recipe := proxy.NewAPIProxy(cfg.RecipeAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 		importAPI := proxy.NewAPIProxy(cfg.ImportAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 		uploadServiceAPI := proxy.NewAPIProxy(cfg.UploadServiceAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+		identityAPI := proxy.NewAPIProxy(cfg.IdentityAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 		addTransitionalHandler(router, recipe, "/recipes")
 		addTransitionalHandler(router, importAPI, "/jobs")
 		addTransitionalHandler(router, dataset, "/instances")
 		addTransitionalHandler(router, uploadServiceAPI, "/upload")
+		for _, version := range cfg.IdentityAPIVersions {
+			addVersionedHandler(router, identityAPI, version, "/tokens")
+			addVersionedHandler(router, identityAPI, version, "/users")
+			addVersionedHandler(router, identityAPI, version, "/groups")
+		}
 
 		// Feature flag for Sessions API
 		if cfg.EnableSessionsAPI {
