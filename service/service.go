@@ -181,7 +181,11 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 	return router
 }
 
-func addVersionHandler(router *mux.Router, proxy *proxy.APIProxy, path string) {
+func addVersionedHandler(router *mux.Router, proxy *proxy.APIProxy, version string, path string) {
+	// Proxy any request after the path given to the target address
+	router.HandleFunc("/"+version+path+"{rest:.*}", proxy.Handle)
+}
+
 func addTransitionalHandler(router *mux.Router, proxy *proxy.APIProxy, path string) {
 	// Proxy any request after the path given to the target address
 	router.HandleFunc(fmt.Sprintf("/%s"+path+"{rest:.*}", proxy.Version), proxy.LegacyHandle)
