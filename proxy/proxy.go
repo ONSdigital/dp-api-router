@@ -49,8 +49,8 @@ func (p *APIProxy) Handle(w http.ResponseWriter, r *http.Request) {
 	p.proxy.ServeHTTP(w, r)
 }
 
-// VersionHandle removes the /v1 path item from the URL and then calls the proxy's ServeHTTP
-func (p *APIProxy) VersionHandle(w http.ResponseWriter, r *http.Request) {
+// LegacyHandle removes the /v1 path item from the URL and then calls the proxy's ServeHTTP
+func (p *APIProxy) LegacyHandle(w http.ResponseWriter, r *http.Request) {
 	r.URL.Path = strings.Replace(r.URL.Path, "/v1", "", 1)
 
 	middleware.BetaApiHandler(p.enableBetaRestriction, p.proxy).ServeHTTP(w, r)
