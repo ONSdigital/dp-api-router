@@ -226,6 +226,8 @@ func TestRouterPrivateAPIs(t *testing.T) {
 		So(err, ShouldBeNil)
 		uploadServiceAPIURL, err := url.Parse(cfg.UploadServiceAPIURL)
 		So(err, ShouldBeNil)
+		identityAPIURL, err := url.Parse(cfg.IdentityAPIURL)
+		So(err, ShouldBeNil)
 		zebedeeURL, err := url.Parse(cfg.ZebedeeURL)
 		So(err, ShouldBeNil)
 
@@ -234,6 +236,14 @@ func TestRouterPrivateAPIs(t *testing.T) {
 			"/recipes":   recipeAPIURL,
 			"/jobs":      importAPIURL,
 			"/instances": datasetAPIURL,
+		}
+		for _, version := range cfg.IdentityAPIVersions {
+			key := "/"+version+"/tokens"
+			expectedPrivateURLs[key] = identityAPIURL
+			key = "/"+version+"/users"
+			expectedPrivateURLs[key] = identityAPIURL
+			key = "/"+version+"/groups"
+			expectedPrivateURLs[key] = identityAPIURL
 		}
 
 		resetProxyMocksWithExpectations(expectedPrivateURLs)
@@ -287,6 +297,54 @@ func TestRouterPrivateAPIs(t *testing.T) {
 				w := createRouterTest(cfg, "http://localhost:23200/v1/instances/subpath")
 				So(w.Code, ShouldEqual, http.StatusOK)
 				verifyProxied("/instances/subpath", datasetAPIURL)
+			})
+
+			Convey("A request to a tokens path is proxied to identityAPIURL", func() {
+				for _, version := range cfg.IdentityAPIVersions {
+					w := createRouterTest(cfg, "http://localhost:23200/"+version+"/tokens")
+					So(w.Code, ShouldEqual, http.StatusOK)
+					verifyProxied("/"+version+"/tokens", identityAPIURL)
+				}
+			})
+
+			Convey("A request to a tokens subpath is proxied to identityAPIURL", func() {
+				for _, version := range cfg.IdentityAPIVersions {
+					w := createRouterTest(cfg, "http://localhost:23200/"+version+"/tokens/subpath")
+					So(w.Code, ShouldEqual, http.StatusOK)
+					verifyProxied("/"+version+"/tokens/subpath", identityAPIURL)
+				}
+			})
+
+			Convey("A request to a users path is proxied to identityAPIURL", func() {
+				for _, version := range cfg.IdentityAPIVersions {
+					w := createRouterTest(cfg, "http://localhost:23200/"+version+"/users")
+					So(w.Code, ShouldEqual, http.StatusOK)
+					verifyProxied("/"+version+"/users", identityAPIURL)
+				}
+			})
+
+			Convey("A request to a users subpath is proxied to identityAPIURL", func() {
+				for _, version := range cfg.IdentityAPIVersions {
+					w := createRouterTest(cfg, "http://localhost:23200/"+version+"/users/subpath")
+					So(w.Code, ShouldEqual, http.StatusOK)
+					verifyProxied("/"+version+"/users/subpath", identityAPIURL)
+				}
+			})
+
+			Convey("A request to a groups path is proxied to identityAPIURL", func() {
+				for _, version := range cfg.IdentityAPIVersions {
+					w := createRouterTest(cfg, "http://localhost:23200/"+version+"/groups")
+					So(w.Code, ShouldEqual, http.StatusOK)
+					verifyProxied("/"+version+"/groups", identityAPIURL)
+				}
+			})
+
+			Convey("A request to a groups subpath is proxied to identityAPIURL", func() {
+				for _, version := range cfg.IdentityAPIVersions {
+					w := createRouterTest(cfg, "http://localhost:23200/"+version+"/groups/subpath")
+					So(w.Code, ShouldEqual, http.StatusOK)
+					verifyProxied("/"+version+"/groups/subpath", identityAPIURL)
+				}
 			})
 		})
 
