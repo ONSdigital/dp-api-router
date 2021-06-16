@@ -56,7 +56,7 @@ func ShallSkipIdentity(versionPrefix, path string) bool {
 
 func shallIgnore(path string) bool {
 	for _, pathToIgnore := range pathsToIgnore {
-		if path == pathToIgnore {
+		if strings.HasPrefix(path, pathToIgnore) {
 			return true
 		}
 	}
