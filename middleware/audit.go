@@ -29,10 +29,14 @@ type Router interface {
 }
 
 // paths that will skip auditing (note)
+// identity api paths being added until the auditing has been updated to work with new tokens
 var pathsToIgnore = []string{
 	"/ping",
 	"/clickEventLog",
 	"/health",
+	"/v1/tokens",
+	"/v1/users",
+	"/v1/groups",
 }
 
 // paths that will skip retrieveIdentity, and will be audited without identity
