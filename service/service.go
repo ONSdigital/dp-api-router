@@ -152,6 +152,7 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 	addTransitionalHandler(router, image, "/images")
 
 	// Private APIs
+	fmt.Println("private endpoint config - "+fmt.Sprintf("%v", cfg.EnablePrivateEndpoints))
 	if cfg.EnablePrivateEndpoints {
 		recipe := proxy.NewAPIProxy(cfg.RecipeAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 		importAPI := proxy.NewAPIProxy(cfg.ImportAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
@@ -165,6 +166,7 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 			addVersionedHandler(router, identityAPI, version, "/tokens")
 			addVersionedHandler(router, identityAPI, version, "/users")
 			addVersionedHandler(router, identityAPI, version, "/groups")
+			addVersionedHandler(router, identityAPI, version, "/password-reset")
 		}
 
 		// Feature flag for Sessions API

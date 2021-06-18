@@ -2,6 +2,7 @@ package service_test
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -244,6 +245,8 @@ func TestRouterPrivateAPIs(t *testing.T) {
 			expectedPrivateURLs[key] = identityAPIURL
 			key = "/"+version+"/groups"
 			expectedPrivateURLs[key] = identityAPIURL
+			key = "/"+version+"/password-reset"
+			expectedPrivateURLs[key] = identityAPIURL
 		}
 
 		resetProxyMocksWithExpectations(expectedPrivateURLs)
@@ -344,6 +347,15 @@ func TestRouterPrivateAPIs(t *testing.T) {
 					w := createRouterTest(cfg, "http://localhost:23200/"+version+"/groups/subpath")
 					So(w.Code, ShouldEqual, http.StatusOK)
 					verifyProxied("/"+version+"/groups/subpath", identityAPIURL)
+				}
+			})
+
+			Convey("A request to password-reset path is proxied to identityAPIURL", func() {
+				fmt.Println(cfg.IdentityAPIVersions)
+				for _, version := range cfg.IdentityAPIVersions {
+					w := createRouterTest(cfg, "http://localhost:23200/"+version+"/password-reset")
+					So(w.Code, ShouldEqual, http.StatusOK)
+					verifyProxied("/"+version+"/password-reset", identityAPIURL)
 				}
 			})
 		})

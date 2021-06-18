@@ -37,6 +37,7 @@ var pathsToIgnore = []string{
 	"/v1/tokens",
 	"/v1/users",
 	"/v1/groups",
+	"/v1/password-reset",
 }
 
 // paths that will skip retrieveIdentity, and will be audited without identity
