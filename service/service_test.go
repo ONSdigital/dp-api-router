@@ -2,7 +2,6 @@ package service_test
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -351,7 +350,6 @@ func TestRouterPrivateAPIs(t *testing.T) {
 			})
 
 			Convey("A request to password-reset path is proxied to identityAPIURL", func() {
-				fmt.Println(cfg.IdentityAPIVersions)
 				for _, version := range cfg.IdentityAPIVersions {
 					w := createRouterTest(cfg, "http://localhost:23200/"+version+"/password-reset")
 					So(w.Code, ShouldEqual, http.StatusOK)

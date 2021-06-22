@@ -161,12 +161,10 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 		addTransitionalHandler(router, importAPI, "/jobs")
 		addTransitionalHandler(router, dataset, "/instances")
 		addTransitionalHandler(router, uploadServiceAPI, "/upload")
-		for _, version := range cfg.IdentityAPIVersions {
-			addVersionedHandler(router, identityAPI, version, "/tokens")
-			addVersionedHandler(router, identityAPI, version, "/users")
-			addVersionedHandler(router, identityAPI, version, "/groups")
-			addVersionedHandler(router, identityAPI, version, "/password-reset")
-		}
+		addVersionedHandlers(router, identityAPI, cfg.IdentityAPIVersions, "/tokens")
+		addVersionedHandlers(router, identityAPI, cfg.IdentityAPIVersions, "/users")
+		addVersionedHandlers(router, identityAPI, cfg.IdentityAPIVersions, "/groups")
+		addVersionedHandlers(router, identityAPI, cfg.IdentityAPIVersions, "/password-reset")
 
 		// Feature flag for Sessions API
 		if cfg.EnableSessionsAPI {
@@ -188,9 +186,11 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 	return router
 }
 
-func addVersionedHandler(router *mux.Router, proxy *proxy.APIProxy, version string, path string) {
+func addVersionedHandlers(router *mux.Router, proxy *proxy.APIProxy, versions []string, path string) {
 	// Proxy any request after the path given to the target address
-	router.HandleFunc("/"+version+path+"{rest:.*}", proxy.Handle)
+	for _, version := range versions {
+		router.HandleFunc("/"+version+path+"{rest:.*}", proxy.Handle)
+	}
 }
 
 func addTransitionalHandler(router *mux.Router, proxy *proxy.APIProxy, path string) {
