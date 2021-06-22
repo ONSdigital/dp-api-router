@@ -29,10 +29,16 @@ type Router interface {
 }
 
 // paths that will skip auditing (note)
+// identity api paths being added until the auditing has been updated to work with new tokens
+// TODO remove "/v1/tokens", "/v1/users", "/v1/groups", "/v1/password-reset" from this list once authorisation has been integrated into dp-identity-api
 var pathsToIgnore = []string{
 	"/ping",
 	"/clickEventLog",
 	"/health",
+	"/v1/tokens",
+	"/v1/users",
+	"/v1/groups",
+	"/v1/password-reset",
 }
 
 // paths that will skip retrieveIdentity, and will be audited without identity
@@ -56,7 +62,7 @@ func ShallSkipIdentity(versionPrefix, path string) bool {
 
 func shallIgnore(path string) bool {
 	for _, pathToIgnore := range pathsToIgnore {
-		if path == pathToIgnore {
+		if strings.HasPrefix(path, pathToIgnore) {
 			return true
 		}
 	}
