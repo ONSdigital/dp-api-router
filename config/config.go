@@ -39,13 +39,18 @@ type Config struct {
 	HealthCheckInterval        time.Duration `envconfig:"HEALTHCHECK_INTERVAL"`
 	HealthCheckCriticalTimeout time.Duration `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`
 	Brokers                    []string      `envconfig:"KAFKA_ADDR"`
+	KafkaVersion               string        `envconfig:"KAFKA_VERSION"`
+	KafkaSecProtocol           string        `envconfig:"KAFKA_SEC_PROTO"`
+	KafkaSecCACerts            string        `envconfig:"KAFKA_SEC_CA_CERTS"`
+	KafkaSecClientCert         string        `envconfig:"KAFKA_SEC_CLIENT_CERT"`
+	KafkaSecClientKey          string        `envconfig:"KAFKA_SEC_CLIENT_KEY" json:"-"`
+	KafkaSecSkipVerify         bool          `envconfig:"KAFKA_SEC_SKIP_VERIFY"`
 	KafkaMaxBytes              int           `envconfig:"KAFKA_MAX_BYTES"`
 	AuditTopic                 string        `envconfig:"AUDIT_TOPIC"`
 	SessionsAPIURL             string        `envconfig:"SESSIONS_API_URL"`
 	EnableSessionsAPI          bool          `envconfig:"ENABLE_SESSIONS_API"`
 	TopicAPIURL                string        `envconfig:"TOPIC_API_URL"`
 	EnableTopicAPI             bool          `envconfig:"ENABLE_TOPIC_API"`
-	KafkaVersion               string        `envconfig:"KAFKA_VERSION"`
 }
 
 var configuration *Config
@@ -82,6 +87,7 @@ func Get() (*Config, error) {
 			HealthCheckInterval:        30 * time.Second,
 			HealthCheckCriticalTimeout: 90 * time.Second,
 			Brokers:                    []string{"localhost:9092"},
+			KafkaVersion:               "1.0.2",
 			AllowedOrigins:             []string{"http://localhost:8081"},
 			KafkaMaxBytes:              2000000,
 			AuditTopic:                 "audit",
@@ -89,7 +95,6 @@ func Get() (*Config, error) {
 			EnableSessionsAPI:          false,
 			TopicAPIURL:                "http://localhost:25300",
 			EnableTopicAPI:             false,
-			KafkaVersion:               "1.0.2",
 		}
 		if err := envconfig.Process("", configuration); err != nil {
 			log.Event(context.Background(), "failed to parse configuration", log.ERROR, log.Data{"config": configuration}, log.Error(err))

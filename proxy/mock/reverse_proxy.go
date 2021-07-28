@@ -9,10 +9,6 @@ import (
 	"sync"
 )
 
-var (
-	lockIReverseProxyMockServeHTTP sync.RWMutex
-)
-
 // Ensure, that IReverseProxyMock does implement proxy.IReverseProxy.
 // If this is not the case, regenerate this file with moq.
 var _ proxy.IReverseProxy = &IReverseProxyMock{}
@@ -46,6 +42,7 @@ type IReverseProxyMock struct {
 			Req *http.Request
 		}
 	}
+	lockServeHTTP sync.RWMutex
 }
 
 // ServeHTTP calls ServeHTTPFunc.
@@ -60,9 +57,9 @@ func (mock *IReverseProxyMock) ServeHTTP(rw http.ResponseWriter, req *http.Reque
 		Rw:  rw,
 		Req: req,
 	}
-	lockIReverseProxyMockServeHTTP.Lock()
+	mock.lockServeHTTP.Lock()
 	mock.calls.ServeHTTP = append(mock.calls.ServeHTTP, callInfo)
-	lockIReverseProxyMockServeHTTP.Unlock()
+	mock.lockServeHTTP.Unlock()
 	mock.ServeHTTPFunc(rw, req)
 }
 
@@ -77,8 +74,8 @@ func (mock *IReverseProxyMock) ServeHTTPCalls() []struct {
 		Rw  http.ResponseWriter
 		Req *http.Request
 	}
-	lockIReverseProxyMockServeHTTP.RLock()
+	mock.lockServeHTTP.RLock()
 	calls = mock.calls.ServeHTTP
-	lockIReverseProxyMockServeHTTP.RUnlock()
+	mock.lockServeHTTP.RUnlock()
 	return calls
 }
