@@ -11,11 +11,6 @@ import (
 	"sync"
 )
 
-var (
-	lockInitialiserMockDoGetHealthCheck   sync.RWMutex
-	lockInitialiserMockDoGetKafkaProducer sync.RWMutex
-)
-
 // Ensure, that InitialiserMock does implement service.Initialiser.
 // If this is not the case, regenerate this file with moq.
 var _ service.Initialiser = &InitialiserMock{}
@@ -29,7 +24,7 @@ var _ service.Initialiser = &InitialiserMock{}
 //             DoGetHealthCheckFunc: func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
 // 	               panic("mock out the DoGetHealthCheck method")
 //             },
-//             DoGetKafkaProducerFunc: func(ctx context.Context, brokers []string, kafkaVersion string, topic string, maxBytes int) (kafka.IProducer, error) {
+//             DoGetKafkaProducerFunc: func(ctx context.Context, cfg *config.Config, topic string) (kafka.IProducer, error) {
 // 	               panic("mock out the DoGetKafkaProducer method")
 //             },
 //         }
@@ -43,7 +38,7 @@ type InitialiserMock struct {
 	DoGetHealthCheckFunc func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error)
 
 	// DoGetKafkaProducerFunc mocks the DoGetKafkaProducer method.
-	DoGetKafkaProducerFunc func(ctx context.Context, brokers []string, kafkaVersion string, topic string, maxBytes int) (kafka.IProducer, error)
+	DoGetKafkaProducerFunc func(ctx context.Context, cfg *config.Config, topic string) (kafka.IProducer, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -62,16 +57,14 @@ type InitialiserMock struct {
 		DoGetKafkaProducer []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
-			// Brokers is the brokers argument value.
-			Brokers []string
-			// KafkaVersion is the kafkaVersion argument value.
-			KafkaVersion string
+			// Cfg is the cfg argument value.
+			Cfg *config.Config
 			// Topic is the topic argument value.
 			Topic string
-			// MaxBytes is the maxBytes argument value.
-			MaxBytes int
 		}
 	}
+	lockDoGetHealthCheck   sync.RWMutex
+	lockDoGetKafkaProducer sync.RWMutex
 }
 
 // DoGetHealthCheck calls DoGetHealthCheckFunc.
@@ -90,9 +83,9 @@ func (mock *InitialiserMock) DoGetHealthCheck(cfg *config.Config, buildTime stri
 		GitCommit: gitCommit,
 		Version:   version,
 	}
-	lockInitialiserMockDoGetHealthCheck.Lock()
+	mock.lockDoGetHealthCheck.Lock()
 	mock.calls.DoGetHealthCheck = append(mock.calls.DoGetHealthCheck, callInfo)
-	lockInitialiserMockDoGetHealthCheck.Unlock()
+	mock.lockDoGetHealthCheck.Unlock()
 	return mock.DoGetHealthCheckFunc(cfg, buildTime, gitCommit, version)
 }
 
@@ -111,55 +104,47 @@ func (mock *InitialiserMock) DoGetHealthCheckCalls() []struct {
 		GitCommit string
 		Version   string
 	}
-	lockInitialiserMockDoGetHealthCheck.RLock()
+	mock.lockDoGetHealthCheck.RLock()
 	calls = mock.calls.DoGetHealthCheck
-	lockInitialiserMockDoGetHealthCheck.RUnlock()
+	mock.lockDoGetHealthCheck.RUnlock()
 	return calls
 }
 
 // DoGetKafkaProducer calls DoGetKafkaProducerFunc.
-func (mock *InitialiserMock) DoGetKafkaProducer(ctx context.Context, brokers []string, kafkaVersion string, topic string, maxBytes int) (kafka.IProducer, error) {
+func (mock *InitialiserMock) DoGetKafkaProducer(ctx context.Context, cfg *config.Config, topic string) (kafka.IProducer, error) {
 	if mock.DoGetKafkaProducerFunc == nil {
 		panic("InitialiserMock.DoGetKafkaProducerFunc: method is nil but Initialiser.DoGetKafkaProducer was just called")
 	}
 	callInfo := struct {
-		Ctx          context.Context
-		Brokers      []string
-		KafkaVersion string
-		Topic        string
-		MaxBytes     int
+		Ctx   context.Context
+		Cfg   *config.Config
+		Topic string
 	}{
-		Ctx:          ctx,
-		Brokers:      brokers,
-		KafkaVersion: kafkaVersion,
-		Topic:        topic,
-		MaxBytes:     maxBytes,
+		Ctx:   ctx,
+		Cfg:   cfg,
+		Topic: topic,
 	}
-	lockInitialiserMockDoGetKafkaProducer.Lock()
+	mock.lockDoGetKafkaProducer.Lock()
 	mock.calls.DoGetKafkaProducer = append(mock.calls.DoGetKafkaProducer, callInfo)
-	lockInitialiserMockDoGetKafkaProducer.Unlock()
-	return mock.DoGetKafkaProducerFunc(ctx, brokers, kafkaVersion, topic, maxBytes)
+	mock.lockDoGetKafkaProducer.Unlock()
+	return mock.DoGetKafkaProducerFunc(ctx, cfg, topic)
 }
 
 // DoGetKafkaProducerCalls gets all the calls that were made to DoGetKafkaProducer.
 // Check the length with:
 //     len(mockedInitialiser.DoGetKafkaProducerCalls())
 func (mock *InitialiserMock) DoGetKafkaProducerCalls() []struct {
-	Ctx          context.Context
-	Brokers      []string
-	KafkaVersion string
-	Topic        string
-	MaxBytes     int
+	Ctx   context.Context
+	Cfg   *config.Config
+	Topic string
 } {
 	var calls []struct {
-		Ctx          context.Context
-		Brokers      []string
-		KafkaVersion string
-		Topic        string
-		MaxBytes     int
+		Ctx   context.Context
+		Cfg   *config.Config
+		Topic string
 	}
-	lockInitialiserMockDoGetKafkaProducer.RLock()
+	mock.lockDoGetKafkaProducer.RLock()
 	calls = mock.calls.DoGetKafkaProducer
-	lockInitialiserMockDoGetKafkaProducer.RUnlock()
+	mock.lockDoGetKafkaProducer.RUnlock()
 	return calls
 }

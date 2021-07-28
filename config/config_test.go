@@ -40,14 +40,14 @@ func TestGetRetrunsDefaultValues(t *testing.T) {
 			HealthCheckInterval:        30 * time.Second,
 			HealthCheckCriticalTimeout: 90 * time.Second,
 			Brokers:                    []string{"localhost:9092"},
-			AllowedOrigins:             []string{"http://localhost:8081"},
+			KafkaVersion:               "1.0.2",
 			KafkaMaxBytes:              2000000,
+			AllowedOrigins:             []string{"http://localhost:8081"},
 			AuditTopic:                 "audit",
 			SessionsAPIURL:             "http://localhost:24400",
 			EnableSessionsAPI:          false,
 			TopicAPIURL:                "http://localhost:25300",
 			EnableTopicAPI:             false,
-			KafkaVersion:               "1.0.2",
 		})
 	})
 }
