@@ -1,10 +1,8 @@
 package config
 
 import (
-	"context"
 	"time"
 
-	"github.com/ONSdigital/log.go/log"
 	"github.com/kelseyhightower/envconfig"
 )
 
@@ -53,53 +51,52 @@ type Config struct {
 	EnableTopicAPI             bool          `envconfig:"ENABLE_TOPIC_API"`
 }
 
-var configuration *Config
+var cfg *Config
 
 // Get configures the application and returns the configuration
 func Get() (*Config, error) {
-	if configuration == nil {
-		configuration = &Config{
-			BindAddr:                   ":23200",
-			Version:                    "v1",
-			EnablePrivateEndpoints:     true,
-			EnableV1BetaRestriction:    false,
-			EnableObservationAPI:       false,
-			EnableAudit:                false,
-			EnableZebedeeAudit:         false,
-			ZebedeeURL:                 "http://localhost:8082",
-			HierarchyAPIURL:            "http://localhost:22600",
-			FilterAPIURL:               "http://localhost:22100",
-			DatasetAPIURL:              "http://localhost:22000",
-			ObservationAPIURL:          "http://localhost:24500",
-			CodelistAPIURL:             "http://localhost:22400",
-			RecipeAPIURL:               "http://localhost:22300",
-			ImportAPIURL:               "http://localhost:21800",
-			SearchAPIURL:               "http://localhost:23900",
-			DimensionSearchAPIURL:      "http://localhost:23100",
-			ImageAPIURL:                "http://localhost:24700",
-			UploadServiceAPIURL:        "http://localhost:25100",
-			IdentityAPIURL:             "http://localhost:25600",
-			IdentityAPIVersions:        []string{"v1"},
-			APIPocURL:                  "http://localhost:3000",
-			ContextURL:                 "",
-			EnvironmentHost:            "http://localhost:23200",
-			GracefulShutdown:           5 * time.Second,
-			HealthCheckInterval:        30 * time.Second,
-			HealthCheckCriticalTimeout: 90 * time.Second,
-			Brokers:                    []string{"localhost:9092"},
-			KafkaVersion:               "1.0.2",
-			AllowedOrigins:             []string{"http://localhost:8081"},
-			KafkaMaxBytes:              2000000,
-			AuditTopic:                 "audit",
-			SessionsAPIURL:             "http://localhost:24400",
-			EnableSessionsAPI:          false,
-			TopicAPIURL:                "http://localhost:25300",
-			EnableTopicAPI:             false,
-		}
-		if err := envconfig.Process("", configuration); err != nil {
-			log.Event(context.Background(), "failed to parse configuration", log.ERROR, log.Data{"config": configuration}, log.Error(err))
-			return nil, err
-		}
+	if cfg != nil {
+		return cfg, nil
 	}
-	return configuration, nil
+
+	cfg = &Config{
+		BindAddr:                   ":23200",
+		Version:                    "v1",
+		EnablePrivateEndpoints:     true,
+		EnableV1BetaRestriction:    false,
+		EnableObservationAPI:       false,
+		EnableAudit:                false,
+		EnableZebedeeAudit:         false,
+		ZebedeeURL:                 "http://localhost:8082",
+		HierarchyAPIURL:            "http://localhost:22600",
+		FilterAPIURL:               "http://localhost:22100",
+		DatasetAPIURL:              "http://localhost:22000",
+		ObservationAPIURL:          "http://localhost:24500",
+		CodelistAPIURL:             "http://localhost:22400",
+		RecipeAPIURL:               "http://localhost:22300",
+		ImportAPIURL:               "http://localhost:21800",
+		SearchAPIURL:               "http://localhost:23900",
+		DimensionSearchAPIURL:      "http://localhost:23100",
+		ImageAPIURL:                "http://localhost:24700",
+		UploadServiceAPIURL:        "http://localhost:25100",
+		IdentityAPIURL:             "http://localhost:25600",
+		IdentityAPIVersions:        []string{"v1"},
+		APIPocURL:                  "http://localhost:3000",
+		ContextURL:                 "",
+		EnvironmentHost:            "http://localhost:23200",
+		GracefulShutdown:           5 * time.Second,
+		HealthCheckInterval:        30 * time.Second,
+		HealthCheckCriticalTimeout: 90 * time.Second,
+		Brokers:                    []string{"localhost:9092"},
+		KafkaVersion:               "1.0.2",
+		AllowedOrigins:             []string{"http://localhost:8081"},
+		KafkaMaxBytes:              2000000,
+		AuditTopic:                 "audit",
+		SessionsAPIURL:             "http://localhost:24400",
+		EnableSessionsAPI:          false,
+		TopicAPIURL:                "http://localhost:25300",
+		EnableTopicAPI:             false,
+	}
+
+	return cfg, envconfig.Process("", cfg)
 }
