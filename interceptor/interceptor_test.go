@@ -33,7 +33,7 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(nil)
+		resp, err := t.RoundTrip(&http.Request{})
 		So(err, ShouldBeNil)
 
 		b, _ := ioutil.ReadAll(resp.Body)
@@ -49,7 +49,7 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(nil)
+		resp, err := t.RoundTrip(&http.Request{})
 		So(err, ShouldBeNil)
 
 		b, _ := ioutil.ReadAll(resp.Body)
@@ -65,7 +65,7 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(nil)
+		resp, err := t.RoundTrip(&http.Request{})
 		So(err, ShouldBeNil)
 
 		b, _ := ioutil.ReadAll(resp.Body)
@@ -82,7 +82,7 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, testContext, transp)
 
-		resp, err := t.RoundTrip(nil)
+		resp, err := t.RoundTrip(&http.Request{})
 		So(err, ShouldBeNil)
 
 		b, _ := ioutil.ReadAll(resp.Body)
@@ -99,7 +99,7 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(nil)
+		resp, err := t.RoundTrip(&http.Request{})
 		So(err, ShouldBeNil)
 
 		b, _ := ioutil.ReadAll(resp.Body)
@@ -116,7 +116,7 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(nil)
+		resp, err := t.RoundTrip(&http.Request{})
 		So(err, ShouldBeNil)
 
 		b, _ := ioutil.ReadAll(resp.Body)
@@ -132,7 +132,7 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(nil)
+		resp, err := t.RoundTrip(&http.Request{})
 		So(err, ShouldBeNil)
 
 		b, _ := ioutil.ReadAll(resp.Body)
@@ -148,7 +148,7 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(nil)
+		resp, err := t.RoundTrip(&http.Request{})
 		So(err, ShouldBeNil)
 
 		b, _ := ioutil.ReadAll(resp.Body)
@@ -164,7 +164,7 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(nil)
+		resp, err := t.RoundTrip(&http.Request{})
 		So(err, ShouldBeNil)
 
 		b, _ := ioutil.ReadAll(resp.Body)
@@ -180,7 +180,7 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(nil)
+		resp, err := t.RoundTrip(&http.Request{})
 		So(err, ShouldBeNil)
 
 		b, _ := ioutil.ReadAll(resp.Body)
@@ -196,7 +196,7 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(nil)
+		resp, err := t.RoundTrip(&http.Request{})
 		So(err, ShouldBeNil)
 
 		b, _ := ioutil.ReadAll(resp.Body)
