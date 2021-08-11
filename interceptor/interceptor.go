@@ -63,11 +63,12 @@ func shallIgnore(path string) bool {
 // host to links
 func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error) {
 	resp, err = t.RoundTripper.RoundTrip(req)
-	if !shallIgnore(req.RequestURI){
-		if err != nil {
-			return nil, err
-		}
+	if err != nil {
+		return nil, err
+	}
 
+	fmt.Println(resp.Body)
+	if !shallIgnore(req.RequestURI){
 		b, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			return nil, err
