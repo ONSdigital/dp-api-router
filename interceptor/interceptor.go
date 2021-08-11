@@ -2,7 +2,6 @@ package interceptor
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -68,7 +67,7 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 
 	updatedB, err := t.update(b)
 	if err != nil {
-		log.Event(context.Background(), "could not update response body with correct links", log.ERROR, log.Error(err))
+		log.Event(req.Context(), "could not update response body with correct links", log.ERROR, log.Error(err))
 		body := ioutil.NopCloser(bytes.NewReader(b))
 
 		resp.Body = body
