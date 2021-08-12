@@ -43,6 +43,22 @@ var (
 	re = regexp.MustCompile(`^(.+://)(.+)(/v\d)$`)
 )
 
+var pathsToIgnore = []string{
+	"/v1/tokens",
+	"/v1/users",
+	"/v1/groups",
+	"/v1/password-reset",
+}
+
+func shallIgnore(path string) bool {
+	for _, pathToIgnore := range pathsToIgnore {
+		if strings.HasPrefix(path, pathToIgnore) {
+			return true
+		}
+	}
+	return false
+}
+
 // RoundTrip intercepts the response body and post processes to add the correct enviornment
 // host to links
 func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error) {
@@ -51,34 +67,39 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 		return nil, err
 	}
 
-	b, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	err = resp.Body.Close()
-	if err != nil {
-		return nil, err
-	}
+	if shallIgnore(req.RequestURI) {
+		log.Event(req.Context(), "debugging path", log.INFO, log.Data{"body": req.RequestURI})
+		log.Event(req.Context(), "debugging body", log.INFO, log.Data{"body": resp.Body})
+	} else {
+		b, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+		err = resp.Body.Close()
+		if err != nil {
+			return nil, err
+		}
 
-	if len(b) == 0 {
-		resp.Body = ioutil.NopCloser(bytes.NewReader([]byte{}))
-		return resp, nil
-	}
+		if len(b) == 0 {
+			resp.Body = ioutil.NopCloser(bytes.NewReader([]byte{}))
+			return resp, nil
+		}
 
-	updatedB, err := t.update(b)
-	if err != nil {
-		log.Event(req.Context(), "could not update response body with correct links", log.ERROR, log.Error(err))
-		body := ioutil.NopCloser(bytes.NewReader(b))
+		updatedB, err := t.update(b)
+		if err != nil {
+			log.Event(req.Context(), "could not update response body with correct links", log.ERROR, log.Error(err))
+			body := ioutil.NopCloser(bytes.NewReader(b))
+
+			resp.Body = body
+			return resp, nil
+		}
+
+		body := ioutil.NopCloser(bytes.NewReader(updatedB))
 
 		resp.Body = body
-		return resp, nil
+		resp.ContentLength = int64(len(updatedB))
+		resp.Header.Set("Content-Length", strconv.Itoa(len(updatedB)))
 	}
-
-	body := ioutil.NopCloser(bytes.NewReader(updatedB))
-
-	resp.Body = body
-	resp.ContentLength = int64(len(updatedB))
-	resp.Header.Set("Content-Length", strconv.Itoa(len(updatedB)))
 	return resp, nil
 }
 
