@@ -67,8 +67,10 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 		return nil, err
 	}
 
-	log.Event(req.Context(), "could not update response body with correct links", log.INFO, log.Data{"body": resp.Body})
-	if !shallIgnore(req.RequestURI){
+	if shallIgnore(req.RequestURI) {
+		log.Event(req.Context(), "debugging path", log.INFO, log.Data{"body": req.RequestURI})
+		log.Event(req.Context(), "debugging body", log.INFO, log.Data{"body": resp.Body})
+	} else {
 		b, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			return nil, err
