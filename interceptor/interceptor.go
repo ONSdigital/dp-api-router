@@ -50,6 +50,7 @@ var pathsToIgnore = []string{
 	"/v1/password-reset",
 }
 
+// Check to see whether the response should be remapped
 func shallIgnore(path string) bool {
 	for _, pathToIgnore := range pathsToIgnore {
 		if strings.HasPrefix(path, pathToIgnore) {
@@ -67,10 +68,7 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 		return nil, err
 	}
 
-	if shallIgnore(req.RequestURI) {
-		log.Event(req.Context(), "debugging path", log.INFO, log.Data{"body": req.RequestURI})
-		log.Event(req.Context(), "debugging body", log.INFO, log.Data{"body": resp.Body})
-	} else {
+	if !shallIgnore(req.RequestURI) {
 		b, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			return nil, err
