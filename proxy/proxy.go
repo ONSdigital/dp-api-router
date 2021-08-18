@@ -29,10 +29,10 @@ var NewSingleHostReverseProxy = func(target *url.URL, version, envHost, contextU
 }
 
 // NewAPIProxy creates a new APIProxy with a new ReverseProxy for the provided target
-func NewAPIProxy(target, version, envHost, contextURL string, enableBetaRestriction bool) *APIProxy {
+func NewAPIProxy(ctx context.Context, target, version, envHost, contextURL string, enableBetaRestriction bool) *APIProxy {
 	targetURL, err := url.Parse(target)
 	if err != nil {
-		log.Event(context.Background(), "failed to create url", log.FATAL, log.Data{"url": target}, log.Error(err))
+		log.Event(ctx, "failed to create url", log.FATAL, log.Data{"url": target}, log.Error(err))
 		os.Exit(1)
 	}
 

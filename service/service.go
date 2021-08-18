@@ -128,20 +128,20 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 
 	// Public APIs
 	if cfg.EnableObservationAPI {
-		observation := proxy.NewAPIProxy(cfg.ObservationAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.ContextURL, cfg.EnableV1BetaRestriction)
+		observation := proxy.NewAPIProxy(ctx, cfg.ObservationAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.ContextURL, cfg.EnableV1BetaRestriction)
 		addTransitionalHandler(router, observation, "/datasets/{dataset_id}/editions/{edition}/versions/{version}/observations")
 	}
 	if cfg.EnableTopicAPI {
-		topic := proxy.NewAPIProxy(cfg.TopicAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.ContextURL, cfg.EnableV1BetaRestriction)
+		topic := proxy.NewAPIProxy(ctx, cfg.TopicAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.ContextURL, cfg.EnableV1BetaRestriction)
 		addTransitionalHandler(router, topic, "/topics")
 	}
-	codeList := proxy.NewAPIProxy(cfg.CodelistAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
-	dataset := proxy.NewAPIProxy(cfg.DatasetAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.ContextURL, cfg.EnableV1BetaRestriction)
-	filter := proxy.NewAPIProxy(cfg.FilterAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
-	hierarchy := proxy.NewAPIProxy(cfg.HierarchyAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
-	search := proxy.NewAPIProxy(cfg.SearchAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
-	dimensionSearch := proxy.NewAPIProxy(cfg.DimensionSearchAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
-	image := proxy.NewAPIProxy(cfg.ImageAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+	codeList := proxy.NewAPIProxy(ctx, cfg.CodelistAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+	dataset := proxy.NewAPIProxy(ctx, cfg.DatasetAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.ContextURL, cfg.EnableV1BetaRestriction)
+	filter := proxy.NewAPIProxy(ctx, cfg.FilterAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+	hierarchy := proxy.NewAPIProxy(ctx, cfg.HierarchyAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+	search := proxy.NewAPIProxy(ctx, cfg.SearchAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+	dimensionSearch := proxy.NewAPIProxy(ctx, cfg.DimensionSearchAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+	image := proxy.NewAPIProxy(ctx, cfg.ImageAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 	addTransitionalHandler(router, codeList, "/code-lists")
 	addTransitionalHandler(router, dataset, "/datasets")
 	addTransitionalHandler(router, filter, "/filters")
@@ -153,10 +153,10 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 
 	// Private APIs
 	if cfg.EnablePrivateEndpoints {
-		recipe := proxy.NewAPIProxy(cfg.RecipeAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
-		importAPI := proxy.NewAPIProxy(cfg.ImportAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
-		uploadServiceAPI := proxy.NewAPIProxy(cfg.UploadServiceAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
-		identityAPI := proxy.NewAPIProxy(cfg.IdentityAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+		recipe := proxy.NewAPIProxy(ctx, cfg.RecipeAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+		importAPI := proxy.NewAPIProxy(ctx, cfg.ImportAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+		uploadServiceAPI := proxy.NewAPIProxy(ctx, cfg.UploadServiceAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+		identityAPI := proxy.NewAPIProxy(ctx, cfg.IdentityAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 		addTransitionalHandler(router, recipe, "/recipes")
 		addTransitionalHandler(router, importAPI, "/jobs")
 		addTransitionalHandler(router, dataset, "/instances")
@@ -168,19 +168,19 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 
 		// Feature flag for Sessions API
 		if cfg.EnableSessionsAPI {
-			session := proxy.NewAPIProxy(cfg.SessionsAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+			session := proxy.NewAPIProxy(ctx, cfg.SessionsAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 			addTransitionalHandler(router, session, "/sessions")
 		}
 	}
 
 	// Legacy API
-	poc := proxy.NewAPIProxy(cfg.APIPocURL, "", cfg.EnvironmentHost, "", false)
+	poc := proxy.NewAPIProxy(ctx, cfg.APIPocURL, "", cfg.EnvironmentHost, "", false)
 	addLegacyHandler(router, poc, "/ops")
 	addLegacyHandler(router, poc, "/dataset")
 	addLegacyHandler(router, poc, "/timeseries")
 	addLegacyHandler(router, poc, "/search")
 
-	zebedee := proxy.NewAPIProxy(cfg.ZebedeeURL, cfg.Version, cfg.EnvironmentHost, "", false)
+	zebedee := proxy.NewAPIProxy(ctx, cfg.ZebedeeURL, cfg.Version, cfg.EnvironmentHost, "", false)
 	router.NotFoundHandler = http.HandlerFunc(zebedee.LegacyHandle)
 
 	return router

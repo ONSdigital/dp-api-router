@@ -1,23 +1,23 @@
-dp-api-router
-=====================
+# dp-api-router
+
 A service which routes API requests to the correct services. In the future this may add additional header information which will be used by the services.
 
-### JSON-LD
+## JSON-LD
 
 This service is responsible for serving a JSON-LD `@context` field on configured API routes. In order to update the JSON-LD files, follow [this guide](JSONLD.md). Once the files have been updated, consider if the secrets for this service need to be updated to point to a new file location or not.
 
-### Configuration
+## Configuration
 
 | Environment variable         | Default                                   | Description
 | ---------------------------- | ----------------------------------------- | -----------
-| ALLOWED_ORIGINS              | "http://localhost:8081"                   | 
+| ALLOWED_ORIGINS              | "http://localhost:8081"                   |
 | BIND_ADDR                    | ":23200"                                  | The host and port to bind to
 | ENV_HOST                     | "http://localhost:23200"                  | The public host for the environment the service is running on
 | VERSION                      | "v1"                                      | The version of the API
-| ENABLE_AUDIT                 | false                                     | 
-| ENABLE_OBSERVATION_API       | false                                     | 
+| ENABLE_AUDIT                 | false                                     |
+| ENABLE_OBSERVATION_API       | false                                     |
 | ENABLE_PRIVATE_ENDPOINTS     | true                                      | If private endpoints should be routed
-| ENABLE_V1_BETA_RESTRICTION   | false                                     | 
+| ENABLE_V1_BETA_RESTRICTION   | false                                     |
 | ENABLE_SESSIONS_API          | false                                     |
 | ENABLE_TOPIC_API             | false                                     |
 | ENABLE_ZEBEDEE_AUDIT         | false                                     |
@@ -39,7 +39,20 @@ This service is responsible for serving a JSON-LD `@context` field on configured
 | KAFKA_ADDR                   | localhost:9092                            | The list of kafka hosts
 | KAFKA_MAX_BYTES              | 2000000                                   | The maximum bytes that can be sent in an event to kafka topic
 | KAFKA_VERSION                | "1.0.2"                                   | The kafka version that this service expects to connect to
-| AUDIT_TOPIC                  | audit                                     | The kafka topic name for audit events 
+| KAFKA_SEC_PROTO              | _unset_                    (only `TLS`)   | if set to `TLS`, kafka connections will use TLS
+| KAFKA_SEC_CLIENT_KEY         | _unset_                                   | PEM [2] for the client key (optional, used for client auth) [1]
+| KAFKA_SEC_CLIENT_CERT        | _unset_                                   | PEM [2] for the client certificate (optional, used for client auth) [1]
+| KAFKA_SEC_CA_CERTS           | _unset_                                   | PEM [2] of CA cert chain if using private CA for the server cert [1]
+| KAFKA_SEC_SKIP_VERIFY        | false                                     | ignore server certificate issues if set to `true` [1]
+| AUDIT_TOPIC                  | audit                                     | The kafka topic name for audit events
 | HEALTHCHECK_INTERVAL         | 30s                                       | The period of time between health checks
 | HEALTHCHECK_CRITICAL_TIMEOUT | 90s                                       | The period of time after which failing checks will result in critical global check
 | SHUTDOWN_TIMEOUT             | 5s                                        | The graceful shutdown timeout (`time.Duration` format)
+
+Notes:
+
+1. Ignored unless using TLS (i.e. `KAFKA_SEC_PROTO` has a value enabling TLS)
+
+2. PEM values are identified as those starting with `-----BEGIN`
+    and can use `\n` (sic) instead of newlines (they will be converted to newlines before use).
+    Any other value will be treated as a path to the given PEM file.

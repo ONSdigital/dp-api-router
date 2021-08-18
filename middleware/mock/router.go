@@ -10,10 +10,6 @@ import (
 	"sync"
 )
 
-var (
-	lockRouterMockMatch sync.RWMutex
-)
-
 // Ensure, that RouterMock does implement middleware.Router.
 // If this is not the case, regenerate this file with moq.
 var _ middleware.Router = &RouterMock{}
@@ -47,6 +43,7 @@ type RouterMock struct {
 			Match *mux.RouteMatch
 		}
 	}
+	lockMatch sync.RWMutex
 }
 
 // Match calls MatchFunc.
@@ -61,9 +58,9 @@ func (mock *RouterMock) Match(req *http.Request, match *mux.RouteMatch) bool {
 		Req:   req,
 		Match: match,
 	}
-	lockRouterMockMatch.Lock()
+	mock.lockMatch.Lock()
 	mock.calls.Match = append(mock.calls.Match, callInfo)
-	lockRouterMockMatch.Unlock()
+	mock.lockMatch.Unlock()
 	return mock.MatchFunc(req, match)
 }
 
@@ -78,8 +75,8 @@ func (mock *RouterMock) MatchCalls() []struct {
 		Req   *http.Request
 		Match *mux.RouteMatch
 	}
-	lockRouterMockMatch.RLock()
+	mock.lockMatch.RLock()
 	calls = mock.calls.Match
-	lockRouterMockMatch.RUnlock()
+	mock.lockMatch.RUnlock()
 	return calls
 }
