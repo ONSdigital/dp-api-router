@@ -208,7 +208,7 @@ func GenerateAuditEvent(req *http.Request) *event.Audit {
 	// try to unescape query parameter
 	unescapedQueryParam, err := url.QueryUnescape(req.URL.RawQuery)
 	if err != nil {
-		log.Event(req.Context(), "failed to unescape query parameters", log.ERROR, log.Data{"query_param": req.URL.RawQuery})
+		log.Error(req.Context(), "failed to unescape query parameters", err, log.Data{"query_param": req.URL.RawQuery})
 		auditEvent.QueryParam = req.URL.RawQuery
 	} else {
 		auditEvent.QueryParam = unescapedQueryParam
