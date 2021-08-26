@@ -13,7 +13,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ONSdigital/log.go/log"
+	"github.com/ONSdigital/log.go/v2/log"
 )
 
 // Transport implements the http RoundTripper method and allows the
@@ -85,7 +85,7 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 
 		updatedB, err := t.update(b)
 		if err != nil {
-			log.Event(req.Context(), "could not update response body with correct links", log.ERROR, log.Error(err))
+			log.Error(req.Context(), "could not update response body with correct links", err)
 			body := ioutil.NopCloser(bytes.NewReader(b))
 
 			resp.Body = body

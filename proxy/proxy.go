@@ -10,7 +10,7 @@ import (
 
 	"github.com/ONSdigital/dp-api-router/interceptor"
 	"github.com/ONSdigital/dp-api-router/middleware"
-	"github.com/ONSdigital/log.go/log"
+	"github.com/ONSdigital/log.go/v2/log"
 )
 
 // APIProxy will forward any requests to a API
@@ -32,7 +32,7 @@ var NewSingleHostReverseProxy = func(target *url.URL, version, envHost, contextU
 func NewAPIProxy(ctx context.Context, target, version, envHost, contextURL string, enableBetaRestriction bool) *APIProxy {
 	targetURL, err := url.Parse(target)
 	if err != nil {
-		log.Event(ctx, "failed to create url", log.FATAL, log.Data{"url": target}, log.Error(err))
+		log.Fatal(ctx, "failed to create url", err, log.Data{"url": target})
 		os.Exit(1)
 	}
 

@@ -12,14 +12,14 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/ONSdigital/dp-api-clients-go/headers"
-	"github.com/ONSdigital/dp-api-clients-go/health"
-	clientsidentity "github.com/ONSdigital/dp-api-clients-go/identity"
+	"github.com/ONSdigital/dp-api-clients-go/v2/headers"
+	"github.com/ONSdigital/dp-api-clients-go/v2/health"
+	clientsidentity "github.com/ONSdigital/dp-api-clients-go/v2/identity"
 	"github.com/ONSdigital/dp-api-router/event"
-	dphttp "github.com/ONSdigital/dp-net/http"
-	dprequest "github.com/ONSdigital/dp-net/request"
+	dphttp "github.com/ONSdigital/dp-net/v2/http"
+	dprequest "github.com/ONSdigital/dp-net/v2/request"
 
-	"github.com/ONSdigital/log.go/log"
+	"github.com/ONSdigital/log.go/v2/log"
 )
 
 //go:generate moq -out ./mock/router.go -pkg mock . Router
@@ -117,7 +117,7 @@ func AuditHandler(auditProducer *event.AvroProducer,
 					// error already handled in retrieveIdentity. Try to audit it.
 					auditEvent.StatusCode = int32(statusCode)
 					if err := auditProducer.Audit(auditEvent); err != nil {
-						log.Event(ctx, "inbound audit event could not be sent", log.ERROR, log.Data{"event": auditEvent})
+						log.Error(ctx, "inbound audit event could not be sent", err, log.Data{"event": auditEvent})
 					}
 					return
 				}
@@ -135,7 +135,7 @@ func AuditHandler(auditProducer *event.AvroProducer,
 					handleError(ctx, w, r, http.StatusUnauthorized, "", err, log.Data{"event": auditEvent})
 					auditEvent.StatusCode = int32(http.StatusUnauthorized)
 					if err := auditProducer.Audit(auditEvent); err != nil {
-						log.Event(ctx, "inbound audit event could not be sent", log.ERROR, log.Data{"event": auditEvent})
+						log.Error(ctx, "inbound audit event could not be sent", err, log.Data{"event": auditEvent})
 					}
 					return
 				}
@@ -208,7 +208,7 @@ func GenerateAuditEvent(req *http.Request) *event.Audit {
 	// try to unescape query parameter
 	unescapedQueryParam, err := url.QueryUnescape(req.URL.RawQuery)
 	if err != nil {
-		log.Event(req.Context(), "failed to unescape query paramters", log.Data{"query_param": req.URL.RawQuery})
+		log.Error(req.Context(), "failed to unescape query parameters", err, log.Data{"query_param": req.URL.RawQuery})
 		auditEvent.QueryParam = req.URL.RawQuery
 	} else {
 		auditEvent.QueryParam = unescapedQueryParam
@@ -243,7 +243,7 @@ func retrieveIdentity(w http.ResponseWriter, req *http.Request, idClient *client
 
 	if authFailure != nil {
 		handleError(ctx, w, req, statusCode, "identity client check request returned an auth error", authFailure, logData)
-		log.Event(ctx, "identity client check request returned an auth error", log.ERROR, log.Error(authFailure), logData)
+		log.Error(ctx, "identity client check request returned an auth error", authFailure, logData)
 		return ctx, statusCode, authFailure
 	}
 
@@ -252,7 +252,7 @@ func retrieveIdentity(w http.ResponseWriter, req *http.Request, idClient *client
 
 // handleError adhering to the DRY principle - clean up for failed identity requests, log the error, drain the request body and write the status code.
 func handleError(ctx context.Context, w http.ResponseWriter, r *http.Request, status int, event string, err error, data log.Data) {
-	log.Event(ctx, event, log.Error(err), log.ERROR, data)
+	log.Error(ctx, event, err, data)
 	dphttp.DrainBody(r)
 	w.WriteHeader(status)
 }
@@ -264,7 +264,7 @@ func getFlorenceToken(ctx context.Context, req *http.Request) (string, error) {
 	if err == nil {
 		florenceToken = token
 	} else if headers.IsErrNotFound(err) {
-		log.Event(ctx, "florence access token header not found attempting to find access token cookie", log.INFO)
+		log.Info(ctx, "florence access token header not found attempting to find access token cookie")
 		florenceToken, err = getFlorenceTokenFromCookie(ctx, req)
 	}
 
@@ -280,7 +280,7 @@ func getFlorenceTokenFromCookie(ctx context.Context, req *http.Request) (string,
 		florenceToken = c.Value
 	} else if err == http.ErrNoCookie {
 		err = nil // we don't consider this scenario an error so we set err to nil and return an empty token
-		log.Event(ctx, "florence access token cookie not found in request", log.INFO)
+		log.Info(ctx, "florence access token cookie not found in request")
 	}
 
 	return florenceToken, err
@@ -294,7 +294,7 @@ func getServiceAuthToken(ctx context.Context, req *http.Request) (string, error)
 		authToken = token
 	} else if headers.IsErrNotFound(err) {
 		err = nil // we don't consider this scenario an error so we set err to nil and return an empty token
-		log.Event(ctx, "service auth token request header is not found", log.INFO)
+		log.Info(ctx, "service auth token request header is not found")
 	}
 
 	return authToken, err

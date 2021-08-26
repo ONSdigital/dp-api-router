@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ONSdigital/dp-api-clients-go/health"
+	"github.com/ONSdigital/dp-api-clients-go/v2/health"
 	"github.com/ONSdigital/dp-api-router/config"
 	"github.com/ONSdigital/dp-api-router/event"
 	"github.com/ONSdigital/dp-api-router/middleware"
 	"github.com/ONSdigital/dp-api-router/proxy"
 	"github.com/ONSdigital/dp-api-router/schema"
 	kafka "github.com/ONSdigital/dp-kafka/v2"
-	dphttp "github.com/ONSdigital/dp-net/http"
-	"github.com/ONSdigital/log.go/log"
+	dphttp "github.com/ONSdigital/dp-net/v2/http"
+	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/justinas/alice"
@@ -32,7 +32,7 @@ type Service struct {
 
 // Run initialises the dependencies, proxy router, and starts the http server
 func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceList, buildTime, gitCommit, version string, svcErrors chan error) (svc *Service, err error) {
-	log.Event(ctx, "got service configuration", log.Data{"config": cfg}, log.INFO)
+	log.Info(ctx, "got service configuration", log.Data{"config": cfg})
 
 	svc = &Service{
 		Config:      cfg,
@@ -40,7 +40,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	}
 
 	if cfg.EnableV1BetaRestriction {
-		log.Event(ctx, "beta route restriction is active, /v1 api requests will only be permitted against beta domains", log.INFO)
+		log.Info(ctx, "beta route restriction is active, /v1 api requests will only be permitted against beta domains")
 	}
 
 	// Create Zebedee client
@@ -50,7 +50,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	if cfg.EnableAudit {
 		svc.KafkaAuditProducer, err = serviceList.GetKafkaAuditProducer(ctx, cfg)
 		if err != nil {
-			log.Event(ctx, "could not instantiate kafka audit producer", log.FATAL, log.Error(err))
+			log.Fatal(ctx, "could not instantiate kafka audit producer", err)
 			return nil, err
 		}
 	}
@@ -58,7 +58,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	// Healthcheck
 	svc.HealthCheck, err = serviceList.GetHealthCheck(cfg, buildTime, gitCommit, version)
 	if err != nil {
-		log.Event(ctx, "could not instantiate healthcheck", log.FATAL, log.Error(err))
+		log.Fatal(ctx, "could not instantiate healthcheck", err)
 		return nil, err
 	}
 	if err := svc.registerCheckers(ctx); err != nil {
@@ -206,7 +206,7 @@ func addLegacyHandler(router *mux.Router, proxy *proxy.APIProxy, path string) {
 // Close gracefully shuts the service down in the required order, with timeout
 func (svc *Service) Close(ctx context.Context) error {
 	timeout := svc.Config.GracefulShutdown
-	log.Event(ctx, "commencing graceful shutdown", log.Data{"graceful_shutdown_timeout": timeout}, log.INFO)
+	log.Info(ctx, "commencing graceful shutdown", log.Data{"graceful_shutdown_timeout": timeout})
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	hasShutdownError := false
 
@@ -220,14 +220,14 @@ func (svc *Service) Close(ctx context.Context) error {
 
 		// stop any incoming requests before closing any outbound connections
 		if err := svc.Server.Shutdown(ctx); err != nil {
-			log.Event(ctx, "failed to shutdown http server", log.Error(err), log.ERROR)
+			log.Error(ctx, "failed to shutdown http server", err)
 			hasShutdownError = true
 		}
 
 		// Close Kafka Audit Producer, if present
 		if svc.ServiceList.KafkaAuditProducer {
 			if err := svc.KafkaAuditProducer.Close(ctx); err != nil {
-				log.Event(ctx, "failed to stop kafka audit producer", log.Error(err), log.ERROR)
+				log.Error(ctx, "failed to stop kafka audit producer", err)
 				hasShutdownError = true
 			}
 		}
@@ -238,18 +238,18 @@ func (svc *Service) Close(ctx context.Context) error {
 
 	// timeout expired
 	if ctx.Err() == context.DeadlineExceeded {
-		log.Event(ctx, "shutdown timed out", log.ERROR, log.Error(ctx.Err()))
+		log.Error(ctx, "shutdown timed out", ctx.Err())
 		return ctx.Err()
 	}
 
 	// other error
 	if hasShutdownError {
 		err := errors.New("failed to shutdown gracefully")
-		log.Event(ctx, "failed to shutdown gracefully ", log.ERROR, log.Error(err))
+		log.Error(ctx, "failed to shutdown gracefully ", err)
 		return err
 	}
 
-	log.Event(ctx, "graceful shutdown was successful", log.INFO)
+	log.Info(ctx, "graceful shutdown was successful")
 	return nil
 }
 
@@ -259,13 +259,13 @@ func (svc *Service) registerCheckers(ctx context.Context) (err error) {
 
 	if err = svc.HealthCheck.AddCheck("Zebedee", svc.ZebedeeClient.Checker); err != nil {
 		hasErrors = true
-		log.Event(ctx, "failed to add zebedee checker", log.ERROR, log.Error(err))
+		log.Error(ctx, "failed to add zebedee checker", err)
 	}
 
 	if svc.Config.EnableAudit {
 		if err = svc.HealthCheck.AddCheck("Kafka Audit Producer", svc.KafkaAuditProducer.Checker); err != nil {
 			hasErrors = true
-			log.Event(ctx, "failed to add kafka audit producer checker", log.ERROR, log.Error(err))
+			log.Error(ctx, "failed to add kafka audit producer checker", err)
 		}
 	}
 
