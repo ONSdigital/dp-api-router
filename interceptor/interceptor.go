@@ -85,7 +85,9 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 
 		updatedB, err := t.update(b)
 		if err != nil {
-			log.Error(req.Context(), "could not update response body with correct links", err)
+			log.Error(req.Context(), "could not update response body with correct links", err, log.Data{
+				"body": string(b),
+			})
 			body := ioutil.NopCloser(bytes.NewReader(b))
 
 			resp.Body = body
