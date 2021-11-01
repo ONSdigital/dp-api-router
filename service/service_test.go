@@ -238,13 +238,13 @@ func TestRouterPrivateAPIs(t *testing.T) {
 			"/instances": datasetAPIURL,
 		}
 		for _, version := range cfg.IdentityAPIVersions {
-			key := "/"+version+"/tokens"
+			key := "/" + version + "/tokens"
 			expectedPrivateURLs[key] = identityAPIURL
-			key = "/"+version+"/users"
+			key = "/" + version + "/users"
 			expectedPrivateURLs[key] = identityAPIURL
-			key = "/"+version+"/groups"
+			key = "/" + version + "/groups"
 			expectedPrivateURLs[key] = identityAPIURL
-			key = "/"+version+"/password-reset"
+			key = "/" + version + "/password-reset"
 			expectedPrivateURLs[key] = identityAPIURL
 		}
 
@@ -426,9 +426,9 @@ func TestRouterLegacyAPIs(t *testing.T) {
 }
 
 func assertOnlyThisURLIsCalled(expectedURL *url.URL) {
-	for url, pxy := range registeredProxies {
+	for urlToCheck, pxy := range registeredProxies {
 
-		if url == *expectedURL {
+		if urlToCheck == *expectedURL {
 			So(len(pxy.ServeHTTPCalls()), ShouldEqual, 1)
 			continue
 		}
@@ -454,8 +454,8 @@ func verifyProxied(path string, expectedURL *url.URL) {
 	So(len(pxy.ServeHTTPCalls()), ShouldEqual, 1)
 	So(pxy.ServeHTTPCalls()[0].Req.Header.Get(authorizationHeader), ShouldEqual, testServiceAuthToken)
 	So(pxy.ServeHTTPCalls()[0].Req.URL.Path, ShouldEqual, path)
-	for url, pxy := range registeredProxies {
-		if url != *expectedURL {
+	for urlToCheck, pxy := range registeredProxies {
+		if urlToCheck != *expectedURL {
 			So(len(pxy.ServeHTTPCalls()), ShouldEqual, 0)
 		}
 	}

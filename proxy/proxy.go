@@ -13,7 +13,7 @@ import (
 	"github.com/ONSdigital/log.go/v2/log"
 )
 
-// APIProxy will forward any requests to a API
+// APIProxy will forward any requests to an API
 type APIProxy struct {
 	target                *url.URL
 	proxy                 IReverseProxy
@@ -21,7 +21,7 @@ type APIProxy struct {
 	enableBetaRestriction bool
 }
 
-// NewSingleHostReverseProxy is a function that creates a new httputil ReverseProxy and it transport
+// NewSingleHostReverseProxy is a function that creates a new httputil ReverseProxy, and its transport
 var NewSingleHostReverseProxy = func(target *url.URL, version, envHost, contextURL string) IReverseProxy {
 	pxy := httputil.NewSingleHostReverseProxy(target)
 	pxy.Transport = interceptor.NewRoundTripper(envHost+"/"+version, contextURL, http.DefaultTransport)

@@ -37,6 +37,8 @@ const (
 	downloads  = "downloads"
 
 	href = "href"
+
+	maxBodyLengthToLog = 30 // only log a small part of the body to help any problem diagnosis, as the full body length could be many Megabytes
 )
 
 var (
@@ -86,8 +88,8 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 
 		updatedB, err := t.update(b)
 		if err != nil {
-			if bodyLength > 30 {
-				bodyLength = 30
+			if bodyLength > maxBodyLengthToLog {
+				bodyLength = maxBodyLengthToLog
 			}
 			log.Error(req.Context(), "could not update response body with correct links", err, log.Data{
 				"body": string(b[0:bodyLength]),
@@ -104,13 +106,13 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 }
 
 func (t *Transport) update(b []byte) ([]byte, error) {
-
 	var (
 		err      error
 		resource interface{}
 	)
 
 	if b[0] != '{' && b[0] != '[' {
+		// quickly reject non json or map files such as .zip's
 		return nil, errors.New("unknown resource type")
 	}
 
@@ -242,6 +244,7 @@ func (t *Transport) checkMap(document map[string]interface{}) (map[string]interf
 
 func updateMap(docMap map[string]interface{}, domain string) (map[string]interface{}, error) {
 	var err error
+
 	for k, v := range docMap {
 		if val, ok := v.(map[string]interface{}); ok {
 			if field, ok := val[href].(string); ok {
@@ -269,6 +272,7 @@ func updateMap(docMap map[string]interface{}, domain string) (map[string]interfa
 
 func updateArray(docArray []interface{}, domain string) ([]interface{}, error) {
 	var err error
+
 	for i, v := range docArray {
 		if val, ok := v.(map[string]interface{}); ok {
 			if field, ok := val[href].(string); ok {
