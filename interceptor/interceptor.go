@@ -78,25 +78,25 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 			return nil, err
 		}
 
-		if len(b) == 0 {
+		bodyLength := len(b)
+		if bodyLength == 0 {
 			resp.Body = ioutil.NopCloser(bytes.NewReader([]byte{}))
 			return resp, nil
 		}
 
 		updatedB, err := t.update(b)
 		if err != nil {
+			if bodyLength > 30 {
+				bodyLength = 30
+			}
 			log.Error(req.Context(), "could not update response body with correct links", err, log.Data{
-				"body": string(b),
+				"body": string(b[0:bodyLength]),
 			})
-			body := ioutil.NopCloser(bytes.NewReader(b))
-
-			resp.Body = body
+			resp.Body = ioutil.NopCloser(bytes.NewReader(b))
 			return resp, nil
 		}
 
-		body := ioutil.NopCloser(bytes.NewReader(updatedB))
-
-		resp.Body = body
+		resp.Body = ioutil.NopCloser(bytes.NewReader(updatedB))
 		resp.ContentLength = int64(len(updatedB))
 		resp.Header.Set("Content-Length", strconv.Itoa(len(updatedB)))
 	}
@@ -110,6 +110,10 @@ func (t *Transport) update(b []byte) ([]byte, error) {
 		resource interface{}
 	)
 
+	if b[0] != '{' && b[0] != '[' {
+		return nil, errors.New("unknown resource type")
+	}
+
 	if err = json.Unmarshal(b, &resource); err != nil {
 		return nil, err
 	}
@@ -120,10 +124,10 @@ func (t *Transport) update(b []byte) ([]byte, error) {
 	}
 
 	switch resourceType.Kind() {
-	case reflect.Map:
+	case reflect.Map: // starts with {
 		// Assert type onto document
 		return t.updateMap(resource.(map[string]interface{}))
-	case reflect.Slice:
+	case reflect.Slice: // starts with [
 		// Assert type onto documents
 		return t.updateSlice(resource.([]interface{}))
 	default:

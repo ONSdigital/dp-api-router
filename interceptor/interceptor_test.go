@@ -206,4 +206,21 @@ func TestUnitInterceptor(t *testing.T) {
 		So(len(b), ShouldEqual, 154)
 		So(string(b), ShouldEqual, `[{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}},{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}]`+"\n")
 	})
+
+	Convey("test interceptor correctly ignores non json and non map object", t, func() {
+		testJSON := `AA`
+		transp := dummyRT{testJSON}
+
+		t := NewRoundTripper(testDomain, "", transp)
+
+		resp, err := t.RoundTrip(&http.Request{})
+		So(err, ShouldBeNil)
+
+		b, _ := ioutil.ReadAll(resp.Body)
+
+		err = resp.Body.Close()
+		So(err, ShouldBeNil)
+		So(len(b), ShouldEqual, 2)
+		So(string(b), ShouldEqual, `AA`)
+	})
 }
