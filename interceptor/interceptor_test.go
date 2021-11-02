@@ -98,13 +98,13 @@ func TestUnitInterceptor(t *testing.T) {
 		So(string(b), ShouldEqual, `{"@context":"context.json","links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}`+"\n")
 	})
 
-	Convey("test interceptor correctly updates a href in downloads subdoc", t, func() {
+	Convey("test interceptor correctly updates a href in downloads subdoc on a nested path", t, func() {
 		testJSON := `{"downloads":{"csv":{"href":"http://localhost:22000/myfile.csv"}}}`
 		transp := dummyRT{testJSON}
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(&http.Request{RequestURI: "??"})
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/datasets/1234"})
 		So(err, ShouldBeNil)
 
 		b, err := ioutil.ReadAll(resp.Body)
@@ -130,7 +130,7 @@ func TestUnitInterceptor(t *testing.T) {
 
 		err = resp.Body.Close()
 		So(err, ShouldBeNil)
-		So(len(b), ShouldEqual, 77)
+		So(len(b), ShouldEqual, 78)
 		So(string(b), ShouldEqual, `{"dimensions":[{"href":"https://api.beta.ons.gov.uk/v1/code-lists/1234567"}]}`+"\n")
 	})
 
