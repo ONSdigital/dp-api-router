@@ -62,7 +62,7 @@ func shallIgnore(path string) bool {
 	return false
 }
 
-// RoundTrip intercepts the response body and post processes to add the correct enviornment
+// RoundTrip intercepts the response body and post processes to add the correct environment
 // host to links
 func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error) {
 	resp, err = t.RoundTripper.RoundTrip(req)
@@ -70,38 +70,47 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 		return nil, err
 	}
 
-	if !shallIgnore(req.RequestURI) {
-		b, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return nil, err
-		}
-		err = resp.Body.Close()
-		if err != nil {
-			return nil, err
-		}
+	contentType := resp.Header.Get("Content-Type") // get canonical form
 
-		bodyLength := len(b)
-		if bodyLength == 0 {
-			resp.Body = ioutil.NopCloser(bytes.NewReader([]byte{}))
-			return resp, nil
-		}
-
-		updatedB, err := t.update(b)
-		if err != nil {
-			if bodyLength > maxBodyLengthToLog {
-				bodyLength = maxBodyLengthToLog
-			}
-			log.Error(req.Context(), "could not update response body with correct links", err, log.Data{
-				"body": string(b[0:bodyLength]),
-			})
-			resp.Body = ioutil.NopCloser(bytes.NewReader(b))
-			return resp, nil
-		}
-
-		resp.Body = ioutil.NopCloser(bytes.NewReader(updatedB))
-		resp.ContentLength = int64(len(updatedB))
-		resp.Header.Set("Content-Length", strconv.Itoa(len(updatedB)))
+	if shallIgnore(req.RequestURI) || strings.Contains(contentType, "gzip") {
+		return resp, nil
 	}
+
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	err = resp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	bodyLength := len(b)
+	if bodyLength == 0 {
+		resp.Body = ioutil.NopCloser(bytes.NewReader([]byte{}))
+		return resp, nil
+	}
+
+	updatedB, err := t.update(b)
+	if err != nil {
+		limitedBodyLength := bodyLength
+		if limitedBodyLength > maxBodyLengthToLog {
+			limitedBodyLength = maxBodyLengthToLog
+		}
+		log.Error(req.Context(), "could not update response body with correct links", err, log.Data{
+			"body":            string(b[0:limitedBodyLength]),
+			"contentType":     contentType,                         // needed to further identify content types that need to be rejected similarly to 'gzip' above
+			"bodyLength":      bodyLength,                          // as above
+			"contentEncoding": resp.Header.Get("Content-Encoding"), // as above
+		})
+		resp.Body = ioutil.NopCloser(bytes.NewReader(b))
+		return resp, nil
+	}
+
+	resp.Body = ioutil.NopCloser(bytes.NewReader(updatedB))
+	resp.ContentLength = int64(len(updatedB))
+	resp.Header.Set("Content-Length", strconv.Itoa(len(updatedB)))
+
 	return resp, nil
 }
 
