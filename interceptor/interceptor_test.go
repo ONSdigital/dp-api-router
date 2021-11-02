@@ -18,6 +18,7 @@ type dummyRT struct {
 }
 
 func (t dummyRT) RoundTrip(req *http.Request) (resp *http.Response, err error) {
+	_ = req // shut some linters up
 	resp = httptest.NewRecorder().Result()
 	resp.Body = ioutil.NopCloser(strings.NewReader(t.testJSON))
 	return
@@ -36,7 +37,8 @@ func TestUnitInterceptor(t *testing.T) {
 		resp, err := t.RoundTrip(&http.Request{})
 		So(err, ShouldBeNil)
 
-		b, _ := ioutil.ReadAll(resp.Body)
+		b, err := ioutil.ReadAll(resp.Body)
+		So(err, ShouldBeNil)
 
 		err = resp.Body.Close()
 		So(err, ShouldBeNil)
@@ -52,7 +54,8 @@ func TestUnitInterceptor(t *testing.T) {
 		resp, err := t.RoundTrip(&http.Request{})
 		So(err, ShouldBeNil)
 
-		b, _ := ioutil.ReadAll(resp.Body)
+		b, err := ioutil.ReadAll(resp.Body)
+		So(err, ShouldBeNil)
 
 		err = resp.Body.Close()
 		So(err, ShouldBeNil)
@@ -68,7 +71,8 @@ func TestUnitInterceptor(t *testing.T) {
 		resp, err := t.RoundTrip(&http.Request{})
 		So(err, ShouldBeNil)
 
-		b, _ := ioutil.ReadAll(resp.Body)
+		b, err := ioutil.ReadAll(resp.Body)
+		So(err, ShouldBeNil)
 
 		err = resp.Body.Close()
 		So(err, ShouldBeNil)
@@ -85,7 +89,8 @@ func TestUnitInterceptor(t *testing.T) {
 		resp, err := t.RoundTrip(&http.Request{})
 		So(err, ShouldBeNil)
 
-		b, _ := ioutil.ReadAll(resp.Body)
+		b, err := ioutil.ReadAll(resp.Body)
+		So(err, ShouldBeNil)
 
 		err = resp.Body.Close()
 		So(err, ShouldBeNil)
@@ -102,7 +107,8 @@ func TestUnitInterceptor(t *testing.T) {
 		resp, err := t.RoundTrip(&http.Request{})
 		So(err, ShouldBeNil)
 
-		b, _ := ioutil.ReadAll(resp.Body)
+		b, err := ioutil.ReadAll(resp.Body)
+		So(err, ShouldBeNil)
 
 		err = resp.Body.Close()
 		So(err, ShouldBeNil)
@@ -119,7 +125,9 @@ func TestUnitInterceptor(t *testing.T) {
 		resp, err := t.RoundTrip(&http.Request{})
 		So(err, ShouldBeNil)
 
-		b, _ := ioutil.ReadAll(resp.Body)
+		b, err := ioutil.ReadAll(resp.Body)
+		So(err, ShouldBeNil)
+
 		err = resp.Body.Close()
 		So(err, ShouldBeNil)
 		So(len(b), ShouldEqual, 77)
@@ -135,7 +143,9 @@ func TestUnitInterceptor(t *testing.T) {
 		resp, err := t.RoundTrip(&http.Request{})
 		So(err, ShouldBeNil)
 
-		b, _ := ioutil.ReadAll(resp.Body)
+		b, err := ioutil.ReadAll(resp.Body)
+		So(err, ShouldBeNil)
+
 		err = resp.Body.Close()
 		So(err, ShouldBeNil)
 		So(len(b), ShouldEqual, 88)
@@ -151,7 +161,9 @@ func TestUnitInterceptor(t *testing.T) {
 		resp, err := t.RoundTrip(&http.Request{})
 		So(err, ShouldBeNil)
 
-		b, _ := ioutil.ReadAll(resp.Body)
+		b, err := ioutil.ReadAll(resp.Body)
+		So(err, ShouldBeNil)
+
 		err = resp.Body.Close()
 		So(err, ShouldBeNil)
 		So(len(b), ShouldEqual, 83)
@@ -167,7 +179,9 @@ func TestUnitInterceptor(t *testing.T) {
 		resp, err := t.RoundTrip(&http.Request{})
 		So(err, ShouldBeNil)
 
-		b, _ := ioutil.ReadAll(resp.Body)
+		b, err := ioutil.ReadAll(resp.Body)
+		So(err, ShouldBeNil)
+
 		err = resp.Body.Close()
 		So(err, ShouldBeNil)
 		So(len(b), ShouldEqual, 91)
@@ -183,7 +197,9 @@ func TestUnitInterceptor(t *testing.T) {
 		resp, err := t.RoundTrip(&http.Request{})
 		So(err, ShouldBeNil)
 
-		b, _ := ioutil.ReadAll(resp.Body)
+		b, err := ioutil.ReadAll(resp.Body)
+		So(err, ShouldBeNil)
+
 		err = resp.Body.Close()
 		So(err, ShouldBeNil)
 		So(len(b), ShouldEqual, 116)
@@ -199,11 +215,30 @@ func TestUnitInterceptor(t *testing.T) {
 		resp, err := t.RoundTrip(&http.Request{})
 		So(err, ShouldBeNil)
 
-		b, _ := ioutil.ReadAll(resp.Body)
+		b, err := ioutil.ReadAll(resp.Body)
+		So(err, ShouldBeNil)
 
 		err = resp.Body.Close()
 		So(err, ShouldBeNil)
 		So(len(b), ShouldEqual, 154)
 		So(string(b), ShouldEqual, `[{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}},{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}]`+"\n")
+	})
+
+	Convey("test interceptor correctly ignores non json and non map object", t, func() {
+		testJSON := `AA`
+		transp := dummyRT{testJSON}
+
+		t := NewRoundTripper(testDomain, "", transp)
+
+		resp, err := t.RoundTrip(&http.Request{})
+		So(err, ShouldBeNil)
+
+		b, err := ioutil.ReadAll(resp.Body)
+		So(err, ShouldBeNil)
+
+		err = resp.Body.Close()
+		So(err, ShouldBeNil)
+		So(len(b), ShouldEqual, 2)
+		So(string(b), ShouldEqual, `AA`)
 	})
 }

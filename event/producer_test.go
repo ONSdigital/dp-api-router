@@ -96,8 +96,8 @@ func TestAvroProducer(t *testing.T) {
 
 // Unmarshal converts observation events to []byte.
 func unmarshal(bytes []byte) *event.Audit {
-	event := &event.Audit{}
-	err := schema.AuditEvent.Unmarshal(bytes, event)
+	observationEvent := &event.Audit{}
+	err := schema.AuditEvent.Unmarshal(bytes, observationEvent)
 	So(err, ShouldBeNil)
-	return event
+	return observationEvent
 }

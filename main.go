@@ -59,7 +59,9 @@ func run(ctx context.Context) error {
 	case sig := <-signals:
 		ctx := context.Background()
 		log.Info(ctx, "os signal received", log.Data{"signal": sig})
-		svc.Close(ctx)
+		if err = svc.Close(ctx); err != nil {
+			log.Error(ctx, "service Close error", err)
+		}
 	}
 	return nil
 }

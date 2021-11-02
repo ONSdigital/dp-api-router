@@ -37,6 +37,8 @@ const (
 	downloads  = "downloads"
 
 	href = "href"
+
+	maxBodyLengthToLog = 30 // only log a small part of the body to help any problem diagnosis, as the full body length could be many Megabytes
 )
 
 var (
@@ -60,7 +62,7 @@ func shallIgnore(path string) bool {
 	return false
 }
 
-// RoundTrip intercepts the response body and post processes to add the correct enviornment
+// RoundTrip intercepts the response body and post processes to add the correct environment
 // host to links
 func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error) {
 	resp, err = t.RoundTripper.RoundTrip(req)
@@ -68,47 +70,60 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 		return nil, err
 	}
 
-	if !shallIgnore(req.RequestURI) {
-		b, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return nil, err
-		}
-		err = resp.Body.Close()
-		if err != nil {
-			return nil, err
-		}
+	contentType := resp.Header.Get("Content-Type") // get canonical form
 
-		if len(b) == 0 {
-			resp.Body = ioutil.NopCloser(bytes.NewReader([]byte{}))
-			return resp, nil
-		}
-
-		updatedB, err := t.update(b)
-		if err != nil {
-			log.Error(req.Context(), "could not update response body with correct links", err, log.Data{
-				"body": string(b),
-			})
-			body := ioutil.NopCloser(bytes.NewReader(b))
-
-			resp.Body = body
-			return resp, nil
-		}
-
-		body := ioutil.NopCloser(bytes.NewReader(updatedB))
-
-		resp.Body = body
-		resp.ContentLength = int64(len(updatedB))
-		resp.Header.Set("Content-Length", strconv.Itoa(len(updatedB)))
+	if shallIgnore(req.RequestURI) || strings.Contains(contentType, "gzip") {
+		return resp, nil
 	}
+
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	err = resp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	bodyLength := len(b)
+	if bodyLength == 0 {
+		resp.Body = ioutil.NopCloser(bytes.NewReader([]byte{}))
+		return resp, nil
+	}
+
+	updatedB, err := t.update(b)
+	if err != nil {
+		limitedBodyLength := bodyLength
+		if limitedBodyLength > maxBodyLengthToLog {
+			limitedBodyLength = maxBodyLengthToLog
+		}
+		log.Error(req.Context(), "could not update response body with correct links", err, log.Data{
+			"body":            string(b[0:limitedBodyLength]),
+			"contentType":     contentType,                         // needed to further identify content types that need to be rejected similarly to 'gzip' above
+			"bodyLength":      bodyLength,                          // as above
+			"contentEncoding": resp.Header.Get("Content-Encoding"), // as above
+		})
+		resp.Body = ioutil.NopCloser(bytes.NewReader(b))
+		return resp, nil
+	}
+
+	resp.Body = ioutil.NopCloser(bytes.NewReader(updatedB))
+	resp.ContentLength = int64(len(updatedB))
+	resp.Header.Set("Content-Length", strconv.Itoa(len(updatedB)))
+
 	return resp, nil
 }
 
 func (t *Transport) update(b []byte) ([]byte, error) {
-
 	var (
 		err      error
 		resource interface{}
 	)
+
+	if b[0] != '{' && b[0] != '[' {
+		// quickly reject non json or map files such as .zip's
+		return nil, errors.New("unknown resource type")
+	}
 
 	if err = json.Unmarshal(b, &resource); err != nil {
 		return nil, err
@@ -120,10 +135,10 @@ func (t *Transport) update(b []byte) ([]byte, error) {
 	}
 
 	switch resourceType.Kind() {
-	case reflect.Map:
+	case reflect.Map: // starts with {
 		// Assert type onto document
 		return t.updateMap(resource.(map[string]interface{}))
-	case reflect.Slice:
+	case reflect.Slice: // starts with [
 		// Assert type onto documents
 		return t.updateSlice(resource.([]interface{}))
 	default:
@@ -238,6 +253,7 @@ func (t *Transport) checkMap(document map[string]interface{}) (map[string]interf
 
 func updateMap(docMap map[string]interface{}, domain string) (map[string]interface{}, error) {
 	var err error
+
 	for k, v := range docMap {
 		if val, ok := v.(map[string]interface{}); ok {
 			if field, ok := val[href].(string); ok {
@@ -265,6 +281,7 @@ func updateMap(docMap map[string]interface{}, domain string) (map[string]interfa
 
 func updateArray(docArray []interface{}, domain string) ([]interface{}, error) {
 	var err error
+
 	for i, v := range docArray {
 		if val, ok := v.(map[string]interface{}); ok {
 			if field, ok := val[href].(string); ok {
