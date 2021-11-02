@@ -102,6 +102,7 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 			"contentType":     contentType,                         // needed to further identify content types that need to be rejected similarly to 'gzip' above
 			"bodyLength":      bodyLength,                          // as above
 			"contentEncoding": resp.Header.Get("Content-Encoding"), // as above
+			"rawQuery":        resp.Request.URL.RawQuery,           // as above
 		})
 		resp.Body = ioutil.NopCloser(bytes.NewReader(b))
 		return resp, nil
