@@ -97,12 +97,16 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 		if limitedBodyLength > maxBodyLengthToLog {
 			limitedBodyLength = maxBodyLengthToLog
 		}
+		rawQuery := ""
+		if resp.Request.URL.RawQuery != nil {
+			rawQuery = resp.Request.URL.RawQuery
+		}
 		log.Error(req.Context(), "could not update response body with correct links", err, log.Data{
 			"body":            string(b[0:limitedBodyLength]),
 			"contentType":     contentType,                         // needed to further identify content types that need to be rejected similarly to 'gzip' above
 			"bodyLength":      bodyLength,                          // as above
 			"contentEncoding": resp.Header.Get("Content-Encoding"), // as above
-			"rawQuery":        resp.Request.URL.RawQuery,           // as above
+			"rawQuery":        rawQuery,                            // as above
 		})
 		resp.Body = ioutil.NopCloser(bytes.NewReader(b))
 		return resp, nil
