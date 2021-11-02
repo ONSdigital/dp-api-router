@@ -53,10 +53,10 @@ var pathsToIgnore = []string{
 }
 
 var pathsToUse = []string{
-	"/v1/datasets",
+	"/datasets",
 	"/v1/filter-outputs",
 	"/v1/filters",
-	"/v1/code-lists",
+	"/code-lists",
 	"/v1/hierarchies",
 	"/v1/dimension-search",
 }

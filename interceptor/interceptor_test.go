@@ -51,7 +51,7 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/datasets"})
 		So(err, ShouldBeNil)
 
 		b, err := ioutil.ReadAll(resp.Body)
@@ -68,7 +68,7 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(&http.Request{RequestURI: "??"})
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/datasets"})
 		So(err, ShouldBeNil)
 
 		b, err := ioutil.ReadAll(resp.Body)
@@ -86,7 +86,7 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, testContext, transp)
 
-		resp, err := t.RoundTrip(&http.Request{RequestURI: "??"})
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/datasets"})
 		So(err, ShouldBeNil)
 
 		b, err := ioutil.ReadAll(resp.Body)
@@ -117,12 +117,12 @@ func TestUnitInterceptor(t *testing.T) {
 	})
 
 	Convey("test interceptor correctly updates a href in dimensions subdoc", t, func() {
-		testJSON := `{"dimensions":[{"href":"http://localhost:23000/codelists/1234567"}]}`
+		testJSON := `{"dimensions":[{"href":"http://localhost:23000/code-lists/1234567"}]}`
 		transp := dummyRT{testJSON}
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(&http.Request{RequestURI: "??"})
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/code-lists"})
 		So(err, ShouldBeNil)
 
 		b, err := ioutil.ReadAll(resp.Body)
@@ -131,7 +131,7 @@ func TestUnitInterceptor(t *testing.T) {
 		err = resp.Body.Close()
 		So(err, ShouldBeNil)
 		So(len(b), ShouldEqual, 77)
-		So(string(b), ShouldEqual, `{"dimensions":[{"href":"https://api.beta.ons.gov.uk/v1/codelists/1234567"}]}`+"\n")
+		So(string(b), ShouldEqual, `{"dimensions":[{"href":"https://api.beta.ons.gov.uk/v1/code-lists/1234567"}]}`+"\n")
 	})
 
 	Convey("test interceptor correctly updates a nested links document", t, func() {
@@ -140,7 +140,7 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(&http.Request{RequestURI: "??"})
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/datasets"})
 		So(err, ShouldBeNil)
 
 		b, err := ioutil.ReadAll(resp.Body)
@@ -158,7 +158,7 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(&http.Request{RequestURI: "??"})
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/datasets"})
 		So(err, ShouldBeNil)
 
 		b, err := ioutil.ReadAll(resp.Body)
@@ -176,7 +176,7 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(&http.Request{RequestURI: "??"})
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/datasets"})
 		So(err, ShouldBeNil)
 
 		b, err := ioutil.ReadAll(resp.Body)
@@ -194,7 +194,7 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(&http.Request{RequestURI: "??"})
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/datasets"})
 		So(err, ShouldBeNil)
 
 		b, err := ioutil.ReadAll(resp.Body)
@@ -212,7 +212,7 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(&http.Request{RequestURI: "??"})
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/datasets"})
 		So(err, ShouldBeNil)
 
 		b, err := ioutil.ReadAll(resp.Body)
@@ -230,7 +230,7 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/datasets"})
 		So(err, ShouldBeNil)
 
 		b, err := ioutil.ReadAll(resp.Body)
