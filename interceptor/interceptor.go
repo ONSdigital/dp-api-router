@@ -98,7 +98,7 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 			limitedBodyLength = maxBodyLengthToLog
 		}
 		rawQuery := ""
-		if resp.Request.URL.RawQuery != nil {
+		if resp.Request != nil && resp.Request.URL != nil {
 			rawQuery = resp.Request.URL.RawQuery
 		}
 		log.Error(req.Context(), "could not update response body with correct links", err, log.Data{
