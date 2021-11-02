@@ -52,10 +52,28 @@ var pathsToIgnore = []string{
 	"/v1/password-reset",
 }
 
+var pathsToUse = []string{
+	"/v1/datasets",
+	"/v1/filter-outputs",
+	"/v1/filters",
+	"/v1/code-lists",
+	"/v1/hierarchies",
+	"/v1/dimension-search",
+}
+
 // Check to see whether the response should be remapped
 func shallIgnore(path string) bool {
 	for _, pathToIgnore := range pathsToIgnore {
 		if strings.HasPrefix(path, pathToIgnore) {
+			return true
+		}
+	}
+	return false
+}
+
+func shallUse(path string) bool {
+	for _, pathToUse := range pathsToUse {
+		if strings.HasPrefix(path, pathToUse) {
 			return true
 		}
 	}
@@ -72,49 +90,51 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 
 	contentType := resp.Header.Get("Content-Type") // get canonical form
 
-	if shallIgnore(req.RequestURI) || strings.Contains(contentType, "gzip") {
+	if strings.Contains(contentType, "gzip") {
 		return resp, nil
 	}
 
-	b, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	err = resp.Body.Close()
-	if err != nil {
-		return nil, err
-	}
-
-	bodyLength := len(b)
-	if bodyLength == 0 {
-		resp.Body = ioutil.NopCloser(bytes.NewReader([]byte{}))
-		return resp, nil
-	}
-
-	updatedB, err := t.update(b)
-	if err != nil {
-		limitedBodyLength := bodyLength
-		if limitedBodyLength > maxBodyLengthToLog {
-			limitedBodyLength = maxBodyLengthToLog
+	if shallUse(req.RequestURI) {
+		b, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
 		}
-		rawQuery := ""
-		if resp.Request != nil && resp.Request.URL != nil {
-			rawQuery = resp.Request.URL.RawQuery
+		err = resp.Body.Close()
+		if err != nil {
+			return nil, err
 		}
-		log.Error(req.Context(), "could not update response body with correct links", err, log.Data{
-			"body":            string(b[0:limitedBodyLength]),
-			"contentType":     contentType,                         // needed to further identify content types that need to be rejected similarly to 'gzip' above
-			"bodyLength":      bodyLength,                          // as above
-			"contentEncoding": resp.Header.Get("Content-Encoding"), // as above
-			"rawQuery":        rawQuery,                            // as above
-		})
-		resp.Body = ioutil.NopCloser(bytes.NewReader(b))
-		return resp, nil
-	}
 
-	resp.Body = ioutil.NopCloser(bytes.NewReader(updatedB))
-	resp.ContentLength = int64(len(updatedB))
-	resp.Header.Set("Content-Length", strconv.Itoa(len(updatedB)))
+		bodyLength := len(b)
+		if bodyLength == 0 {
+			resp.Body = ioutil.NopCloser(bytes.NewReader([]byte{}))
+			return resp, nil
+		}
+
+		updatedB, err := t.update(b)
+		if err != nil {
+			limitedBodyLength := bodyLength
+			if limitedBodyLength > maxBodyLengthToLog {
+				limitedBodyLength = maxBodyLengthToLog
+			}
+			rawQuery := ""
+			if resp.Request != nil && resp.Request.URL != nil {
+				rawQuery = resp.Request.URL.RawQuery
+			}
+			log.Error(req.Context(), "could not update response body with correct links", err, log.Data{
+				"body":            string(b[0:limitedBodyLength]),
+				"contentType":     contentType,                         // needed to further identify content types that need to be rejected similarly to 'gzip' above
+				"bodyLength":      bodyLength,                          // as above
+				"contentEncoding": resp.Header.Get("Content-Encoding"), // as above
+				"rawQuery":        rawQuery,                            // as above
+			})
+			resp.Body = ioutil.NopCloser(bytes.NewReader(b))
+			return resp, nil
+		}
+
+		resp.Body = ioutil.NopCloser(bytes.NewReader(updatedB))
+		resp.ContentLength = int64(len(updatedB))
+		resp.Header.Set("Content-Length", strconv.Itoa(len(updatedB)))
+	}
 
 	return resp, nil
 }
