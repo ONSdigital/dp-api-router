@@ -147,7 +147,7 @@ func (t *Transport) update(b []byte) ([]byte, error) {
 
 	if b[0] != '{' && b[0] != '[' {
 		// quickly reject non json or map files such as .zip's
-		return nil, errors.New("unknown resource type")
+		return nil, errors.New("Not a JSON file")
 	}
 
 	if err = json.Unmarshal(b, &resource); err != nil {
