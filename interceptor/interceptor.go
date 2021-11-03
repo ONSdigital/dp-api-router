@@ -85,6 +85,7 @@ func shallUse(path string) bool {
 // RoundTrip intercepts the response body and post processes to add the correct environment
 // host to links
 func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error) {
+	// Make the request to the server
 	resp, err = t.RoundTripper.RoundTrip(req)
 	if err != nil {
 		return nil, err
@@ -133,12 +134,12 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 				"content_encoding": resp.Header.Get("Content-Encoding"), // as above
 				"raw_query":        rawQuery,                            // as above
 			})
-			// recombine the buffered part of the body with the rest of the stream
 			first := ioutil.NopCloser(bytes.NewReader(readdata))
-			resp2 := resp
-			// NOTE: The reciever of resp2 will do the "resp.Body.Close()"
-			resp2.Body = ioutil.NopCloser(io.MultiReader(first, resp.Body))
-			return resp2, nil
+			remainingBody := resp.Body // take copy of pointer to the original io.ReadCloser whose stream has had 'first' read from it
+			// NOTE: The reciever of resp will do the "resp.Body.Close()"
+			// recombine the buffered 'first' part of the body with any remaining part of the stream
+			resp.Body = ioutil.NopCloser(io.MultiReader(first, remainingBody))
+			return resp, nil
 		}
 
 		// get the rest of the stream, which should be of reasonable size
@@ -172,10 +173,12 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 				"content_encoding": resp.Header.Get("Content-Encoding"), // as above
 				"raw_query":        rawQuery,                            // as above
 			})
+			// return original body
 			resp.Body = ioutil.NopCloser(bytes.NewReader(b))
 			return resp, nil
 		}
 
+		// return updated body
 		resp.Body = ioutil.NopCloser(bytes.NewReader(updatedB))
 		resp.ContentLength = int64(len(updatedB))
 		resp.Header.Set("Content-Length", strconv.Itoa(len(updatedB)))
