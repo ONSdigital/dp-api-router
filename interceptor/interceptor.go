@@ -105,9 +105,9 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 				rawQuery = resp.Request.URL.RawQuery
 			}
 			log.Error(req.Context(), "Problem reading first part of resp'", err, log.Data{
-				"contentType":     contentType,                         // needed to further identify content types that need to be rejected similarly to 'gzip' above
-				"contentEncoding": resp.Header.Get("Content-Encoding"), // as above
-				"rawQuery":        rawQuery,                            // as above
+				"content_type":     contentType,                         // needed to further identify content types that need to be rejected similarly to 'gzip' above
+				"content_encoding": resp.Header.Get("Content-Encoding"), // as above
+				"raw_query":        rawQuery,                            // as above
 			})
 			return nil, err
 		}
@@ -127,10 +127,10 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 				rawQuery = resp.Request.URL.RawQuery
 			}
 			log.Error(req.Context(), "Not a JSON file", err, log.Data{
-				"body":            string(readdata),
-				"contentType":     contentType,                         // needed to further identify content types that need to be rejected similarly to 'gzip' above
-				"contentEncoding": resp.Header.Get("Content-Encoding"), // as above
-				"rawQuery":        rawQuery,                            // as above
+				"body":             string(readdata),
+				"content_type":     contentType,                         // needed to further identify content types that need to be rejected similarly to 'gzip' above
+				"content_encoding": resp.Header.Get("Content-Encoding"), // as above
+				"raw_query":        rawQuery,                            // as above
 			})
 			// recombine the buffered part of the body with the rest of the stream
 			first := ioutil.NopCloser(bytes.NewReader(readdata))
@@ -166,11 +166,11 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 				rawQuery = resp.Request.URL.RawQuery
 			}
 			log.Error(req.Context(), "could not update response body with correct links", err, log.Data{
-				"body":            string(b[0:limitedBodyLength]),
-				"contentType":     contentType,                         // needed to further identify content types that need to be rejected similarly to 'gzip' above
-				"bodyLength":      bodyLength,                          // as above
-				"contentEncoding": resp.Header.Get("Content-Encoding"), // as above
-				"rawQuery":        rawQuery,                            // as above
+				"body":             string(b[0:limitedBodyLength]),
+				"content_type":     contentType,                         // needed to further identify content types that need to be rejected similarly to 'gzip' above
+				"body_length":      bodyLength,                          // as above
+				"content_encoding": resp.Header.Get("Content-Encoding"), // as above
+				"raw_query":        rawQuery,                            // as above
 			})
 			resp.Body = ioutil.NopCloser(bytes.NewReader(b))
 			return resp, nil
