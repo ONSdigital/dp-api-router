@@ -225,7 +225,7 @@ func TestUnitInterceptor(t *testing.T) {
 	})
 
 	Convey("test interceptor correctly ignores non json and non map object", t, func() {
-		testJSON := `AA`
+		testJSON := `AbcdefghijklmnopqrstuvwxyZ`
 		transp := dummyRT{testJSON}
 
 		t := NewRoundTripper(testDomain, "", transp)
@@ -238,7 +238,26 @@ func TestUnitInterceptor(t *testing.T) {
 
 		err = resp.Body.Close()
 		So(err, ShouldBeNil)
-		So(len(b), ShouldEqual, 2)
-		So(string(b), ShouldEqual, `AA`)
+		So(len(b), ShouldEqual, 26)
+		So(string(b), ShouldEqual, `AbcdefghijklmnopqrstuvwxyZ`)
 	})
+
+	Convey("test interceptor correctly handles broken json object", t, func() {
+		testJSON := `{bla`
+		transp := dummyRT{testJSON}
+
+		t := NewRoundTripper(testDomain, "", transp)
+
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/datasets"})
+		So(err, ShouldBeNil)
+
+		b, err := ioutil.ReadAll(resp.Body)
+		So(err, ShouldBeNil)
+
+		err = resp.Body.Close()
+		So(err, ShouldBeNil)
+		So(len(b), ShouldEqual, 4)
+		So(string(b), ShouldEqual, `{bla`)
+	})
+
 }

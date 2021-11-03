@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -38,7 +39,7 @@ const (
 
 	href = "href"
 
-	maxBodyLengthToLog = 30 // only log a small part of the body to help any problem diagnosis, as the full body length could be many Megabytes
+	maxBodyLengthToLog = 20 // only log a small part of the body to help any problem diagnosis, as the full body length could be many Megabytes
 )
 
 var (
@@ -95,6 +96,46 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 	}
 
 	if shallUse(req.RequestURI) {
+
+		// get small number of bytes from resp
+		readdata, err := ioutil.ReadAll(io.LimitReader(resp.Body, maxBodyLengthToLog))
+		if err != nil {
+			rawQuery := ""
+			if resp.Request != nil && resp.Request.URL != nil {
+				rawQuery = resp.Request.URL.RawQuery
+			}
+			log.Error(req.Context(), "Problem reading first part of resp'", err, log.Data{
+				"contentType":     contentType,                         // needed to further identify content types that need to be rejected similarly to 'gzip' above
+				"contentEncoding": resp.Header.Get("Content-Encoding"), // as above
+				"rawQuery":        rawQuery,                            // as above
+			})
+			return nil, err
+		}
+		if len(readdata) == 0 {
+			resp.Body = ioutil.NopCloser(bytes.NewReader([]byte{}))
+			return resp, nil
+		}
+
+		if readdata[0] != '{' && readdata[0] != '[' {
+			// quickly reject non json or map files such as .zip's, to avoid reading in the body of potentially very large objects
+			rawQuery := ""
+			if resp.Request != nil && resp.Request.URL != nil {
+				rawQuery = resp.Request.URL.RawQuery
+			}
+			log.Error(req.Context(), "Not a JSON file", err, log.Data{
+				"body":            string(readdata),
+				"contentType":     contentType,                         // needed to further identify content types that need to be rejected similarly to 'gzip' above
+				"contentEncoding": resp.Header.Get("Content-Encoding"), // as above
+				"rawQuery":        rawQuery,                            // as above
+			})
+			// recombine the buffered part of the body with the rest of the stream
+			first := ioutil.NopCloser(bytes.NewReader(readdata))
+			resp2 := resp
+			resp2.Body = ioutil.NopCloser(io.MultiReader(first, resp.Body))
+			return resp2, nil
+		}
+
+		// get the rest of the stream, which should be of reasonable size
 		b, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			return nil, err
@@ -104,11 +145,10 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 			return nil, err
 		}
 
+		// prefix the first chunk read above back into the stream
+		b = append(readdata, b...)
+
 		bodyLength := len(b)
-		if bodyLength == 0 {
-			resp.Body = ioutil.NopCloser(bytes.NewReader([]byte{}))
-			return resp, nil
-		}
 
 		updatedB, err := t.update(b)
 		if err != nil {
@@ -144,11 +184,6 @@ func (t *Transport) update(b []byte) ([]byte, error) {
 		err      error
 		resource interface{}
 	)
-
-	if b[0] != '{' && b[0] != '[' {
-		// quickly reject non json or map files such as .zip's
-		return nil, errors.New("Not a JSON file")
-	}
 
 	if err = json.Unmarshal(b, &resource); err != nil {
 		return nil, err
