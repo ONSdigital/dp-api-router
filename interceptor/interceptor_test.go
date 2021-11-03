@@ -224,8 +224,11 @@ func TestUnitInterceptor(t *testing.T) {
 		So(string(b), ShouldEqual, `[{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}},{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}]`+"\n")
 	})
 
-	Convey("test interceptor correctly ignores non json and non map object", t, func() {
-		testJSON := `AbcdefghijklmnopqrstuvwxyZ`
+	Convey("test interceptor correctly ignores non json and non map object that is 'maxBodyLengthToLog - 1'", t, func() {
+		testJSON := "A"
+		for i := 0; i < (maxBodyLengthToLog - 2); i++ {
+			testJSON += "n"
+		}
 		transp := dummyRT{testJSON}
 
 		t := NewRoundTripper(testDomain, "", transp)
@@ -238,11 +241,54 @@ func TestUnitInterceptor(t *testing.T) {
 
 		err = resp.Body.Close()
 		So(err, ShouldBeNil)
-		So(len(b), ShouldEqual, 26)
-		So(string(b), ShouldEqual, `AbcdefghijklmnopqrstuvwxyZ`)
+		So(len(b), ShouldEqual, maxBodyLengthToLog-1)
+		So(string(b), ShouldEqual, testJSON)
 	})
 
-	Convey("test interceptor correctly handles broken json object", t, func() {
+	Convey("test interceptor correctly ignores non json and non map object that is 'maxBodyLengthToLog'", t, func() {
+		testJSON := "B"
+		for i := 0; i < (maxBodyLengthToLog - 1); i++ {
+			testJSON += "n"
+		}
+		transp := dummyRT{testJSON}
+
+		t := NewRoundTripper(testDomain, "", transp)
+
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/datasets"})
+		So(err, ShouldBeNil)
+
+		b, err := ioutil.ReadAll(resp.Body)
+		So(err, ShouldBeNil)
+
+		err = resp.Body.Close()
+		So(err, ShouldBeNil)
+		So(len(b), ShouldEqual, maxBodyLengthToLog)
+		So(string(b), ShouldEqual, testJSON)
+	})
+
+	Convey("test interceptor correctly ignores non json and non map object that is 'maxBodyLengthToLog+1'", t, func() {
+		testJSON := "C"
+		for i := 0; i < (maxBodyLengthToLog - 1); i++ {
+			testJSON += "n"
+		}
+		testJSON += "1"
+		transp := dummyRT{testJSON}
+
+		t := NewRoundTripper(testDomain, "", transp)
+
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/datasets"})
+		So(err, ShouldBeNil)
+
+		b, err := ioutil.ReadAll(resp.Body)
+		So(err, ShouldBeNil)
+
+		err = resp.Body.Close()
+		So(err, ShouldBeNil)
+		So(len(b), ShouldEqual, maxBodyLengthToLog+1)
+		So(string(b), ShouldEqual, testJSON)
+	})
+
+	Convey("test interceptor correctly handles broken json object, that is not split", t, func() {
 		testJSON := `{bla`
 		transp := dummyRT{testJSON}
 
@@ -256,8 +302,28 @@ func TestUnitInterceptor(t *testing.T) {
 
 		err = resp.Body.Close()
 		So(err, ShouldBeNil)
-		So(len(b), ShouldEqual, 4)
-		So(string(b), ShouldEqual, `{bla`)
+		So(len(b), ShouldEqual, len(testJSON))
+		So(string(b), ShouldEqual, testJSON)
 	})
 
+	Convey("test interceptor correctly handles broken json object that will be split", t, func() {
+		testJSON := `{bla`
+		for i := 0; i < maxBodyLengthToLog; i++ {
+			testJSON += "n"
+		}
+		transp := dummyRT{testJSON}
+
+		t := NewRoundTripper(testDomain, "", transp)
+
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/datasets"})
+		So(err, ShouldBeNil)
+
+		b, err := ioutil.ReadAll(resp.Body)
+		So(err, ShouldBeNil)
+
+		err = resp.Body.Close()
+		So(err, ShouldBeNil)
+		So(len(b), ShouldEqual, len(testJSON))
+		So(string(b), ShouldEqual, testJSON)
+	})
 }

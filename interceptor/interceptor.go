@@ -39,6 +39,7 @@ const (
 
 	href = "href"
 
+	// NOTE: Don't go changing 'maxBodyLengthToLog' value to omuch from '20' as its used to generate boundary test cases.
 	maxBodyLengthToLog = 20 // only log a small part of the body to help any problem diagnosis, as the full body length could be many Megabytes
 )
 
