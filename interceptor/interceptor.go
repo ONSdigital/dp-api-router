@@ -136,7 +136,7 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 			// recombine the buffered part of the body with the rest of the stream
 			first := ioutil.NopCloser(bytes.NewReader(readdata))
 			resp2 := resp
-			// NOTE: MultiReader will do the "resp.Body.Close()"
+			// NOTE: The reciever of resp2 will do the "resp.Body.Close()"
 			resp2.Body = ioutil.NopCloser(io.MultiReader(first, resp.Body))
 			return resp2, nil
 		}
@@ -154,10 +154,9 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 		// prefix the first chunk read above back into the stream
 		b = append(readdata, b...)
 
-		bodyLength := len(b)
-
 		updatedB, err := t.update(b)
 		if err != nil {
+			bodyLength := len(b)
 			limitedBodyLength := bodyLength
 			if limitedBodyLength > maxBodyLengthToLog {
 				limitedBodyLength = maxBodyLengthToLog
