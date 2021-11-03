@@ -112,6 +112,10 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 			return nil, err
 		}
 		if len(readdata) == 0 {
+			err = resp.Body.Close()
+			if err != nil {
+				return nil, err
+			}
 			resp.Body = ioutil.NopCloser(bytes.NewReader([]byte{}))
 			return resp, nil
 		}
@@ -131,6 +135,7 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 			// recombine the buffered part of the body with the rest of the stream
 			first := ioutil.NopCloser(bytes.NewReader(readdata))
 			resp2 := resp
+			// NOTE: MultiReader will do the "resp.Body.Close()"
 			resp2.Body = ioutil.NopCloser(io.MultiReader(first, resp.Body))
 			return resp2, nil
 		}
