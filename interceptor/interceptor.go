@@ -134,16 +134,14 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 				"content_encoding": resp.Header.Get("Content-Encoding"), // as above
 				"raw_query":        rawQuery,                            // as above
 			})
-			first := ioutil.NopCloser(bytes.NewReader(readdata))
 			remainingBody := resp.Body // take copy of pointer to the original io.ReadCloser whose stream has had 'first' read from it
-			// NOTE: The reciever of resp will do the "resp.Body.Close()"
 			// recombine the buffered 'first' part of the body with any remaining part of the stream
-			resp.Body = ioutil.NopCloser(io.MultiReader(first, remainingBody))
+			resp.Body = NewMultiReadCloser(bytes.NewReader(readdata), remainingBody)
 			return resp, nil
 		}
 
 		// get the rest of the stream, which should be of reasonable size
-		b, err := ioutil.ReadAll(resp.Body)
+		b, err := ioutil.ReadAll(NewMultiReadCloser(bytes.NewReader(readdata), resp.Body))
 		if err != nil {
 			return nil, err
 		}
@@ -151,9 +149,6 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 		if err != nil {
 			return nil, err
 		}
-
-		// prefix the first chunk read above back into the stream
-		b = append(readdata, b...)
 
 		updatedB, err := t.update(b)
 		if err != nil {
@@ -185,6 +180,34 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 	}
 
 	return resp, nil
+}
+
+type multiReadCloser struct {
+	readers     []io.Reader
+	multiReader io.Reader
+}
+
+func NewMultiReadCloser(readers ...io.Reader) io.ReadCloser {
+	return &multiReadCloser{
+		readers:     readers,
+		multiReader: io.MultiReader(readers...),
+	}
+}
+
+func (r *multiReadCloser) Read(p []byte) (n int, err error) {
+	return r.multiReader.Read(p)
+}
+
+func (r *multiReadCloser) Close() (err error) {
+	for _, r := range r.readers {
+		if c, ok := r.(io.Closer); ok {
+			if e := c.Close(); e != nil {
+				err = e
+			}
+		}
+	}
+
+	return err
 }
 
 func (t *Transport) update(b []byte) ([]byte, error) {
