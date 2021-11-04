@@ -45,6 +45,40 @@ func TestUnitInterceptor(t *testing.T) {
 		So(len(b), ShouldEqual, 0)
 	})
 
+	Convey("test interceptor doesn't throw an error for a nil body", t, func() {
+		//testJSON := ``
+		transp := dummyRT{}
+
+		t := NewRoundTripper(testDomain, "", transp)
+
+		resp, err := t.RoundTrip(&http.Request{})
+		So(err, ShouldBeNil)
+
+		b, err := ioutil.ReadAll(resp.Body)
+		So(err, ShouldBeNil)
+
+		err = resp.Body.Close()
+		So(err, ShouldBeNil)
+		So(len(b), ShouldEqual, 0)
+	})
+
+	Convey("test interceptor doesn't throw an error for a nil body with correct URI", t, func() {
+		//testJSON := ``
+		transp := dummyRT{}
+
+		t := NewRoundTripper(testDomain, "", transp)
+
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/datasets"})
+		So(err, ShouldBeNil)
+
+		b, err := ioutil.ReadAll(resp.Body)
+		So(err, ShouldBeNil)
+
+		err = resp.Body.Close()
+		So(err, ShouldBeNil)
+		So(len(b), ShouldEqual, 0)
+	})
+
 	Convey("test interceptor doesn't change an already correct link", t, func() {
 		testJSON := `{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}`
 		transp := dummyRT{testJSON}
