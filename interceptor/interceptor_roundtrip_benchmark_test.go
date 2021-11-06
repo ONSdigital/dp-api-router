@@ -336,3 +336,25 @@ func BenchmarkTest3(b *testing.B) {
 	b.SetParallelism(2000)
 	b.RunParallel(trip)
 }
+
+/* Test results for benchmarks, bytes used on HEAP:
+
+Code as of 16th Sep 2021
+
+Test1 => 6,537
+Test2 => 86,496
+Test3 => 11,542
+
+Code in Develop as updated on 2nd Nov 2021
+
+Test1 => 6,539
+Test2 => 53,802
+Test3 => 11,576
+
+Code on 'feature/undo-part-of-unmarshal-specific-things' as of 6th Nov 2021
+
+Test1 => 7,261
+Test2 => 3,149    <---- *** This is the important one that will avoid BIG files causing problems.
+Test3 => 13,014
+
+*/
