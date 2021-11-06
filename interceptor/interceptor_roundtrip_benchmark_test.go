@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"sync/atomic"
 	"testing"
 )
 
@@ -285,6 +286,18 @@ Showing top 30 nodes out of 36
 
 var testJSON2 = `{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/1234"}}}`
 
+// running test3 with:
+//  go test -race -run=interceptor_roundtrip_benchmark_test.go -bench=Test3 -memprofile=mem0.out
+// gives:
+//  28	  36988328 ns/op	  162985 B/op	     884 allocs/op
+//
+// ... in the run with race checking, there is a lot of other things going on taking time away from benchmarking.
+//
+// running test3 with:
+//  go test -run=interceptor_roundtrip_benchmark_test.go -bench=Test3 -memprofile=mem0.out
+// gives:
+//  172375	      8255 ns/op	   13088 B/op	     185 allocs/op
+
 func BenchmarkTest3(b *testing.B) {
 	fmt.Println("Benchmarking: 'roundTrip', using code from unit test that is known to work")
 
@@ -298,11 +311,11 @@ func BenchmarkTest3(b *testing.B) {
 
 	b.ReportAllocs()
 
-	c := 0
+	var c int32
 
 	trip := func(pb *testing.PB) {
 		for pb.Next() {
-			c++
+			atomic.AddInt32(&c, 1)
 			resp, err := t.RoundTrip(&http.Request{RequestURI: "/datasets"})
 			if err != nil {
 				fmt.Printf("RoundTrip Error: %v\n", err)
@@ -333,7 +346,7 @@ func BenchmarkTest3(b *testing.B) {
 		}
 	}
 
-	b.SetParallelism(2000)
+	b.SetParallelism(1000)
 	b.RunParallel(trip)
 }
 
