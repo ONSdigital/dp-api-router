@@ -346,7 +346,7 @@ func BenchmarkTest3(b *testing.B) {
 		}
 	}
 
-	b.SetParallelism(1000)
+	b.SetParallelism(500)
 	b.RunParallel(trip)
 }
 
