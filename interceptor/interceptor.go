@@ -134,9 +134,8 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 				"content_encoding": resp.Header.Get("Content-Encoding"), // as above
 				"raw_query":        rawQuery,                            // as above
 			})
-			remainingBody := resp.Body // take copy of pointer to the original io.ReadCloser whose stream has had 'first' read from it
 			// recombine the buffered 'first' part of the body with any remaining part of the stream
-			resp.Body = NewMultiReadCloser(bytes.NewReader(readdata), remainingBody)
+			resp.Body = NewMultiReadCloser(bytes.NewReader(readdata), resp.Body)
 			return resp, nil
 		}
 
