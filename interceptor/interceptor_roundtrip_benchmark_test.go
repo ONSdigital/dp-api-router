@@ -88,7 +88,7 @@ func BenchmarkTest1(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 
 		/*resp, err := */
-		t.RoundTrip(&http.Request{RequestURI: "/datasets"})
+		t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 	}
 
 	/*So(err, ShouldBeNil)
@@ -230,7 +230,7 @@ func BenchmarkTest2(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 
 		/*resp, err := */
-		t.RoundTrip(&http.Request{RequestURI: "/datasets"})
+		t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 	}
 }
 
@@ -316,7 +316,7 @@ func BenchmarkTest3(b *testing.B) {
 	trip := func(pb *testing.PB) {
 		for pb.Next() {
 			atomic.AddInt32(&c, 1)
-			resp, err := t.RoundTrip(&http.Request{RequestURI: "/datasets"})
+			resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 			if err != nil {
 				fmt.Printf("RoundTrip Error: %v\n", err)
 				panic(err)
@@ -330,7 +330,7 @@ func BenchmarkTest3(b *testing.B) {
 				panic(fmt.Errorf("wrong result: %d: %v\n", c, string(body)))
 			}
 
-			resp2, err := t2.RoundTrip(&http.Request{RequestURI: "/datasets"})
+			resp2, err := t2.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 			if err != nil {
 				fmt.Printf("RoundTrip Error: %v\n", err)
 				panic(err)
