@@ -85,7 +85,7 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(&http.Request{RequestURI: "/datasets"})
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
 
 		b, err := ioutil.ReadAll(resp.Body)
@@ -102,7 +102,7 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(&http.Request{RequestURI: "/datasets"})
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
 
 		b, err := ioutil.ReadAll(resp.Body)
@@ -120,7 +120,7 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, testContext, transp)
 
-		resp, err := t.RoundTrip(&http.Request{RequestURI: "/datasets"})
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
 
 		b, err := ioutil.ReadAll(resp.Body)
@@ -138,7 +138,7 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(&http.Request{RequestURI: "/datasets/1234"})
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets/1234"})
 		So(err, ShouldBeNil)
 
 		b, err := ioutil.ReadAll(resp.Body)
@@ -156,7 +156,7 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(&http.Request{RequestURI: "/code-lists"})
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/code-lists"})
 		So(err, ShouldBeNil)
 
 		b, err := ioutil.ReadAll(resp.Body)
@@ -174,7 +174,7 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(&http.Request{RequestURI: "/datasets"})
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
 
 		b, err := ioutil.ReadAll(resp.Body)
@@ -192,7 +192,7 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(&http.Request{RequestURI: "/datasets"})
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
 
 		b, err := ioutil.ReadAll(resp.Body)
@@ -210,7 +210,7 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(&http.Request{RequestURI: "/datasets"})
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
 
 		b, err := ioutil.ReadAll(resp.Body)
@@ -228,7 +228,7 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(&http.Request{RequestURI: "/datasets"})
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
 
 		b, err := ioutil.ReadAll(resp.Body)
@@ -246,7 +246,7 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(&http.Request{RequestURI: "/datasets"})
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
 
 		b, err := ioutil.ReadAll(resp.Body)
@@ -267,7 +267,7 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(&http.Request{RequestURI: "/datasets"})
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
 
 		b, err := ioutil.ReadAll(resp.Body)
@@ -288,7 +288,7 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(&http.Request{RequestURI: "/datasets"})
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
 
 		b, err := ioutil.ReadAll(resp.Body)
@@ -310,7 +310,7 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(&http.Request{RequestURI: "/datasets"})
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
 
 		b, err := ioutil.ReadAll(resp.Body)
@@ -328,7 +328,7 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(&http.Request{RequestURI: "/datasets"})
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
 
 		b, err := ioutil.ReadAll(resp.Body)
@@ -349,7 +349,7 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(&http.Request{RequestURI: "/datasets"})
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
 
 		b, err := ioutil.ReadAll(resp.Body)
