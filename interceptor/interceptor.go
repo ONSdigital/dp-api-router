@@ -61,6 +61,9 @@ var pathsToUse = []string{
 	"/v1/code-lists",
 	"/v1/hierarchies",
 	"/v1/dimension-search",
+	"/v1/images",
+	"/v1/jobs", // this is more commonly referred to as 'imports'
+	"/v1/instances",
 }
 
 // Check to see whether the response should be remapped
@@ -96,6 +99,8 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 	if strings.Contains(contentType, "gzip") {
 		return resp, nil
 	}
+
+	// "contentEncoding": "gzip" ... might need to exclude these things at some point
 
 	if shallUse(req.RequestURI) {
 
