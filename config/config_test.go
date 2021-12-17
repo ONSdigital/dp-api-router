@@ -19,6 +19,7 @@ func TestGetRetrunsDefaultValues(t *testing.T) {
 			EnableV1BetaRestriction:    false,
 			EnableObservationAPI:       false,
 			EnableAudit:                false,
+			EnableZebedeeAudit:         false,
 			ZebedeeURL:                 "http://localhost:8082",
 			HierarchyAPIURL:            "http://localhost:22600",
 			FilterAPIURL:               "http://localhost:22100",
@@ -48,6 +49,8 @@ func TestGetRetrunsDefaultValues(t *testing.T) {
 			EnableSessionsAPI:          false,
 			TopicAPIURL:                "http://localhost:25300",
 			EnableTopicAPI:             false,
+			ArticlesAPIURL:             "http://localhost:27000",
+			EnableArticlesAPI:          false,
 		})
 	})
 }

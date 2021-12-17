@@ -54,6 +54,8 @@ func TestRouterPublicAPIs(t *testing.T) {
 		// This is temporary and needs to be removed when it is ready for SearchAPIURL to point to dp-search-query
 		cfg.SearchAPIURL = "http://justForTests:1234"
 
+		zebedeeURL, err := url.Parse(cfg.ZebedeeURL)
+		So(err, ShouldBeNil)
 		hierarchyAPIURL, err := url.Parse(cfg.HierarchyAPIURL)
 		So(err, ShouldBeNil)
 		filterAPIURL, err := url.Parse(cfg.FilterAPIURL)
@@ -70,6 +72,8 @@ func TestRouterPublicAPIs(t *testing.T) {
 		So(err, ShouldBeNil)
 		imageAPIURL, err := url.Parse(cfg.ImageAPIURL)
 		So(err, ShouldBeNil)
+		articlesAPIURL, err := url.Parse(cfg.ArticlesAPIURL)
+		So(err, ShouldBeNil)
 
 		expectedPublicURLs := map[string]*url.URL{
 			"/code-lists": codelistAPIURL,
@@ -81,6 +85,7 @@ func TestRouterPublicAPIs(t *testing.T) {
 			"/search":           searchAPIURL,
 			"/dimension-search": dimensionSearchAPIURL,
 			"/images":           imageAPIURL,
+			"/articles":         articlesAPIURL,
 		}
 
 		resetProxyMocksWithExpectations(expectedPublicURLs)
@@ -188,6 +193,26 @@ func TestRouterPublicAPIs(t *testing.T) {
 				w := createRouterTest(cfg, "http://localhost:23200/v1/images/subpath")
 				So(w.Code, ShouldEqual, http.StatusOK)
 				verifyProxied("/images/subpath", imageAPIURL)
+			})
+
+			Convey("A request to an articles subpath", func() {
+				Convey("when the feature flag is enabled", func() {
+					cfg.EnableArticlesAPI = true
+					Convey("Then the request is proxied to the articles API", func() {
+						w := createRouterTest(cfg, "http://localhost:23200/v1/articles/subpath")
+						So(w.Code, ShouldEqual, http.StatusOK)
+						verifyProxied("/articles/subpath", articlesAPIURL)
+					})
+				})
+
+				Convey("With the feature flag disabled", func() {
+					cfg.EnableArticlesAPI = false
+					Convey("Then the request falls through to the default zebedee handler", func() {
+						w := createRouterTest(cfg, "http://localhost:23200/v1/articles/subpath")
+						So(w.Code, ShouldEqual, http.StatusOK)
+						verifyProxied("/articles/subpath", zebedeeURL)
+					})
+				})
 			})
 		})
 

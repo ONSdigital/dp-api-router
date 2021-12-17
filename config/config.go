@@ -49,6 +49,8 @@ type Config struct {
 	EnableSessionsAPI          bool          `envconfig:"ENABLE_SESSIONS_API"`
 	TopicAPIURL                string        `envconfig:"TOPIC_API_URL"`
 	EnableTopicAPI             bool          `envconfig:"ENABLE_TOPIC_API"`
+	EnableArticlesAPI          bool          `envconfig:"ENABLE_ARTICLES_API"`
+	ArticlesAPIURL             string        `envconfig:"ARTICLES_API_URL"`
 }
 
 var cfg *Config
@@ -96,6 +98,8 @@ func Get() (*Config, error) {
 		EnableSessionsAPI:          false,
 		TopicAPIURL:                "http://localhost:25300",
 		EnableTopicAPI:             false,
+		ArticlesAPIURL:             "http://localhost:27000",
+		EnableArticlesAPI:          false,
 	}
 
 	return cfg, envconfig.Process("", cfg)
