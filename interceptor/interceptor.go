@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -13,7 +14,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ONSdigital/log.go/log"
+	"github.com/ONSdigital/log.go/v2/log"
 )
 
 // Transport implements the http RoundTripper method and allows the
@@ -37,6 +38,9 @@ const (
 	downloads  = "downloads"
 
 	href = "href"
+
+	// NOTE: Don't go changing 'maxBodyLengthToLog' value to omuch from '20' as its used to generate boundary test cases.
+	maxBodyLengthToLog = 20 // only log a small part of the body to help any problem diagnosis, as the full body length could be many Megabytes
 )
 
 var (
@@ -50,6 +54,18 @@ var pathsToIgnore = []string{
 	"/v1/password-reset",
 }
 
+var pathsToUse = []string{
+	"/v1/datasets",
+	"/v1/filter-outputs",
+	"/v1/filters",
+	"/v1/code-lists",
+	"/v1/hierarchies",
+	"/v1/dimension-search",
+	"/v1/images",
+	"/v1/jobs", // this is more commonly referred to as 'imports'
+	"/v1/instances",
+}
+
 // Check to see whether the response should be remapped
 func shallIgnore(path string) bool {
 	for _, pathToIgnore := range pathsToIgnore {
@@ -60,16 +76,76 @@ func shallIgnore(path string) bool {
 	return false
 }
 
-// RoundTrip intercepts the response body and post processes to add the correct enviornment
+func shallUse(path string) bool {
+	for _, pathToUse := range pathsToUse {
+		if strings.HasPrefix(path, pathToUse) {
+			return true
+		}
+	}
+	return false
+}
+
+// RoundTrip intercepts the response body and post processes to add the correct environment
 // host to links
 func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error) {
+	// Make the request to the server
 	resp, err = t.RoundTripper.RoundTrip(req)
 	if err != nil {
 		return nil, err
 	}
 
-	if !shallIgnore(req.RequestURI) {
-		b, err := ioutil.ReadAll(resp.Body)
+	contentType := resp.Header.Get("Content-Type") // get canonical form
+
+	if strings.Contains(contentType, "gzip") {
+		return resp, nil
+	}
+
+	// "contentEncoding": "gzip" ... might need to exclude these things at some point
+
+	if shallUse(req.RequestURI) {
+
+		// get small number of bytes from resp
+		readdata, err := ioutil.ReadAll(io.LimitReader(resp.Body, maxBodyLengthToLog))
+		if err != nil {
+			rawQuery := ""
+			if resp.Request != nil && resp.Request.URL != nil {
+				rawQuery = resp.Request.URL.RawQuery
+			}
+			log.Error(req.Context(), "Problem reading first part of resp'", err, log.Data{
+				"content_type":     contentType,                         // needed to further identify content types that need to be rejected similarly to 'gzip' above
+				"content_encoding": resp.Header.Get("Content-Encoding"), // as above
+				"raw_query":        rawQuery,                            // as above
+			})
+			return nil, err
+		}
+		if len(readdata) == 0 {
+			err = resp.Body.Close()
+			if err != nil {
+				return nil, err
+			}
+			resp.Body = ioutil.NopCloser(bytes.NewReader([]byte{}))
+			return resp, nil
+		}
+
+		if readdata[0] != '{' && readdata[0] != '[' {
+			// quickly reject non json or map files such as .zip's, to avoid reading in the body of potentially very large objects
+			rawQuery := ""
+			if resp.Request != nil && resp.Request.URL != nil {
+				rawQuery = resp.Request.URL.RawQuery
+			}
+			log.Error(req.Context(), "Not a JSON file", err, log.Data{
+				"body":             string(readdata),
+				"content_type":     contentType,                         // needed to further identify content types that need to be rejected similarly to 'gzip' above
+				"content_encoding": resp.Header.Get("Content-Encoding"), // as above
+				"raw_query":        rawQuery,                            // as above
+			})
+			// recombine the buffered 'first' part of the body with any remaining part of the stream
+			resp.Body = NewMultiReadCloser(bytes.NewReader(readdata), resp.Body)
+			return resp, nil
+		}
+
+		// get the rest of the stream, which should be of reasonable size
+		b, err := ioutil.ReadAll(NewMultiReadCloser(bytes.NewReader(readdata), resp.Body))
 		if err != nil {
 			return nil, err
 		}
@@ -78,31 +154,67 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 			return nil, err
 		}
 
-		if len(b) == 0 {
-			resp.Body = ioutil.NopCloser(bytes.NewReader([]byte{}))
-			return resp, nil
-		}
-
 		updatedB, err := t.update(b)
 		if err != nil {
-			log.Event(req.Context(), "could not update response body with correct links", log.ERROR, log.Error(err))
-			body := ioutil.NopCloser(bytes.NewReader(b))
-
-			resp.Body = body
+			bodyLength := len(b)
+			limitedBodyLength := bodyLength
+			if limitedBodyLength > maxBodyLengthToLog {
+				limitedBodyLength = maxBodyLengthToLog
+			}
+			rawQuery := ""
+			if resp.Request != nil && resp.Request.URL != nil {
+				rawQuery = resp.Request.URL.RawQuery
+			}
+			log.Error(req.Context(), "could not update response body with correct links", err, log.Data{
+				"body":             string(b[0:limitedBodyLength]),
+				"content_type":     contentType,                         // needed to further identify content types that need to be rejected similarly to 'gzip' above
+				"body_length":      bodyLength,                          // as above
+				"content_encoding": resp.Header.Get("Content-Encoding"), // as above
+				"raw_query":        rawQuery,                            // as above
+			})
+			// return original body
+			resp.Body = ioutil.NopCloser(bytes.NewReader(b))
 			return resp, nil
 		}
 
-		body := ioutil.NopCloser(bytes.NewReader(updatedB))
-
-		resp.Body = body
+		// return updated body
+		resp.Body = ioutil.NopCloser(bytes.NewReader(updatedB))
 		resp.ContentLength = int64(len(updatedB))
 		resp.Header.Set("Content-Length", strconv.Itoa(len(updatedB)))
 	}
+
 	return resp, nil
 }
 
-func (t *Transport) update(b []byte) ([]byte, error) {
+type multiReadCloser struct {
+	readers     []io.Reader
+	multiReader io.Reader
+}
 
+func NewMultiReadCloser(readers ...io.Reader) io.ReadCloser {
+	return &multiReadCloser{
+		readers:     readers,
+		multiReader: io.MultiReader(readers...),
+	}
+}
+
+func (r *multiReadCloser) Read(p []byte) (n int, err error) {
+	return r.multiReader.Read(p)
+}
+
+func (r *multiReadCloser) Close() (err error) {
+	for _, r := range r.readers {
+		if c, ok := r.(io.Closer); ok {
+			if e := c.Close(); e != nil {
+				err = e
+			}
+		}
+	}
+
+	return err
+}
+
+func (t *Transport) update(b []byte) ([]byte, error) {
 	var (
 		err      error
 		resource interface{}
@@ -118,10 +230,10 @@ func (t *Transport) update(b []byte) ([]byte, error) {
 	}
 
 	switch resourceType.Kind() {
-	case reflect.Map:
+	case reflect.Map: // starts with {
 		// Assert type onto document
 		return t.updateMap(resource.(map[string]interface{}))
-	case reflect.Slice:
+	case reflect.Slice: // starts with [
 		// Assert type onto documents
 		return t.updateSlice(resource.([]interface{}))
 	default:
@@ -236,6 +348,7 @@ func (t *Transport) checkMap(document map[string]interface{}) (map[string]interf
 
 func updateMap(docMap map[string]interface{}, domain string) (map[string]interface{}, error) {
 	var err error
+
 	for k, v := range docMap {
 		if val, ok := v.(map[string]interface{}); ok {
 			if field, ok := val[href].(string); ok {
@@ -263,6 +376,7 @@ func updateMap(docMap map[string]interface{}, domain string) (map[string]interfa
 
 func updateArray(docArray []interface{}, domain string) ([]interface{}, error) {
 	var err error
+
 	for i, v := range docArray {
 		if val, ok := v.(map[string]interface{}); ok {
 			if field, ok := val[href].(string); ok {

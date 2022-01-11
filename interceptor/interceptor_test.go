@@ -18,6 +18,7 @@ type dummyRT struct {
 }
 
 func (t dummyRT) RoundTrip(req *http.Request) (resp *http.Response, err error) {
+	_ = req // shut some linters up
 	resp = httptest.NewRecorder().Result()
 	resp.Body = ioutil.NopCloser(strings.NewReader(t.testJSON))
 	return
@@ -36,7 +37,42 @@ func TestUnitInterceptor(t *testing.T) {
 		resp, err := t.RoundTrip(&http.Request{})
 		So(err, ShouldBeNil)
 
-		b, _ := ioutil.ReadAll(resp.Body)
+		b, err := ioutil.ReadAll(resp.Body)
+		So(err, ShouldBeNil)
+
+		err = resp.Body.Close()
+		So(err, ShouldBeNil)
+		So(len(b), ShouldEqual, 0)
+	})
+
+	Convey("test interceptor doesn't throw an error for a nil body", t, func() {
+		//testJSON := ``
+		transp := dummyRT{}
+
+		t := NewRoundTripper(testDomain, "", transp)
+
+		resp, err := t.RoundTrip(&http.Request{})
+		So(err, ShouldBeNil)
+
+		b, err := ioutil.ReadAll(resp.Body)
+		So(err, ShouldBeNil)
+
+		err = resp.Body.Close()
+		So(err, ShouldBeNil)
+		So(len(b), ShouldEqual, 0)
+	})
+
+	Convey("test interceptor doesn't throw an error for a nil body with correct URI", t, func() {
+		//testJSON := ``
+		transp := dummyRT{}
+
+		t := NewRoundTripper(testDomain, "", transp)
+
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/datasets"})
+		So(err, ShouldBeNil)
+
+		b, err := ioutil.ReadAll(resp.Body)
+		So(err, ShouldBeNil)
 
 		err = resp.Body.Close()
 		So(err, ShouldBeNil)
@@ -49,10 +85,11 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(&http.Request{})
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
 
-		b, _ := ioutil.ReadAll(resp.Body)
+		b, err := ioutil.ReadAll(resp.Body)
+		So(err, ShouldBeNil)
 
 		err = resp.Body.Close()
 		So(err, ShouldBeNil)
@@ -65,10 +102,11 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(&http.Request{})
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
 
-		b, _ := ioutil.ReadAll(resp.Body)
+		b, err := ioutil.ReadAll(resp.Body)
+		So(err, ShouldBeNil)
 
 		err = resp.Body.Close()
 		So(err, ShouldBeNil)
@@ -82,10 +120,11 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, testContext, transp)
 
-		resp, err := t.RoundTrip(&http.Request{})
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
 
-		b, _ := ioutil.ReadAll(resp.Body)
+		b, err := ioutil.ReadAll(resp.Body)
+		So(err, ShouldBeNil)
 
 		err = resp.Body.Close()
 		So(err, ShouldBeNil)
@@ -93,16 +132,17 @@ func TestUnitInterceptor(t *testing.T) {
 		So(string(b), ShouldEqual, `{"@context":"context.json","links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}`+"\n")
 	})
 
-	Convey("test interceptor correctly updates a href in downloads subdoc", t, func() {
+	Convey("test interceptor correctly updates a href in downloads subdoc on a nested path", t, func() {
 		testJSON := `{"downloads":{"csv":{"href":"http://localhost:22000/myfile.csv"}}}`
 		transp := dummyRT{testJSON}
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(&http.Request{})
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets/1234"})
 		So(err, ShouldBeNil)
 
-		b, _ := ioutil.ReadAll(resp.Body)
+		b, err := ioutil.ReadAll(resp.Body)
+		So(err, ShouldBeNil)
 
 		err = resp.Body.Close()
 		So(err, ShouldBeNil)
@@ -111,19 +151,21 @@ func TestUnitInterceptor(t *testing.T) {
 	})
 
 	Convey("test interceptor correctly updates a href in dimensions subdoc", t, func() {
-		testJSON := `{"dimensions":[{"href":"http://localhost:23000/codelists/1234567"}]}`
+		testJSON := `{"dimensions":[{"href":"http://localhost:23000/code-lists/1234567"}]}`
 		transp := dummyRT{testJSON}
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(&http.Request{})
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/code-lists"})
 		So(err, ShouldBeNil)
 
-		b, _ := ioutil.ReadAll(resp.Body)
+		b, err := ioutil.ReadAll(resp.Body)
+		So(err, ShouldBeNil)
+
 		err = resp.Body.Close()
 		So(err, ShouldBeNil)
-		So(len(b), ShouldEqual, 77)
-		So(string(b), ShouldEqual, `{"dimensions":[{"href":"https://api.beta.ons.gov.uk/v1/codelists/1234567"}]}`+"\n")
+		So(len(b), ShouldEqual, 78)
+		So(string(b), ShouldEqual, `{"dimensions":[{"href":"https://api.beta.ons.gov.uk/v1/code-lists/1234567"}]}`+"\n")
 	})
 
 	Convey("test interceptor correctly updates a nested links document", t, func() {
@@ -132,10 +174,12 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(&http.Request{})
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
 
-		b, _ := ioutil.ReadAll(resp.Body)
+		b, err := ioutil.ReadAll(resp.Body)
+		So(err, ShouldBeNil)
+
 		err = resp.Body.Close()
 		So(err, ShouldBeNil)
 		So(len(b), ShouldEqual, 88)
@@ -148,10 +192,12 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(&http.Request{})
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
 
-		b, _ := ioutil.ReadAll(resp.Body)
+		b, err := ioutil.ReadAll(resp.Body)
+		So(err, ShouldBeNil)
+
 		err = resp.Body.Close()
 		So(err, ShouldBeNil)
 		So(len(b), ShouldEqual, 83)
@@ -164,10 +210,12 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(&http.Request{})
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
 
-		b, _ := ioutil.ReadAll(resp.Body)
+		b, err := ioutil.ReadAll(resp.Body)
+		So(err, ShouldBeNil)
+
 		err = resp.Body.Close()
 		So(err, ShouldBeNil)
 		So(len(b), ShouldEqual, 91)
@@ -180,10 +228,12 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(&http.Request{})
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
 
-		b, _ := ioutil.ReadAll(resp.Body)
+		b, err := ioutil.ReadAll(resp.Body)
+		So(err, ShouldBeNil)
+
 		err = resp.Body.Close()
 		So(err, ShouldBeNil)
 		So(len(b), ShouldEqual, 116)
@@ -196,14 +246,118 @@ func TestUnitInterceptor(t *testing.T) {
 
 		t := NewRoundTripper(testDomain, "", transp)
 
-		resp, err := t.RoundTrip(&http.Request{})
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
 
-		b, _ := ioutil.ReadAll(resp.Body)
+		b, err := ioutil.ReadAll(resp.Body)
+		So(err, ShouldBeNil)
 
 		err = resp.Body.Close()
 		So(err, ShouldBeNil)
 		So(len(b), ShouldEqual, 154)
 		So(string(b), ShouldEqual, `[{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}},{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}]`+"\n")
+	})
+
+	Convey("test interceptor correctly ignores non json and non map object that is 'maxBodyLengthToLog - 1'", t, func() {
+		testJSON := "A"
+		for i := 0; i < (maxBodyLengthToLog - 2); i++ {
+			testJSON += "n"
+		}
+		transp := dummyRT{testJSON}
+
+		t := NewRoundTripper(testDomain, "", transp)
+
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
+		So(err, ShouldBeNil)
+
+		b, err := ioutil.ReadAll(resp.Body)
+		So(err, ShouldBeNil)
+
+		err = resp.Body.Close()
+		So(err, ShouldBeNil)
+		So(len(b), ShouldEqual, maxBodyLengthToLog-1)
+		So(string(b), ShouldEqual, testJSON)
+	})
+
+	Convey("test interceptor correctly ignores non json and non map object that is 'maxBodyLengthToLog'", t, func() {
+		testJSON := "B"
+		for i := 0; i < (maxBodyLengthToLog - 1); i++ {
+			testJSON += "n"
+		}
+		transp := dummyRT{testJSON}
+
+		t := NewRoundTripper(testDomain, "", transp)
+
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
+		So(err, ShouldBeNil)
+
+		b, err := ioutil.ReadAll(resp.Body)
+		So(err, ShouldBeNil)
+
+		err = resp.Body.Close()
+		So(err, ShouldBeNil)
+		So(len(b), ShouldEqual, maxBodyLengthToLog)
+		So(string(b), ShouldEqual, testJSON)
+	})
+
+	Convey("test interceptor correctly ignores non json and non map object that is 'maxBodyLengthToLog+1'", t, func() {
+		testJSON := "C"
+		for i := 0; i < (maxBodyLengthToLog - 1); i++ {
+			testJSON += "n"
+		}
+		testJSON += "1"
+		transp := dummyRT{testJSON}
+
+		t := NewRoundTripper(testDomain, "", transp)
+
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
+		So(err, ShouldBeNil)
+
+		b, err := ioutil.ReadAll(resp.Body)
+		So(err, ShouldBeNil)
+
+		err = resp.Body.Close()
+		So(err, ShouldBeNil)
+		So(len(b), ShouldEqual, maxBodyLengthToLog+1)
+		So(string(b), ShouldEqual, testJSON)
+	})
+
+	Convey("test interceptor correctly handles broken json object, that is not split", t, func() {
+		testJSON := `{bla`
+		transp := dummyRT{testJSON}
+
+		t := NewRoundTripper(testDomain, "", transp)
+
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
+		So(err, ShouldBeNil)
+
+		b, err := ioutil.ReadAll(resp.Body)
+		So(err, ShouldBeNil)
+
+		err = resp.Body.Close()
+		So(err, ShouldBeNil)
+		So(len(b), ShouldEqual, len(testJSON))
+		So(string(b), ShouldEqual, testJSON)
+	})
+
+	Convey("test interceptor correctly handles broken json object that will be split", t, func() {
+		testJSON := `{bla`
+		for i := 0; i < maxBodyLengthToLog; i++ {
+			testJSON += "n"
+		}
+		transp := dummyRT{testJSON}
+
+		t := NewRoundTripper(testDomain, "", transp)
+
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
+		So(err, ShouldBeNil)
+
+		b, err := ioutil.ReadAll(resp.Body)
+		So(err, ShouldBeNil)
+
+		err = resp.Body.Close()
+		So(err, ShouldBeNil)
+		So(len(b), ShouldEqual, len(testJSON))
+		So(string(b), ShouldEqual, testJSON)
 	})
 }

@@ -7,7 +7,7 @@ import (
 
 	"github.com/ONSdigital/dp-api-router/config"
 	"github.com/ONSdigital/dp-api-router/service"
-	"github.com/ONSdigital/log.go/log"
+	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/pkg/errors"
 )
 
@@ -27,7 +27,7 @@ func main() {
 	ctx := context.Background()
 
 	if err := run(ctx); err != nil {
-		log.Event(ctx, "fatal runtime error", log.Error(err), log.FATAL)
+		log.Fatal(ctx, "fatal runtime error", err)
 		os.Exit(1)
 	}
 }
@@ -58,8 +58,10 @@ func run(ctx context.Context) error {
 		return errors.Wrap(err, "service error received")
 	case sig := <-signals:
 		ctx := context.Background()
-		log.Event(ctx, "os signal received", log.Data{"signal": sig}, log.INFO)
-		svc.Close(ctx)
+		log.Info(ctx, "os signal received", log.Data{"signal": sig})
+		if err = svc.Close(ctx); err != nil {
+			log.Error(ctx, "service Close error", err)
+		}
 	}
 	return nil
 }

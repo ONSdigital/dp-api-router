@@ -87,7 +87,7 @@ func Get() (*Config, error) {
 		GracefulShutdown:           5 * time.Second,
 		HealthCheckInterval:        30 * time.Second,
 		HealthCheckCriticalTimeout: 90 * time.Second,
-		Brokers:                    []string{"localhost:9092"},
+		Brokers:                    []string{"localhost:9092", "localhost:9093", "localhost:9094"},
 		KafkaVersion:               "1.0.2",
 		AllowedOrigins:             []string{"http://localhost:8081"},
 		KafkaMaxBytes:              2000000,
