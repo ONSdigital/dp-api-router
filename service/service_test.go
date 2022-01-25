@@ -90,20 +90,20 @@ func TestRouterPublicAPIs(t *testing.T) {
 
 		resetProxyMocksWithExpectations(expectedPublicURLs)
 
-		Convey("and observation API enabled by configuration", func() {
+		Convey("A request to code-list path succeeds and is proxied to codeListAPIURL", func() {
+			w := createRouterTest(cfg, "http://localhost:23200/v1/code-lists")
+			So(w.Code, ShouldEqual, http.StatusOK)
+			verifyProxied("/code-lists", codelistAPIURL)
+		})
+
+		Convey("A request to code-list subpath succeeds and is proxied to codeListAPIURL", func() {
+			w := createRouterTest(cfg, "http://localhost:23200/v1/code-lists/subpath")
+			So(w.Code, ShouldEqual, http.StatusOK)
+			verifyProxied("/code-lists/subpath", codelistAPIURL)
+		})
+
+		Convey("When the enable observation feature flag is enabled", func() {
 			cfg.EnableObservationAPI = true
-
-			Convey("A request to code-list path succeeds and is proxied to codeListAPIURL", func() {
-				w := createRouterTest(cfg, "http://localhost:23200/v1/code-lists")
-				So(w.Code, ShouldEqual, http.StatusOK)
-				verifyProxied("/code-lists", codelistAPIURL)
-			})
-
-			Convey("A request to code-list subpath succeeds and is proxied to codeListAPIURL", func() {
-				w := createRouterTest(cfg, "http://localhost:23200/v1/code-lists/subpath")
-				So(w.Code, ShouldEqual, http.StatusOK)
-				verifyProxied("/code-lists/subpath", codelistAPIURL)
-			})
 
 			Convey("A request to dataset path succeeds and is proxied to datasetAPIURL", func() {
 				w := createRouterTest(cfg, "http://localhost:23200/v1/datasets")
@@ -128,95 +128,9 @@ func TestRouterPublicAPIs(t *testing.T) {
 				So(w.Code, ShouldEqual, http.StatusOK)
 				verifyProxied("/datasets/cpih012/editions/123/versions/321/observations", observationAPIURL)
 			})
-
-			Convey("A request to a filters is proxied to filterAPIURL", func() {
-				w := createRouterTest(cfg, "http://localhost:23200/v1/filters")
-				So(w.Code, ShouldEqual, http.StatusOK)
-				verifyProxied("/filters", filterAPIURL)
-			})
-
-			Convey("A request to a filters subpath is proxied to filterAPIURL", func() {
-				w := createRouterTest(cfg, "http://localhost:23200/v1/filters/subpath")
-				So(w.Code, ShouldEqual, http.StatusOK)
-				verifyProxied("/filters/subpath", filterAPIURL)
-			})
-
-			Convey("A request to a filter-output is proxied to filterAPIURL", func() {
-				w := createRouterTest(cfg, "http://localhost:23200/v1/filter-outputs")
-				So(w.Code, ShouldEqual, http.StatusOK)
-				verifyProxied("/filter-outputs", filterAPIURL)
-			})
-
-			Convey("A request to a filter-output subpath is proxied to filterAPIURL", func() {
-				w := createRouterTest(cfg, "http://localhost:23200/v1/filter-outputs/subpath")
-				So(w.Code, ShouldEqual, http.StatusOK)
-				verifyProxied("/filter-outputs/subpath", filterAPIURL)
-			})
-
-			Convey("A request to a hierarchies path is proxied to hierarchyAPIURL", func() {
-				w := createRouterTest(cfg, "http://localhost:23200/v1/hierarchies")
-				So(w.Code, ShouldEqual, http.StatusOK)
-				verifyProxied("/hierarchies", hierarchyAPIURL)
-			})
-
-			Convey("A request to a hierarchies subpath is proxied to hierarchyAPIURL", func() {
-				w := createRouterTest(cfg, "http://localhost:23200/v1/hierarchies/subpath")
-				So(w.Code, ShouldEqual, http.StatusOK)
-				verifyProxied("/hierarchies/subpath", hierarchyAPIURL)
-			})
-
-			Convey("A request to a search path is proxied to searchAPIURL", func() {
-				w := createRouterTest(cfg, "http://localhost:23200/v1/search")
-				So(w.Code, ShouldEqual, http.StatusOK)
-				verifyProxied("/search", searchAPIURL)
-			})
-
-			Convey("A request to a search subpath is proxied to searchAPIURL", func() {
-				w := createRouterTest(cfg, "http://localhost:23200/v1/search/subpath")
-				So(w.Code, ShouldEqual, http.StatusOK)
-				verifyProxied("/search/subpath", searchAPIURL)
-			})
-
-			Convey("A request to a dimension search path is proxied to dimensionSearchAPIURL", func() {
-				w := createRouterTest(cfg, "http://localhost:23200/v1/dimension-search")
-				So(w.Code, ShouldEqual, http.StatusOK)
-				verifyProxied("/dimension-search", dimensionSearchAPIURL)
-			})
-
-			Convey("A request to a dimension search subpath is proxied to dimensionSearchAPIURL", func() {
-				w := createRouterTest(cfg, "http://localhost:23200/v1/dimension-search/subpath")
-				So(w.Code, ShouldEqual, http.StatusOK)
-				verifyProxied("/dimension-search/subpath", dimensionSearchAPIURL)
-			})
-
-			Convey("A request to an image subpath is proxied to imageAPIURL", func() {
-				w := createRouterTest(cfg, "http://localhost:23200/v1/images/subpath")
-				So(w.Code, ShouldEqual, http.StatusOK)
-				verifyProxied("/images/subpath", imageAPIURL)
-			})
-
-			Convey("A request to an articles subpath", func() {
-				Convey("when the feature flag is enabled", func() {
-					cfg.EnableArticlesAPI = true
-					Convey("Then the request is proxied to the articles API", func() {
-						w := createRouterTest(cfg, "http://localhost:23200/v1/articles/subpath")
-						So(w.Code, ShouldEqual, http.StatusOK)
-						verifyProxied("/articles/subpath", articlesAPIURL)
-					})
-				})
-
-				Convey("With the feature flag disabled", func() {
-					cfg.EnableArticlesAPI = false
-					Convey("Then the request falls through to the default zebedee handler", func() {
-						w := createRouterTest(cfg, "http://localhost:23200/v1/articles/subpath")
-						So(w.Code, ShouldEqual, http.StatusOK)
-						verifyProxied("/articles/subpath", zebedeeURL)
-					})
-				})
-			})
 		})
 
-		Convey("and observation API disabled by configuration", func() {
+		Convey("When the enable observation feature flag is disabled", func() {
 			cfg.EnableObservationAPI = false
 
 			Convey("A request to dataset path succeeds and is proxied to datasetAPIURL", func() {
@@ -225,14 +139,110 @@ func TestRouterPublicAPIs(t *testing.T) {
 				verifyProxied("/datasets", datasetAPIURL)
 			})
 
+			Convey("A request to dataset edition path succeeds and is proxied to datasetAPIURL", func() {
+				w := createRouterTest(cfg, "http://localhost:23200/v1/datasets/cpih012/editions/123")
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/datasets/cpih012/editions/123", datasetAPIURL)
+			})
+
+			Convey("A request to a dataset edition version endpoint succeeds and is proxied to datasetAPIURL", func() {
+				w := createRouterTest(cfg, "http://localhost:23200/v1/datasets/cpih012/editions/123/versions/321")
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/datasets/cpih012/editions/123/versions/321", datasetAPIURL)
+			})
+
 			Convey("A request to a dataset edition version observation endpoint succeeds and is proxied to datasetAPIURL", func() {
 				w := createRouterTest(cfg, "http://localhost:23200/v1/datasets/cpih012/editions/123/versions/321/observations")
 				So(w.Code, ShouldEqual, http.StatusOK)
 				verifyProxied("/datasets/cpih012/editions/123/versions/321/observations", datasetAPIURL)
 			})
-
 		})
 
+		Convey("A request to a filters is proxied to filterAPIURL", func() {
+			w := createRouterTest(cfg, "http://localhost:23200/v1/filters")
+			So(w.Code, ShouldEqual, http.StatusOK)
+			verifyProxied("/filters", filterAPIURL)
+		})
+
+		Convey("A request to a filters subpath is proxied to filterAPIURL", func() {
+			w := createRouterTest(cfg, "http://localhost:23200/v1/filters/subpath")
+			So(w.Code, ShouldEqual, http.StatusOK)
+			verifyProxied("/filters/subpath", filterAPIURL)
+		})
+
+		Convey("A request to a filter-output is proxied to filterAPIURL", func() {
+			w := createRouterTest(cfg, "http://localhost:23200/v1/filter-outputs")
+			So(w.Code, ShouldEqual, http.StatusOK)
+			verifyProxied("/filter-outputs", filterAPIURL)
+		})
+
+		Convey("A request to a filter-output subpath is proxied to filterAPIURL", func() {
+			w := createRouterTest(cfg, "http://localhost:23200/v1/filter-outputs/subpath")
+			So(w.Code, ShouldEqual, http.StatusOK)
+			verifyProxied("/filter-outputs/subpath", filterAPIURL)
+		})
+
+		Convey("A request to a hierarchies path is proxied to hierarchyAPIURL", func() {
+			w := createRouterTest(cfg, "http://localhost:23200/v1/hierarchies")
+			So(w.Code, ShouldEqual, http.StatusOK)
+			verifyProxied("/hierarchies", hierarchyAPIURL)
+		})
+
+		Convey("A request to a hierarchies subpath is proxied to hierarchyAPIURL", func() {
+			w := createRouterTest(cfg, "http://localhost:23200/v1/hierarchies/subpath")
+			So(w.Code, ShouldEqual, http.StatusOK)
+			verifyProxied("/hierarchies/subpath", hierarchyAPIURL)
+		})
+
+		Convey("A request to a search path is proxied to searchAPIURL", func() {
+			w := createRouterTest(cfg, "http://localhost:23200/v1/search")
+			So(w.Code, ShouldEqual, http.StatusOK)
+			verifyProxied("/search", searchAPIURL)
+		})
+
+		Convey("A request to a search subpath is proxied to searchAPIURL", func() {
+			w := createRouterTest(cfg, "http://localhost:23200/v1/search/subpath")
+			So(w.Code, ShouldEqual, http.StatusOK)
+			verifyProxied("/search/subpath", searchAPIURL)
+		})
+
+		Convey("A request to a dimension search path is proxied to dimensionSearchAPIURL", func() {
+			w := createRouterTest(cfg, "http://localhost:23200/v1/dimension-search")
+			So(w.Code, ShouldEqual, http.StatusOK)
+			verifyProxied("/dimension-search", dimensionSearchAPIURL)
+		})
+
+		Convey("A request to a dimension search subpath is proxied to dimensionSearchAPIURL", func() {
+			w := createRouterTest(cfg, "http://localhost:23200/v1/dimension-search/subpath")
+			So(w.Code, ShouldEqual, http.StatusOK)
+			verifyProxied("/dimension-search/subpath", dimensionSearchAPIURL)
+		})
+
+		Convey("A request to an image subpath is proxied to imageAPIURL", func() {
+			w := createRouterTest(cfg, "http://localhost:23200/v1/images/subpath")
+			So(w.Code, ShouldEqual, http.StatusOK)
+			verifyProxied("/images/subpath", imageAPIURL)
+		})
+
+		Convey("A request to an articles subpath", func() {
+			Convey("when the feature flag is enabled", func() {
+				cfg.EnableArticlesAPI = true
+				Convey("Then the request is proxied to the articles API", func() {
+					w := createRouterTest(cfg, "http://localhost:23200/v1/articles/subpath")
+					So(w.Code, ShouldEqual, http.StatusOK)
+					verifyProxied("/articles/subpath", articlesAPIURL)
+				})
+			})
+
+			Convey("With the feature flag disabled", func() {
+				cfg.EnableArticlesAPI = false
+				Convey("Then the request falls through to the default zebedee handler", func() {
+					w := createRouterTest(cfg, "http://localhost:23200/v1/articles/subpath")
+					So(w.Code, ShouldEqual, http.StatusOK)
+					verifyProxied("/articles/subpath", zebedeeURL)
+				})
+			})
+		})
 	})
 }
 
