@@ -76,6 +76,8 @@ func TestRouterPublicAPIs(t *testing.T) {
 		So(err, ShouldBeNil)
 		releaseCalendarAPIURL, err := url.Parse(cfg.ReleaseCalendarAPIURL)
 		So(err, ShouldBeNil)
+		interactivesAPIURL, err := url.Parse(cfg.InteractivesAPIURL)
+		So(err, ShouldBeNil)
 
 		expectedPublicURLs := map[string]*url.URL{
 			"/code-lists": codelistAPIURL,
@@ -89,6 +91,10 @@ func TestRouterPublicAPIs(t *testing.T) {
 			"/images":           imageAPIURL,
 			"/articles":         articlesAPIURL,
 			"/releasecalendar":  releaseCalendarAPIURL,
+		}
+		for _, version := range cfg.InteractivesAPIVersions {
+			key := "/" + version + "/interactives"
+			expectedPublicURLs[key] = interactivesAPIURL
 		}
 
 		resetProxyMocksWithExpectations(expectedPublicURLs)
@@ -265,6 +271,36 @@ func TestRouterPublicAPIs(t *testing.T) {
 					w := createRouterTest(cfg, url)
 					So(w.Code, ShouldEqual, http.StatusOK)
 					verifyProxied("/releasecalendar/subpath", zebedeeURL)
+				})
+			})
+		})
+
+		Convey("A request to an interactives subpath", func() {
+			Convey("When the feature flag is enabled", func() {
+				versionsForTest := []string{"v1", "v2"}
+				cfg.EnableInteractivesAPI = true
+
+				Convey("Then the request is proxied to the interactives API for a mapped URL", func() {
+					version := versionsForTest[0]
+					w := createRouterTest(cfg, "http://localhost:23200/"+version+"/interactives/subpath")
+					So(w.Code, ShouldEqual, http.StatusOK)
+					verifyProxied("/"+version+"/interactives/subpath", interactivesAPIURL)
+				})
+
+				Convey("Then the request falls for >v1 through to the default zebedee handler", func() {
+					version := versionsForTest[1]
+					w := createRouterTest(cfg, "http://localhost:23200/"+version+"/interactives/subpath")
+					So(w.Code, ShouldEqual, http.StatusNotFound)
+					verifyProxied("/v2/interactives/subpath", zebedeeURL)
+				})
+			})
+
+			Convey("With the feature flag disabled", func() {
+				cfg.EnableInteractivesAPI = false
+				Convey("Then the request falls for v1 through to the default zebedee handler", func() {
+					w := createRouterTest(cfg, "http://localhost:23200/v1/interactives/subpath")
+					So(w.Code, ShouldEqual, http.StatusNotFound)
+					verifyProxied("/interactives/subpath", zebedeeURL)
 				})
 			})
 		})

@@ -53,6 +53,9 @@ type Config struct {
 	ArticlesAPIURL             string        `envconfig:"ARTICLES_API_URL"`
 	EnableReleaseCalendarAPI   bool          `envconfig:"ENABLE_RELEASE_CALENDAR_API"`
 	ReleaseCalendarAPIURL      string        `envconfig:"RELEASE_CALENDAR_API_URL"`
+	EnableInteractivesAPI      bool          `envconfig:"ENABLE_INTERACTIVES_API"`
+	InteractivesAPIURL         string        `envconfig:"INTERACTIVES_API_URL"`
+	InteractivesAPIVersions    []string      `envconfig:"INTERACTIVES_API_VERSIONS"`
 }
 
 var cfg *Config
@@ -104,6 +107,9 @@ func Get() (*Config, error) {
 		EnableArticlesAPI:          false,
 		ReleaseCalendarAPIURL:      "http://localhost:27800",
 		EnableReleaseCalendarAPI:   false,
+		InteractivesAPIURL:         "http://localhost:27500",
+		EnableInteractivesAPI:      false,
+		InteractivesAPIVersions:    []string{"v1"},
 	}
 
 	return cfg, envconfig.Process("", cfg)
