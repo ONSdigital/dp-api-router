@@ -51,6 +51,8 @@ type Config struct {
 	EnableTopicAPI             bool          `envconfig:"ENABLE_TOPIC_API"`
 	EnableArticlesAPI          bool          `envconfig:"ENABLE_ARTICLES_API"`
 	ArticlesAPIURL             string        `envconfig:"ARTICLES_API_URL"`
+	EnableReleaseCalendarAPI   bool          `envconfig:"ENABLE_RELEASE_CALENDAR_API"`
+	ReleaseCalendarAPIURL      string        `envconfig:"RELEASE_CALENDAR_API_URL"`
 }
 
 var cfg *Config
@@ -100,6 +102,8 @@ func Get() (*Config, error) {
 		EnableTopicAPI:             false,
 		ArticlesAPIURL:             "http://localhost:27000",
 		EnableArticlesAPI:          false,
+		ReleaseCalendarAPIURL:      "http://localhost:27800",
+		EnableReleaseCalendarAPI:   false,
 	}
 
 	return cfg, envconfig.Process("", cfg)

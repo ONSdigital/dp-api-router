@@ -51,6 +51,8 @@ func TestGetRetrunsDefaultValues(t *testing.T) {
 			EnableTopicAPI:             false,
 			ArticlesAPIURL:             "http://localhost:27000",
 			EnableArticlesAPI:          false,
+			ReleaseCalendarAPIURL:      "http://localhost:27800",
+			EnableReleaseCalendarAPI:   false,
 		})
 	})
 }

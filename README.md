@@ -21,6 +21,7 @@ This service is responsible for serving a JSON-LD `@context` field on configured
 | ENABLE_SESSIONS_API          | false                                     |
 | ENABLE_TOPIC_API             | false                                     |
 | ENABLE_ARTICLES_API          | false                                     | Flag to enable routing to the articles API
+| ENABLE_RELEASE_CALENDAR_API  | false                                     | Flag to enable routing to the release calendar API
 | ENABLE_ZEBEDEE_AUDIT         | false                                     |
 | CONTEXT_URL                  | ""                                        | A URL to the JSON-LD context file describing the APIs
 | API_POC_URL                  | "http://localhost:3000"                   | A URL to the poc api
@@ -37,6 +38,7 @@ This service is responsible for serving a JSON-LD `@context` field on configured
 | OBSERVATION_API_URL          | "http://localhost:24500"                  | A URL to the observation api
 | IMAGE_API_URL                | "http://localhost:24700"                  | A URL to the image api
 | UPLOAD_SERVICE_API_URL:      | "http://localhost:25100"                  | A URL to the upload service api
+| RELEASE_CALENDAR_API_URL     | "http://localhost:27800"                  | A URL to the release calendar api
 | ZEBEDEE_URL                  | "http://localhost:8082"                   | A URL to the zebedee service api
 | KAFKA_ADDR                   | localhost:9092                            | The list of kafka hosts
 | KAFKA_MAX_BYTES              | 2000000                                   | The maximum bytes that can be sent in an event to kafka topic

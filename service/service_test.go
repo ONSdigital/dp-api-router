@@ -74,6 +74,8 @@ func TestRouterPublicAPIs(t *testing.T) {
 		So(err, ShouldBeNil)
 		articlesAPIURL, err := url.Parse(cfg.ArticlesAPIURL)
 		So(err, ShouldBeNil)
+		releaseCalendarAPIURL, err := url.Parse(cfg.ReleaseCalendarAPIURL)
+		So(err, ShouldBeNil)
 
 		expectedPublicURLs := map[string]*url.URL{
 			"/code-lists": codelistAPIURL,
@@ -86,6 +88,7 @@ func TestRouterPublicAPIs(t *testing.T) {
 			"/dimension-search": dimensionSearchAPIURL,
 			"/images":           imageAPIURL,
 			"/articles":         articlesAPIURL,
+			"/releasecalendar":  releaseCalendarAPIURL,
 		}
 
 		resetProxyMocksWithExpectations(expectedPublicURLs)
@@ -240,6 +243,28 @@ func TestRouterPublicAPIs(t *testing.T) {
 					w := createRouterTest(cfg, "http://localhost:23200/v1/articles/subpath")
 					So(w.Code, ShouldEqual, http.StatusOK)
 					verifyProxied("/articles/subpath", zebedeeURL)
+				})
+			})
+		})
+
+		Convey("A request to a release calendar subpath", func() {
+			url := "http://localhost:23200/v1/releasecalendar/subpath"
+
+			Convey("when the feature flag is enabled", func() {
+				cfg.EnableReleaseCalendarAPI = true
+				Convey("Then the request is proxied to the release calendar API", func() {
+					w := createRouterTest(cfg, url)
+					So(w.Code, ShouldEqual, http.StatusOK)
+					verifyProxied("/releasecalendar/subpath", releaseCalendarAPIURL)
+				})
+			})
+
+			Convey("With the feature flag disabled", func() {
+				cfg.EnableReleaseCalendarAPI = false
+				Convey("Then the request falls through to the default zebedee handler", func() {
+					w := createRouterTest(cfg, url)
+					So(w.Code, ShouldEqual, http.StatusOK)
+					verifyProxied("/releasecalendar/subpath", zebedeeURL)
 				})
 			})
 		})
