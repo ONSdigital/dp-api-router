@@ -27,6 +27,7 @@ type Config struct {
 	DimensionSearchAPIURL      string        `envconfig:"DIMENSION_SEARCH_API_URL"`
 	ImageAPIURL                string        `envconfig:"IMAGE_API_URL"`
 	UploadServiceAPIURL        string        `envconfig:"UPLOAD_SERVICE_API_URL"`
+	FilesAPIURL                string        `envconfig:"FILES_API_URL"`
 	IdentityAPIURL             string        `envconfig:"IDENTITY_API_URL"`
 	IdentityAPIVersions        []string      `envconfig:"IDENTITY_API_VERSIONS"`
 	ContextURL                 string        `envconfig:"CONTEXT_URL"`
@@ -82,6 +83,7 @@ func Get() (*Config, error) {
 		ImageAPIURL:                "http://localhost:24700",
 		UploadServiceAPIURL:        "http://localhost:25100",
 		IdentityAPIURL:             "http://localhost:25600",
+		FilesAPIURL:                "http://localhost:26900",
 		IdentityAPIVersions:        []string{"v1"},
 		APIPocURL:                  "http://localhost:3000",
 		ContextURL:                 "",
