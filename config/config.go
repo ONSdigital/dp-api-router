@@ -59,11 +59,6 @@ type Config struct {
 
 var cfg *Config
 
-// Flush is a testing seam to allow reset to pre-initialised configuration
-func Flush() {
-	cfg = nil
-}
-
 // Get configures the application and returns the configuration
 func Get() (*Config, error) {
 	if cfg != nil {
