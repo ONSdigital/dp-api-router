@@ -76,6 +76,8 @@ func TestRouterPublicAPIs(t *testing.T) {
 		So(err, ShouldBeNil)
 		releaseCalendarAPIURL, err := url.Parse(cfg.ReleaseCalendarAPIURL)
 		So(err, ShouldBeNil)
+		populationTypesAPIURL, err := url.Parse(cfg.PopulationTypesAPIURL)
+		So(err, ShouldBeNil)
 
 		expectedPublicURLs := map[string]*url.URL{
 			"/code-lists": codelistAPIURL,
@@ -89,6 +91,7 @@ func TestRouterPublicAPIs(t *testing.T) {
 			"/images":           imageAPIURL,
 			"/articles":         articlesAPIURL,
 			"/releasecalendar":  releaseCalendarAPIURL,
+			"/population-types": populationTypesAPIURL,
 		}
 
 		resetProxyMocksWithExpectations(expectedPublicURLs)
@@ -268,6 +271,31 @@ func TestRouterPublicAPIs(t *testing.T) {
 				})
 			})
 		})
+
+		Convey("Given the population types API is enabled", func() {
+			cfg.EnablePopulationTypesAPI = true
+			Convey("When population types is requested", func() {
+				url := "http://localhost:23200/v1/population-types"
+				w := createRouterTest(cfg, url)
+				Convey("Then the population types API should respond to the request", func() {
+					So(w.Code, ShouldEqual, http.StatusOK)
+					verifyProxied("/population-types", populationTypesAPIURL)
+				})
+			})
+		})
+
+		Convey("Given the population types API is NOT enabled", func() {
+			cfg.EnablePopulationTypesAPI = false
+			Convey("When population types is requested", func() {
+				url := "http://localhost:23200/v1/population-types"
+				w := createRouterTest(cfg, url)
+				Convey("Then the default zebedee handler should respond", func() {
+					So(w.Code, ShouldEqual, http.StatusOK)
+					verifyProxied("/population-types", zebedeeURL)
+				})
+			})
+		})
+
 	})
 }
 
