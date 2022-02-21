@@ -1,8 +1,6 @@
 package config
 
 import (
-	"github.com/hashicorp/go-uuid"
-	"os"
 	"testing"
 	"time"
 
@@ -59,50 +57,4 @@ func TestGetRetrunsDefaultValues(t *testing.T) {
 			EnableReleaseCalendarAPI:   false,
 		})
 	})
-}
-
-func TestEnvironmentVariableBinding(t *testing.T) {
-
-	Convey("PopulationTypesAPIURL should be bound to POPULATION_TYPES_API_URL", t, func() {
-		expectedValue, _ := uuid.GenerateUUID()
-		undo := setEnvVar("POPULATION_TYPES_API_URL", expectedValue)
-		defer undo()
-		configuration, err := Get()
-		So(err, ShouldBeNil)
-		So(configuration.PopulationTypesAPIURL, ShouldEqual, expectedValue)
-	})
-
-	Convey("EnablePopulationTypesAPI should be bound to ENABLE_POPULATION_TYPES_API", t, func() {
-		undo := setEnvVar("ENABLE_POPULATION_TYPES_API", "true")
-		defer undo()
-		configuration, err := Get()
-		So(err, ShouldBeNil)
-		So(configuration.EnablePopulationTypesAPI, ShouldBeTrue)
-	})
-}
-
-func setEnvVar(name string, value string) func() {
-	existingValue, isValueSet := os.LookupEnv(name)
-	setenvOrPanic(name, value)
-	return func() {
-		if isValueSet {
-			setenvOrPanic(name, existingValue)
-		} else {
-			unsetenvOrPanic(name)
-		}
-		// remove the cached configuration so that it can be re-read on next Get
-		Flush()
-	}
-}
-
-func unsetenvOrPanic(name string) {
-	if err := os.Unsetenv(name); err != nil {
-		panic(err)
-	}
-}
-
-func setenvOrPanic(name string, value string) {
-	if err := os.Setenv(name, value); err != nil {
-		panic(err)
-	}
 }
