@@ -1,6 +1,8 @@
 package config
 
 import (
+	"github.com/hashicorp/go-uuid"
+	"os"
 	"testing"
 	"time"
 
@@ -56,5 +58,23 @@ func TestGetRetrunsDefaultValues(t *testing.T) {
 			ReleaseCalendarAPIURL:      "http://localhost:27800",
 			EnableReleaseCalendarAPI:   false,
 		})
+	})
+}
+
+func TestEnvironmentVariableBinding(t *testing.T) {
+
+	Convey("PopulationTypesAPIURL should be bound to POPULATION_TYPES_API_URL", t, func() {
+		expectedValue, _ := uuid.GenerateUUID()
+		os.Setenv("POPULATION_TYPES_API_URL", expectedValue)
+		Flush()
+		configuration, _ := Get()
+		So(configuration.PopulationTypesAPIURL, ShouldEqual, expectedValue)
+	})
+
+	Convey("EnablePopulationTypesAPI should be bound to ENABLE_POPULATION_TYPES_API", t, func() {
+		os.Setenv("ENABLE_POPULATION_TYPES_API", "true")
+		Flush()
+		configuration, _ := Get()
+		So(configuration.EnablePopulationTypesAPI, ShouldBeTrue)
 	})
 }
