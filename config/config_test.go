@@ -65,16 +65,30 @@ func TestEnvironmentVariableBinding(t *testing.T) {
 
 	Convey("PopulationTypesAPIURL should be bound to POPULATION_TYPES_API_URL", t, func() {
 		expectedValue, _ := uuid.GenerateUUID()
-		os.Setenv("POPULATION_TYPES_API_URL", expectedValue)
-		Flush()
+		undo := setEnvVar("POPULATION_TYPES_API_URL", expectedValue)
+		defer undo()
 		configuration, _ := Get()
 		So(configuration.PopulationTypesAPIURL, ShouldEqual, expectedValue)
 	})
 
 	Convey("EnablePopulationTypesAPI should be bound to ENABLE_POPULATION_TYPES_API", t, func() {
-		os.Setenv("ENABLE_POPULATION_TYPES_API", "true")
-		Flush()
+		undo := setEnvVar("ENABLE_POPULATION_TYPES_API", "true")
+		defer undo()
 		configuration, _ := Get()
 		So(configuration.EnablePopulationTypesAPI, ShouldBeTrue)
 	})
+}
+
+func setEnvVar(environmentVariable string, expectedValue string) func() {
+	existingValue, isValueSet := os.LookupEnv(environmentVariable)
+	os.Setenv(environmentVariable, expectedValue)
+	return func() {
+		if isValueSet {
+			os.Setenv(environmentVariable, existingValue)
+		} else {
+			os.Unsetenv(environmentVariable)
+		}
+		// remove the cached configuration so that it can be re-read on next Get
+		Flush()
+	}
 }
