@@ -67,28 +67,42 @@ func TestEnvironmentVariableBinding(t *testing.T) {
 		expectedValue, _ := uuid.GenerateUUID()
 		undo := setEnvVar("POPULATION_TYPES_API_URL", expectedValue)
 		defer undo()
-		configuration, _ := Get()
+		configuration, err := Get()
+		So(err, ShouldBeNil)
 		So(configuration.PopulationTypesAPIURL, ShouldEqual, expectedValue)
 	})
 
 	Convey("EnablePopulationTypesAPI should be bound to ENABLE_POPULATION_TYPES_API", t, func() {
 		undo := setEnvVar("ENABLE_POPULATION_TYPES_API", "true")
 		defer undo()
-		configuration, _ := Get()
+		configuration, err := Get()
+		So(err, ShouldBeNil)
 		So(configuration.EnablePopulationTypesAPI, ShouldBeTrue)
 	})
 }
 
-func setEnvVar(environmentVariable string, expectedValue string) func() {
-	existingValue, isValueSet := os.LookupEnv(environmentVariable)
-	os.Setenv(environmentVariable, expectedValue)
+func setEnvVar(name string, value string) func() {
+	existingValue, isValueSet := os.LookupEnv(name)
+	setenvOrPanic(name, value)
 	return func() {
 		if isValueSet {
-			os.Setenv(environmentVariable, existingValue)
+			setenvOrPanic(name, existingValue)
 		} else {
-			os.Unsetenv(environmentVariable)
+			unsetenvOrPanic(name)
 		}
 		// remove the cached configuration so that it can be re-read on next Get
 		Flush()
+	}
+}
+
+func unsetenvOrPanic(name string) {
+	if err := os.Unsetenv(name); err != nil {
+		panic(err)
+	}
+}
+
+func setenvOrPanic(name string, value string) {
+	if err := os.Setenv(name, value); err != nil {
+		panic(err)
 	}
 }
