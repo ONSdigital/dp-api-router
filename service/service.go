@@ -127,23 +127,7 @@ func (svc *Service) CreateMiddleware(cfg *config.Config, router *mux.Router) ali
 func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 	router := mux.NewRouter()
 
-	// Public APIs
-	codeList := proxy.NewAPIProxy(ctx, cfg.CodelistAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
-	dataset := proxy.NewAPIProxy(ctx, cfg.DatasetAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.ContextURL, cfg.EnableV1BetaRestriction)
-	filter := proxy.NewAPIProxy(ctx, cfg.FilterAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
-	hierarchy := proxy.NewAPIProxy(ctx, cfg.HierarchyAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
-	search := proxy.NewAPIProxy(ctx, cfg.SearchAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
-	dimensionSearch := proxy.NewAPIProxy(ctx, cfg.DimensionSearchAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
-	image := proxy.NewAPIProxy(ctx, cfg.ImageAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
-	addTransitionalHandler(router, codeList, "/code-lists")
-	addTransitionalHandler(router, dataset, "/datasets")
-	addTransitionalHandler(router, filter, "/filters")
-	addTransitionalHandler(router, filter, "/filter-outputs")
-	addTransitionalHandler(router, hierarchy, "/hierarchies")
-	addTransitionalHandler(router, search, "/search")
-	addTransitionalHandler(router, dimensionSearch, "/dimension-search")
-	addTransitionalHandler(router, image, "/images")
-	// By Feature Flag
+	// Public APIs - by Feature Flag (ordering important)
 	if cfg.EnableObservationAPI {
 		observation := proxy.NewAPIProxy(ctx, cfg.ObservationAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.ContextURL, cfg.EnableV1BetaRestriction)
 		addTransitionalHandler(router, observation, "/datasets/{dataset_id}/editions/{edition}/versions/{version}/observations")
@@ -168,6 +152,22 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 		populationTypesAPI := proxy.NewAPIProxy(ctx, cfg.PopulationTypesAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 		addTransitionalHandler(router, populationTypesAPI, "/population-types")
 	}
+	// Public APIs - default
+	codeList := proxy.NewAPIProxy(ctx, cfg.CodelistAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+	dataset := proxy.NewAPIProxy(ctx, cfg.DatasetAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.ContextURL, cfg.EnableV1BetaRestriction)
+	filter := proxy.NewAPIProxy(ctx, cfg.FilterAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+	hierarchy := proxy.NewAPIProxy(ctx, cfg.HierarchyAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+	search := proxy.NewAPIProxy(ctx, cfg.SearchAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+	dimensionSearch := proxy.NewAPIProxy(ctx, cfg.DimensionSearchAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+	image := proxy.NewAPIProxy(ctx, cfg.ImageAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+	addTransitionalHandler(router, codeList, "/code-lists")
+	addTransitionalHandler(router, dataset, "/datasets")
+	addTransitionalHandler(router, filter, "/filters")
+	addTransitionalHandler(router, filter, "/filter-outputs")
+	addTransitionalHandler(router, hierarchy, "/hierarchies")
+	addTransitionalHandler(router, search, "/search")
+	addTransitionalHandler(router, dimensionSearch, "/dimension-search")
+	addTransitionalHandler(router, image, "/images")
 
 	// Private APIs
 	if cfg.EnablePrivateEndpoints {
