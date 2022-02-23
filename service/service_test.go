@@ -95,7 +95,8 @@ func TestRouterPublicAPIs(t *testing.T) {
 			"/releasecalendar":  releaseCalendarAPIURL,
 			"/population-types": populationTypesAPIURL,
 		}
-		for _, version := range cfg.InteractivesAPIVersions {
+		expectedInteractivesAPIVersions := []string{"v1", "vAnother"}
+		for _, version := range expectedInteractivesAPIVersions {
 			key := "/" + version + "/interactives"
 			expectedPublicURLs[key] = interactivesAPIURL
 		}
@@ -304,21 +305,22 @@ func TestRouterPublicAPIs(t *testing.T) {
 
 		Convey("A request to an interactives subpath", func() {
 			Convey("When the feature flag is enabled", func() {
-				versionsForTest := []string{"v1", "v2"}
 				cfg.EnableInteractivesAPI = true
+				cfg.InteractivesAPIVersions = expectedInteractivesAPIVersions
 
 				Convey("Then the request is proxied to the interactives API for a mapped URL", func() {
-					version := versionsForTest[0]
-					w := createRouterTest(cfg, "http://localhost:23200/"+version+"/interactives/subpath")
-					So(w.Code, ShouldEqual, http.StatusOK)
-					verifyProxied("/"+version+"/interactives/subpath", interactivesAPIURL)
+					for _, version := range expectedInteractivesAPIVersions {
+						w := createRouterTest(cfg, "http://localhost:23200/"+version+"/interactives/subpath")
+						So(w.Code, ShouldEqual, http.StatusOK)
+						verifyProxied("/"+version+"/interactives/subpath", interactivesAPIURL)
+					}
 				})
 
-				Convey("Then the request falls for >v1 through to the default zebedee handler", func() {
-					version := versionsForTest[1]
+				Convey("Then the request falls through to the default zebedee handler for an unhandled version", func() {
+					version := "vSomeOtherVersion"
 					w := createRouterTest(cfg, "http://localhost:23200/"+version+"/interactives/subpath")
 					So(w.Code, ShouldEqual, http.StatusNotFound)
-					verifyProxied("/v2/interactives/subpath", zebedeeURL)
+					verifyProxied("/"+version+"/interactives/subpath", zebedeeURL)
 				})
 			})
 
