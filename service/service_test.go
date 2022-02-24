@@ -246,42 +246,44 @@ func TestRouterPublicAPIs(t *testing.T) {
 			verifyProxied("/images/subpath", imageAPIURL)
 		})
 
-		Convey("A request to an articles subpath", func() {
+		Convey("Given an URL to an articles subpath", func() {
 			host := "http://localhost:23200"
 			path := "/%s/articles/subpath"
 			urlPattern := host + path
 
-			Convey("When the feature flag is enabled", func() {
+			Convey("And the feature flag is enabled", func() {
 				cfg.EnableArticlesAPI = true
 				for _, version := range cfg.ArticlesAPIVersions {
-					Convey("And the request is using the mapped version "+version, func() {
+					Convey("When we make a GET request using the mapped version "+version, func() {
+						w := createRouterTest(cfg, fmt.Sprintf(urlPattern, version))
 						Convey("Then the request is proxied to the articles API", func() {
-							w := createRouterTest(cfg, fmt.Sprintf(urlPattern, version))
 							So(w.Code, ShouldEqual, http.StatusOK)
 							verifyProxied(fmt.Sprintf(path, version), articlesAPIURL)
 						})
 					})
 				}
 
-				Convey("And the request is using an unmapped version", func() {
+				Convey("When we make a GET request using an unmapped version", func() {
+					version := "v9"
+					createRouterTest(cfg, fmt.Sprintf(urlPattern, version))
 					Convey("Then the request falls through to the default zebedee handler", func() {
-						version := "v9"
-						createRouterTest(cfg, fmt.Sprintf(urlPattern, version))
 						verifyProxied(fmt.Sprintf(path, version), zebedeeURL)
 					})
 				})
 			})
 
-			Convey("When the feature flag is disabled", func() {
+			Convey("And the feature flag is disabled", func() {
 				cfg.EnableArticlesAPI = false
-				Convey("Then all requests fall through to the default zebedee handler", func() {
-					for _, version := range cfg.ArticlesAPIVersions {
+				for _, version := range cfg.ArticlesAPIVersions {
+					Convey("When we make a GET request using the mapped version "+version, func() {
 						//deliberately not configured v1 to get around legacyhandle stripping it
 						w := createRouterTest(cfg, fmt.Sprintf(urlPattern, version))
-						So(w.Code, ShouldEqual, http.StatusOK)
-						verifyProxied(fmt.Sprintf(path, version), zebedeeURL)
-					}
-				})
+						Convey("Then it falls through to the default zebedee handler", func() {
+							So(w.Code, ShouldEqual, http.StatusOK)
+							verifyProxied(fmt.Sprintf(path, version), zebedeeURL)
+						})
+					})
+				}
 			})
 		})
 
