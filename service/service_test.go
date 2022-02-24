@@ -95,8 +95,8 @@ func TestRouterPublicAPIs(t *testing.T) {
 			"/releasecalendar":  releaseCalendarAPIURL,
 			"/population-types": populationTypesAPIURL,
 		}
-		expectedInteractivesAPIVersions := []string{"v1", "vAnother"}
-		for _, version := range expectedInteractivesAPIVersions {
+		cfg.InteractivesAPIVersions = []string{"vX", "vAnother"}
+		for _, version := range cfg.InteractivesAPIVersions {
 			key := "/" + version + "/interactives"
 			expectedPublicURLs[key] = interactivesAPIURL
 		}
@@ -306,10 +306,9 @@ func TestRouterPublicAPIs(t *testing.T) {
 		Convey("A request to an interactives subpath", func() {
 			Convey("When the feature flag is enabled", func() {
 				cfg.EnableInteractivesAPI = true
-				cfg.InteractivesAPIVersions = expectedInteractivesAPIVersions
 
 				Convey("Then the request is proxied to the interactives API for a mapped URL", func() {
-					for _, version := range expectedInteractivesAPIVersions {
+					for _, version := range cfg.InteractivesAPIVersions {
 						w := createRouterTest(cfg, "http://localhost:23200/"+version+"/interactives/subpath")
 						So(w.Code, ShouldEqual, http.StatusOK)
 						verifyProxied("/"+version+"/interactives/subpath", interactivesAPIURL)
@@ -326,10 +325,13 @@ func TestRouterPublicAPIs(t *testing.T) {
 
 			Convey("With the feature flag disabled", func() {
 				cfg.EnableInteractivesAPI = false
-				Convey("Then the request falls for v1 through to the default zebedee handler", func() {
-					w := createRouterTest(cfg, "http://localhost:23200/v1/interactives/subpath")
-					So(w.Code, ShouldEqual, http.StatusNotFound)
-					verifyProxied("/interactives/subpath", zebedeeURL)
+				Convey("Then the request falls through for all interactives versions to the default zebedee handler", func() {
+					for _, version := range cfg.InteractivesAPIVersions {
+						//deliberately not configured v1 to get around legacyhandle stripping it
+						w := createRouterTest(cfg, "http://localhost:23200/"+version+"/interactives/subpath")
+						So(w.Code, ShouldEqual, http.StatusOK)
+						verifyProxied("/"+version+"/interactives/subpath", zebedeeURL)
+					}
 				})
 			})
 		})
