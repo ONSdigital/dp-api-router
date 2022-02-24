@@ -145,7 +145,7 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 	image := proxy.NewAPIProxy(ctx, cfg.ImageAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 	if cfg.EnableArticlesAPI {
 		articles := proxy.NewAPIProxy(ctx, cfg.ArticlesAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
-		addTransitionalHandler(router, articles, "/articles")
+		addVersionedHandlers(router, articles, cfg.ArticlesAPIVersions, "/articles")
 	}
 	if cfg.EnableReleaseCalendarAPI {
 		releaseCalendar := proxy.NewAPIProxy(ctx, cfg.ReleaseCalendarAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)

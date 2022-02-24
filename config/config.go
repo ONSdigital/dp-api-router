@@ -51,6 +51,7 @@ type Config struct {
 	EnableTopicAPI             bool          `envconfig:"ENABLE_TOPIC_API"`
 	EnableArticlesAPI          bool          `envconfig:"ENABLE_ARTICLES_API"`
 	ArticlesAPIURL             string        `envconfig:"ARTICLES_API_URL"`
+	ArticlesAPIVersions        []string      `envconfig:"ARTICLES_API_VERSIONS"`
 	PopulationTypesAPIURL      string        `envconfig:"POPULATION_TYPES_API_URL"`
 	EnablePopulationTypesAPI   bool          `envconfig:"ENABLE_POPULATION_TYPES_API"`
 	EnableReleaseCalendarAPI   bool          `envconfig:"ENABLE_RELEASE_CALENDAR_API"`
@@ -108,6 +109,7 @@ func Get() (*Config, error) {
 		EnableTopicAPI:             false,
 		ArticlesAPIURL:             "http://localhost:27000",
 		EnableArticlesAPI:          false,
+		ArticlesAPIVersions:        []string{"v1"},
 		PopulationTypesAPIURL:      "http://localhost:27300",
 		EnablePopulationTypesAPI:   false,
 		ReleaseCalendarAPIURL:      "http://localhost:27800",
