@@ -55,6 +55,7 @@ func TestGetReturnsDefaultValues(t *testing.T) {
 			EnablePopulationTypesAPI:   false,
 			ReleaseCalendarAPIURL:      "http://localhost:27800",
 			EnableReleaseCalendarAPI:   false,
+			ReleaseCalendarAPIVersions: []string{"v1"},
 			InteractivesAPIURL:         "http://localhost:27500",
 			EnableInteractivesAPI:      false,
 			InteractivesAPIVersions:    []string{"v1"},

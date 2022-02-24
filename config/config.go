@@ -55,6 +55,7 @@ type Config struct {
 	EnablePopulationTypesAPI   bool          `envconfig:"ENABLE_POPULATION_TYPES_API"`
 	EnableReleaseCalendarAPI   bool          `envconfig:"ENABLE_RELEASE_CALENDAR_API"`
 	ReleaseCalendarAPIURL      string        `envconfig:"RELEASE_CALENDAR_API_URL"`
+	ReleaseCalendarAPIVersions []string      `envconfig:"RELEASE_CALENDAR_API_VERSIONS"`
 	EnableInteractivesAPI      bool          `envconfig:"ENABLE_INTERACTIVES_API"`
 	InteractivesAPIURL         string        `envconfig:"INTERACTIVES_API_URL"`
 	InteractivesAPIVersions    []string      `envconfig:"INTERACTIVES_API_VERSIONS"`
@@ -111,6 +112,7 @@ func Get() (*Config, error) {
 		EnablePopulationTypesAPI:   false,
 		ReleaseCalendarAPIURL:      "http://localhost:27800",
 		EnableReleaseCalendarAPI:   false,
+		ReleaseCalendarAPIVersions: []string{"v1"},
 		InteractivesAPIURL:         "http://localhost:27500",
 		EnableInteractivesAPI:      false,
 		InteractivesAPIVersions:    []string{"v1"},

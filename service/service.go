@@ -149,7 +149,7 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 	}
 	if cfg.EnableReleaseCalendarAPI {
 		releaseCalendar := proxy.NewAPIProxy(ctx, cfg.ReleaseCalendarAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
-		addTransitionalHandler(router, releaseCalendar, "/releasecalendar")
+		addVersionedHandlers(router, releaseCalendar, cfg.ReleaseCalendarAPIVersions, "/releases")
 	}
 	addTransitionalHandler(router, codeList, "/code-lists")
 	addTransitionalHandler(router, dataset, "/datasets")

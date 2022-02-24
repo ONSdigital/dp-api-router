@@ -2,6 +2,7 @@ package service_test
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -92,8 +93,12 @@ func TestRouterPublicAPIs(t *testing.T) {
 			"/dimension-search": dimensionSearchAPIURL,
 			"/images":           imageAPIURL,
 			"/articles":         articlesAPIURL,
-			"/releasecalendar":  releaseCalendarAPIURL,
 			"/population-types": populationTypesAPIURL,
+		}
+		cfg.ReleaseCalendarAPIVersions = []string{"vX", "vY"}
+		for _, version := range cfg.ReleaseCalendarAPIVersions {
+			key := "/" + version + "/releases"
+			expectedPublicURLs[key] = releaseCalendarAPIURL
 		}
 		cfg.InteractivesAPIVersions = []string{"vX", "vAnother"}
 		for _, version := range cfg.InteractivesAPIVersions {
@@ -258,23 +263,41 @@ func TestRouterPublicAPIs(t *testing.T) {
 		})
 
 		Convey("A request to a release calendar subpath", func() {
-			url := "http://localhost:23200/v1/releasecalendar/subpath"
+			host := "http://localhost:23200"
+			path := "/%s/releases/subpath"
+			urlPattern := host + path
 
-			Convey("when the feature flag is enabled", func() {
+			Convey("When the feature flag is enabled", func() {
 				cfg.EnableReleaseCalendarAPI = true
-				Convey("Then the request is proxied to the release calendar API", func() {
-					w := createRouterTest(cfg, url)
-					So(w.Code, ShouldEqual, http.StatusOK)
-					verifyProxied("/releasecalendar/subpath", releaseCalendarAPIURL)
+
+				for _, version := range cfg.ReleaseCalendarAPIVersions {
+					Convey("And the request is using the mapped version "+version, func() {
+						Convey("Then the request is proxied to the release calendar API", func() {
+							w := createRouterTest(cfg, fmt.Sprintf(urlPattern, version))
+							So(w.Code, ShouldEqual, http.StatusOK)
+							verifyProxied(fmt.Sprintf(path, version), releaseCalendarAPIURL)
+						})
+					})
+				}
+
+				Convey("And the request is using an unmapped version", func() {
+					Convey("Then the request falls through to the default zebedee handler", func() {
+						version := "v9"
+						createRouterTest(cfg, fmt.Sprintf(urlPattern, version))
+						verifyProxied(fmt.Sprintf(path, version), zebedeeURL)
+					})
 				})
 			})
 
-			Convey("With the feature flag disabled", func() {
+			Convey("When the feature flag is disabled", func() {
 				cfg.EnableReleaseCalendarAPI = false
-				Convey("Then the request falls through to the default zebedee handler", func() {
-					w := createRouterTest(cfg, url)
-					So(w.Code, ShouldEqual, http.StatusOK)
-					verifyProxied("/releasecalendar/subpath", zebedeeURL)
+				Convey("Then all requests falls through to the default zebedee handler", func() {
+					for _, version := range cfg.ReleaseCalendarAPIVersions {
+						//deliberately not configured v1 to get around legacyhandle stripping it
+						w := createRouterTest(cfg, fmt.Sprintf(urlPattern, version))
+						So(w.Code, ShouldEqual, http.StatusOK)
+						verifyProxied(fmt.Sprintf(path, version), zebedeeURL)
+					}
 				})
 			})
 		})
