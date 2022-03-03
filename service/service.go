@@ -123,6 +123,7 @@ func (svc *Service) CreateMiddleware(cfg *config.Config, router *mux.Router) ali
 }
 
 // CreateRouter creates the router with the required endpoints for proxied APIs
+// The preferred approach for new APIs is to use `addVersionedHandlers` and include the version on downstream API routes
 func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 	router := mux.NewRouter()
 
@@ -144,7 +145,11 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 	image := proxy.NewAPIProxy(ctx, cfg.ImageAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 	if cfg.EnableArticlesAPI {
 		articles := proxy.NewAPIProxy(ctx, cfg.ArticlesAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
-		addTransitionalHandler(router, articles, "/articles")
+		addVersionedHandlers(router, articles, cfg.ArticlesAPIVersions, "/articles")
+	}
+	if cfg.EnableReleaseCalendarAPI {
+		releaseCalendar := proxy.NewAPIProxy(ctx, cfg.ReleaseCalendarAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+		addVersionedHandlers(router, releaseCalendar, cfg.ReleaseCalendarAPIVersions, "/releases")
 	}
 	addTransitionalHandler(router, codeList, "/code-lists")
 	addTransitionalHandler(router, dataset, "/datasets")
@@ -154,6 +159,15 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 	addTransitionalHandler(router, search, "/search")
 	addTransitionalHandler(router, dimensionSearch, "/dimension-search")
 	addTransitionalHandler(router, image, "/images")
+
+	if cfg.EnablePopulationTypesAPI {
+		populationTypesAPI := proxy.NewAPIProxy(ctx, cfg.PopulationTypesAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+		addTransitionalHandler(router, populationTypesAPI, "/population-types")
+	}
+	if cfg.EnableInteractivesAPI {
+		interactives := proxy.NewAPIProxy(ctx, cfg.InteractivesAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.ContextURL, cfg.EnableV1BetaRestriction)
+		addVersionedHandlers(router, interactives, cfg.InteractivesAPIVersions, "/interactives")
+	}
 
 	// Private APIs
 	if cfg.EnablePrivateEndpoints {

@@ -52,6 +52,15 @@ type Config struct {
 	EnableTopicAPI             bool          `envconfig:"ENABLE_TOPIC_API"`
 	EnableArticlesAPI          bool          `envconfig:"ENABLE_ARTICLES_API"`
 	ArticlesAPIURL             string        `envconfig:"ARTICLES_API_URL"`
+	ArticlesAPIVersions        []string      `envconfig:"ARTICLES_API_VERSIONS"`
+	PopulationTypesAPIURL      string        `envconfig:"POPULATION_TYPES_API_URL"`
+	EnablePopulationTypesAPI   bool          `envconfig:"ENABLE_POPULATION_TYPES_API"`
+	EnableReleaseCalendarAPI   bool          `envconfig:"ENABLE_RELEASE_CALENDAR_API"`
+	ReleaseCalendarAPIURL      string        `envconfig:"RELEASE_CALENDAR_API_URL"`
+	ReleaseCalendarAPIVersions []string      `envconfig:"RELEASE_CALENDAR_API_VERSIONS"`
+	EnableInteractivesAPI      bool          `envconfig:"ENABLE_INTERACTIVES_API"`
+	InteractivesAPIURL         string        `envconfig:"INTERACTIVES_API_URL"`
+	InteractivesAPIVersions    []string      `envconfig:"INTERACTIVES_API_VERSIONS"`
 }
 
 var cfg *Config
@@ -102,6 +111,15 @@ func Get() (*Config, error) {
 		EnableTopicAPI:             false,
 		ArticlesAPIURL:             "http://localhost:27000",
 		EnableArticlesAPI:          false,
+		ArticlesAPIVersions:        []string{"v1"},
+		PopulationTypesAPIURL:      "http://localhost:27300",
+		EnablePopulationTypesAPI:   false,
+		ReleaseCalendarAPIURL:      "http://localhost:27800",
+		EnableReleaseCalendarAPI:   false,
+		ReleaseCalendarAPIVersions: []string{"v1"},
+		InteractivesAPIURL:         "http://localhost:27500",
+		EnableInteractivesAPI:      false,
+		InteractivesAPIVersions:    []string{"v1"},
 	}
 
 	return cfg, envconfig.Process("", cfg)

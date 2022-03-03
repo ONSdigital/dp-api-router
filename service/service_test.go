@@ -2,6 +2,7 @@ package service_test
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -74,6 +75,12 @@ func TestRouterPublicAPIs(t *testing.T) {
 		So(err, ShouldBeNil)
 		articlesAPIURL, err := url.Parse(cfg.ArticlesAPIURL)
 		So(err, ShouldBeNil)
+		releaseCalendarAPIURL, err := url.Parse(cfg.ReleaseCalendarAPIURL)
+		So(err, ShouldBeNil)
+		populationTypesAPIURL, err := url.Parse(cfg.PopulationTypesAPIURL)
+		So(err, ShouldBeNil)
+		interactivesAPIURL, err := url.Parse(cfg.InteractivesAPIURL)
+		So(err, ShouldBeNil)
 
 		expectedPublicURLs := map[string]*url.URL{
 			"/code-lists": codelistAPIURL,
@@ -85,7 +92,22 @@ func TestRouterPublicAPIs(t *testing.T) {
 			"/search":           searchAPIURL,
 			"/dimension-search": dimensionSearchAPIURL,
 			"/images":           imageAPIURL,
-			"/articles":         articlesAPIURL,
+			"/population-types": populationTypesAPIURL,
+		}
+		cfg.ArticlesAPIVersions = []string{"a", "b"}
+		for _, version := range cfg.ArticlesAPIVersions {
+			key := "/" + version + "/articles"
+			expectedPublicURLs[key] = articlesAPIURL
+		}
+		cfg.ReleaseCalendarAPIVersions = []string{"vX", "vY"}
+		for _, version := range cfg.ReleaseCalendarAPIVersions {
+			key := "/" + version + "/releases"
+			expectedPublicURLs[key] = releaseCalendarAPIURL
+		}
+		cfg.InteractivesAPIVersions = []string{"vX", "vAnother"}
+		for _, version := range cfg.InteractivesAPIVersions {
+			key := "/" + version + "/interactives"
+			expectedPublicURLs[key] = interactivesAPIURL
 		}
 
 		resetProxyMocksWithExpectations(expectedPublicURLs)
@@ -224,22 +246,142 @@ func TestRouterPublicAPIs(t *testing.T) {
 			verifyProxied("/images/subpath", imageAPIURL)
 		})
 
-		Convey("A request to an articles subpath", func() {
-			Convey("when the feature flag is enabled", func() {
+		Convey("Given an URL to an articles subpath", func() {
+			host := "http://localhost:23200"
+			path := "/%s/articles/subpath"
+			urlPattern := host + path
+
+			Convey("And the feature flag is enabled", func() {
 				cfg.EnableArticlesAPI = true
-				Convey("Then the request is proxied to the articles API", func() {
-					w := createRouterTest(cfg, "http://localhost:23200/v1/articles/subpath")
-					So(w.Code, ShouldEqual, http.StatusOK)
-					verifyProxied("/articles/subpath", articlesAPIURL)
+				for _, version := range cfg.ArticlesAPIVersions {
+					Convey("When we make a GET request using the mapped version "+version, func() {
+						w := createRouterTest(cfg, fmt.Sprintf(urlPattern, version))
+						Convey("Then the request is proxied to the articles API", func() {
+							So(w.Code, ShouldEqual, http.StatusOK)
+							verifyProxied(fmt.Sprintf(path, version), articlesAPIURL)
+						})
+					})
+				}
+
+				Convey("When we make a GET request using an unmapped version", func() {
+					version := "v9"
+					createRouterTest(cfg, fmt.Sprintf(urlPattern, version))
+					Convey("Then the request falls through to the default zebedee handler", func() {
+						verifyProxied(fmt.Sprintf(path, version), zebedeeURL)
+					})
+				})
+			})
+
+			Convey("And the feature flag is disabled", func() {
+				cfg.EnableArticlesAPI = false
+				for _, version := range cfg.ArticlesAPIVersions {
+					Convey("When we make a GET request using the mapped version "+version, func() {
+						//deliberately not configured v1 to get around legacyhandle stripping it
+						w := createRouterTest(cfg, fmt.Sprintf(urlPattern, version))
+						Convey("Then it falls through to the default zebedee handler", func() {
+							So(w.Code, ShouldEqual, http.StatusOK)
+							verifyProxied(fmt.Sprintf(path, version), zebedeeURL)
+						})
+					})
+				}
+			})
+		})
+
+		Convey("A request to a release calendar subpath", func() {
+			host := "http://localhost:23200"
+			path := "/%s/releases/subpath"
+			urlPattern := host + path
+
+			Convey("When the feature flag is enabled", func() {
+				cfg.EnableReleaseCalendarAPI = true
+
+				for _, version := range cfg.ReleaseCalendarAPIVersions {
+					Convey("And the request is using the mapped version "+version, func() {
+						Convey("Then the request is proxied to the release calendar API", func() {
+							w := createRouterTest(cfg, fmt.Sprintf(urlPattern, version))
+							So(w.Code, ShouldEqual, http.StatusOK)
+							verifyProxied(fmt.Sprintf(path, version), releaseCalendarAPIURL)
+						})
+					})
+				}
+
+				Convey("And the request is using an unmapped version", func() {
+					Convey("Then the request falls through to the default zebedee handler", func() {
+						version := "v9"
+						createRouterTest(cfg, fmt.Sprintf(urlPattern, version))
+						verifyProxied(fmt.Sprintf(path, version), zebedeeURL)
+					})
+				})
+			})
+
+			Convey("When the feature flag is disabled", func() {
+				cfg.EnableReleaseCalendarAPI = false
+				Convey("Then all requests falls through to the default zebedee handler", func() {
+					for _, version := range cfg.ReleaseCalendarAPIVersions {
+						//deliberately not configured v1 to get around legacyhandle stripping it
+						w := createRouterTest(cfg, fmt.Sprintf(urlPattern, version))
+						So(w.Code, ShouldEqual, http.StatusOK)
+						verifyProxied(fmt.Sprintf(path, version), zebedeeURL)
+					}
+				})
+			})
+		})
+
+		Convey("Given an url to the population types api", func() {
+			url := "http://localhost:23200/v1/population-types"
+
+			Convey("And the feature flag is enabled", func() {
+				cfg.EnablePopulationTypesAPI = true
+				Convey("When a GET request is made", func() {
+					w := createRouterTest(cfg, url)
+					Convey("Then the population types API should respond", func() {
+						So(w.Code, ShouldEqual, http.StatusOK)
+						verifyProxied("/population-types", populationTypesAPIURL)
+					})
+				})
+			})
+
+			Convey("And the feature flag is disabled", func() {
+				cfg.EnablePopulationTypesAPI = false
+				Convey("When a GET request is made", func() {
+					w := createRouterTest(cfg, url)
+					Convey("Then the default zebedee handler should respond", func() {
+						So(w.Code, ShouldEqual, http.StatusOK)
+						verifyProxied("/population-types", zebedeeURL)
+					})
+				})
+			})
+		})
+
+		Convey("A request to an interactives subpath", func() {
+			Convey("When the feature flag is enabled", func() {
+				cfg.EnableInteractivesAPI = true
+
+				Convey("Then the request is proxied to the interactives API for a mapped URL", func() {
+					for _, version := range cfg.InteractivesAPIVersions {
+						w := createRouterTest(cfg, "http://localhost:23200/"+version+"/interactives/subpath")
+						So(w.Code, ShouldEqual, http.StatusOK)
+						verifyProxied("/"+version+"/interactives/subpath", interactivesAPIURL)
+					}
+				})
+
+				Convey("Then the request falls through to the default zebedee handler for an unhandled version", func() {
+					version := "vSomeOtherVersion"
+					w := createRouterTest(cfg, "http://localhost:23200/"+version+"/interactives/subpath")
+					So(w.Code, ShouldEqual, http.StatusNotFound)
+					verifyProxied("/"+version+"/interactives/subpath", zebedeeURL)
 				})
 			})
 
 			Convey("With the feature flag disabled", func() {
-				cfg.EnableArticlesAPI = false
-				Convey("Then the request falls through to the default zebedee handler", func() {
-					w := createRouterTest(cfg, "http://localhost:23200/v1/articles/subpath")
-					So(w.Code, ShouldEqual, http.StatusOK)
-					verifyProxied("/articles/subpath", zebedeeURL)
+				cfg.EnableInteractivesAPI = false
+				Convey("Then the request falls through for all interactives versions to the default zebedee handler", func() {
+					for _, version := range cfg.InteractivesAPIVersions {
+						//deliberately not configured v1 to get around legacyhandle stripping it
+						w := createRouterTest(cfg, "http://localhost:23200/"+version+"/interactives/subpath")
+						So(w.Code, ShouldEqual, http.StatusOK)
+						verifyProxied("/"+version+"/interactives/subpath", zebedeeURL)
+					}
 				})
 			})
 		})

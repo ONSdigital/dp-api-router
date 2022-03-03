@@ -7,7 +7,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestGetRetrunsDefaultValues(t *testing.T) {
+func TestGetReturnsDefaultValues(t *testing.T) {
 	t.Parallel()
 	Convey("When a loading a configuration, default values are return", t, func() {
 		configuration, err := Get()
@@ -51,6 +51,15 @@ func TestGetRetrunsDefaultValues(t *testing.T) {
 			EnableTopicAPI:             false,
 			ArticlesAPIURL:             "http://localhost:27000",
 			EnableArticlesAPI:          false,
+			ArticlesAPIVersions:        []string{"v1"},
+			PopulationTypesAPIURL:      "http://localhost:27300",
+			EnablePopulationTypesAPI:   false,
+			ReleaseCalendarAPIURL:      "http://localhost:27800",
+			EnableReleaseCalendarAPI:   false,
+			ReleaseCalendarAPIVersions: []string{"v1"},
+			InteractivesAPIURL:         "http://localhost:27500",
+			EnableInteractivesAPI:      false,
+			InteractivesAPIVersions:    []string{"v1"},
 		})
 	})
 }
