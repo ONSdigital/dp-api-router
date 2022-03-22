@@ -60,6 +60,7 @@ func TestGetReturnsDefaultValues(t *testing.T) {
 			InteractivesAPIURL:         "http://localhost:27500",
 			EnableInteractivesAPI:      false,
 			InteractivesAPIVersions:    []string{"v1"},
+			DimensionsAPIURL:           "http://localhost:27200",
 		})
 	})
 }

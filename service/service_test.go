@@ -81,6 +81,8 @@ func TestRouterPublicAPIs(t *testing.T) {
 		So(err, ShouldBeNil)
 		interactivesAPIURL, err := url.Parse(cfg.InteractivesAPIURL)
 		So(err, ShouldBeNil)
+		dimensionsAPIURL, err := url.Parse(cfg.DimensionsAPIURL)
+		So(err, ShouldBeNil)
 
 		expectedPublicURLs := map[string]*url.URL{
 			"/code-lists": codelistAPIURL,
@@ -93,6 +95,7 @@ func TestRouterPublicAPIs(t *testing.T) {
 			"/dimension-search": dimensionSearchAPIURL,
 			"/images":           imageAPIURL,
 			"/population-types": populationTypesAPIURL,
+			"/area-types":       dimensionsAPIURL,
 		}
 		cfg.ArticlesAPIVersions = []string{"a", "b"}
 		for _, version := range cfg.ArticlesAPIVersions {
@@ -384,6 +387,12 @@ func TestRouterPublicAPIs(t *testing.T) {
 					}
 				})
 			})
+		})
+
+		Convey("A request to the dimensions area-types endpoint is proxied to dimensionsAPIURL", func() {
+			w := createRouterTest(cfg, "http://localhost:23200/v1/area-types")
+			So(w.Code, ShouldEqual, http.StatusOK)
+			verifyProxied("/area-types", dimensionsAPIURL)
 		})
 	})
 }

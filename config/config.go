@@ -60,6 +60,7 @@ type Config struct {
 	EnableInteractivesAPI      bool          `envconfig:"ENABLE_INTERACTIVES_API"`
 	InteractivesAPIURL         string        `envconfig:"INTERACTIVES_API_URL"`
 	InteractivesAPIVersions    []string      `envconfig:"INTERACTIVES_API_VERSIONS"`
+	DimensionsAPIURL           string        `envconfig:"DIMENSIONS_API_URL"`
 }
 
 var cfg *Config
@@ -118,6 +119,7 @@ func Get() (*Config, error) {
 		InteractivesAPIURL:         "http://localhost:27500",
 		EnableInteractivesAPI:      false,
 		InteractivesAPIVersions:    []string{"v1"},
+		DimensionsAPIURL:           "http://localhost:27200",
 	}
 
 	return cfg, envconfig.Process("", cfg)
