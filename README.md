@@ -39,6 +39,8 @@ This service is responsible for serving a JSON-LD `@context` field on configured
 | OBSERVATION_API_URL          | "http://localhost:24500"                | A URL to the observation api                                                       |
 | IMAGE_API_URL                | "http://localhost:24700"                | A URL to the image api                                                             |
 | UPLOAD_SERVICE_API_URL:      | "http://localhost:25100"                | A URL to the upload service api                                                    |
+| IDENTITY_API_URL:            | "http://localhost:25600"                | A URL to the identity api                                                          |
+| IDENTITY_API_VERSIONS        | "v1"                                    | A comma delimted string with a list of versions supported by identity api          |
 | RELEASE_CALENDAR_API_URL     | "http://localhost:27800"                | A URL to the release calendar api                                                  |
 | INTERACTIVES_API_URL         | "http://localhost:27500"                | A URL to the interactives api                                                      |
 | ZEBEDEE_URL                  | "http://localhost:8082"                 | A URL to the zebedee service api                                                   |
