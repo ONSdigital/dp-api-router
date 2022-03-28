@@ -144,6 +144,7 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 	dimensionSearch := proxy.NewAPIProxy(ctx, cfg.DimensionSearchAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 	dimensions := proxy.NewAPIProxy(ctx, cfg.DimensionsAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.ContextURL, cfg.EnableV1BetaRestriction)
 	image := proxy.NewAPIProxy(ctx, cfg.ImageAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+
 	if cfg.EnableArticlesAPI {
 		articles := proxy.NewAPIProxy(ctx, cfg.ArticlesAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 		addVersionedHandlers(router, articles, cfg.ArticlesAPIVersions, "/articles")
@@ -169,6 +170,10 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 	if cfg.EnableInteractivesAPI {
 		interactives := proxy.NewAPIProxy(ctx, cfg.InteractivesAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.ContextURL, cfg.EnableV1BetaRestriction)
 		addVersionedHandlers(router, interactives, cfg.InteractivesAPIVersions, "/interactives")
+	}
+	if cfg.EnableMapsAPI {
+		mapsProxy := proxy.NewAPIProxy(ctx, cfg.MapsAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+		addVersionedHandlers(router, mapsProxy, cfg.MapsAPIVersions, "/maps")
 	}
 
 	// Private APIs

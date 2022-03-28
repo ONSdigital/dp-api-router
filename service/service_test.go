@@ -49,40 +49,26 @@ func TestRouterPublicAPIs(t *testing.T) {
 
 	Convey("Given an api router and proxies with all public endpoints available", t, func() {
 
-		cfg, err := config.Get()
-		So(err, ShouldBeNil)
+		cfg, _ := config.Get()
 
 		// This is temporary and needs to be removed when it is ready for SearchAPIURL to point to dp-search-query
 		cfg.SearchAPIURL = "http://justForTests:1234"
 
-		zebedeeURL, err := url.Parse(cfg.ZebedeeURL)
-		So(err, ShouldBeNil)
-		hierarchyAPIURL, err := url.Parse(cfg.HierarchyAPIURL)
-		So(err, ShouldBeNil)
-		filterAPIURL, err := url.Parse(cfg.FilterAPIURL)
-		So(err, ShouldBeNil)
-		datasetAPIURL, err := url.Parse(cfg.DatasetAPIURL)
-		So(err, ShouldBeNil)
-		observationAPIURL, err := url.Parse(cfg.ObservationAPIURL)
-		So(err, ShouldBeNil)
-		codelistAPIURL, err := url.Parse(cfg.CodelistAPIURL)
-		So(err, ShouldBeNil)
-		searchAPIURL, err := url.Parse(cfg.SearchAPIURL)
-		So(err, ShouldBeNil)
-		dimensionSearchAPIURL, err := url.Parse(cfg.DimensionSearchAPIURL)
-		So(err, ShouldBeNil)
-		imageAPIURL, err := url.Parse(cfg.ImageAPIURL)
-		So(err, ShouldBeNil)
-		articlesAPIURL, err := url.Parse(cfg.ArticlesAPIURL)
-		So(err, ShouldBeNil)
-		releaseCalendarAPIURL, err := url.Parse(cfg.ReleaseCalendarAPIURL)
-		So(err, ShouldBeNil)
-		populationTypesAPIURL, err := url.Parse(cfg.PopulationTypesAPIURL)
-		So(err, ShouldBeNil)
-		interactivesAPIURL, err := url.Parse(cfg.InteractivesAPIURL)
-		So(err, ShouldBeNil)
-		dimensionsAPIURL, err := url.Parse(cfg.DimensionsAPIURL)
-		So(err, ShouldBeNil)
+		zebedeeURL, _ := url.Parse(cfg.ZebedeeURL)
+		hierarchyAPIURL, _ := url.Parse(cfg.HierarchyAPIURL)
+		filterAPIURL, _ := url.Parse(cfg.FilterAPIURL)
+		datasetAPIURL, _ := url.Parse(cfg.DatasetAPIURL)
+		observationAPIURL, _ := url.Parse(cfg.ObservationAPIURL)
+		codelistAPIURL, _ := url.Parse(cfg.CodelistAPIURL)
+		searchAPIURL, _ := url.Parse(cfg.SearchAPIURL)
+		dimensionSearchAPIURL, _ := url.Parse(cfg.DimensionSearchAPIURL)
+		imageAPIURL, _ := url.Parse(cfg.ImageAPIURL)
+		articlesAPIURL, _ := url.Parse(cfg.ArticlesAPIURL)
+		releaseCalendarAPIURL, _ := url.Parse(cfg.ReleaseCalendarAPIURL)
+		populationTypesAPIURL, _ := url.Parse(cfg.PopulationTypesAPIURL)
+		interactivesAPIURL, _ := url.Parse(cfg.InteractivesAPIURL)
+		dimensionsAPIURL, _ := url.Parse(cfg.DimensionsAPIURL)
+		mapsAPIURL, _ := url.Parse(cfg.MapsAPIURL)
 
 		expectedPublicURLs := map[string]*url.URL{
 			"/code-lists": codelistAPIURL,
@@ -99,18 +85,19 @@ func TestRouterPublicAPIs(t *testing.T) {
 		}
 		cfg.ArticlesAPIVersions = []string{"a", "b"}
 		for _, version := range cfg.ArticlesAPIVersions {
-			key := "/" + version + "/articles"
-			expectedPublicURLs[key] = articlesAPIURL
+			expectedPublicURLs["/"+version+"/articles"] = articlesAPIURL
 		}
 		cfg.ReleaseCalendarAPIVersions = []string{"vX", "vY"}
 		for _, version := range cfg.ReleaseCalendarAPIVersions {
-			key := "/" + version + "/releases"
-			expectedPublicURLs[key] = releaseCalendarAPIURL
+			expectedPublicURLs["/"+version+"/releases"] = releaseCalendarAPIURL
 		}
 		cfg.InteractivesAPIVersions = []string{"vX", "vAnother"}
 		for _, version := range cfg.InteractivesAPIVersions {
-			key := "/" + version + "/interactives"
-			expectedPublicURLs[key] = interactivesAPIURL
+			expectedPublicURLs["/"+version+"/interactives"] = interactivesAPIURL
+		}
+		cfg.MapsAPIVersions = []string{"vX", "vY"}
+		for _, version := range cfg.MapsAPIVersions {
+			expectedPublicURLs["/"+version+"/maps"] = mapsAPIURL
 		}
 
 		resetProxyMocksWithExpectations(expectedPublicURLs)
@@ -394,6 +381,78 @@ func TestRouterPublicAPIs(t *testing.T) {
 			So(w.Code, ShouldEqual, http.StatusOK)
 			verifyProxied("/area-types", dimensionsAPIURL)
 		})
+
+		Convey("Given a maps service path", func() {
+			urlPathTemplate := "http://localhost:23200/%s/maps"
+
+			Convey("And the feature flag is enabled", func() {
+				cfg.EnableMapsAPI = true
+
+				Convey("When we make GET requests to configured versions", func() {
+					for _, version := range cfg.MapsAPIVersions {
+						response := createRouterTest(cfg, fmt.Sprintf(urlPathTemplate, version))
+
+						Convey("Then the "+version+" request is successful and is proxied to mapsAPIURL", func() {
+							So(response.Code, ShouldEqual, http.StatusOK)
+							verifyProxied("/"+version+"/maps", mapsAPIURL)
+						})
+					}
+				})
+
+				Convey("When we make GET requests to an unconfigured version", func() {
+					version := "vInvalid"
+					_ = createRouterTest(cfg, fmt.Sprintf(urlPathTemplate, version))
+
+					Convey("Then the request is proxied to zebedee handler", func() {
+						verifyProxied("/"+version+"/maps", zebedeeURL)
+					})
+				})
+			})
+
+			Convey("And the feature flag is disabled", func() {
+				cfg.EnableMapsAPI = false
+
+				Convey("When we make GET requests to configured versions", func() {
+					for _, version := range cfg.MapsAPIVersions {
+						_ = createRouterTest(cfg, fmt.Sprintf(urlPathTemplate, version))
+
+						Convey("Then the "+version+" request is proxied to zebedee handler", func() {
+							verifyProxied("/"+version+"/maps", zebedeeURL)
+						})
+					}
+				})
+			})
+
+		})
+
+		Convey("Given a maps service subpath", func() {
+			urlPathTemplate := "http://localhost:23200/%s/maps/subpath"
+
+			Convey("And the feature flag is enabled", func() {
+				cfg.EnableMapsAPI = true
+
+				Convey("When we make GET requests to configured versions", func() {
+					for _, version := range cfg.MapsAPIVersions {
+						response := createRouterTest(cfg, fmt.Sprintf(urlPathTemplate, version))
+
+						Convey("Then the "+version+" request is successful and is proxied to mapsAPIURL", func() {
+							So(response.Code, ShouldEqual, http.StatusOK)
+							verifyProxied("/"+version+"/maps/subpath", mapsAPIURL)
+						})
+					}
+				})
+
+				Convey("When we make GET requests to an unconfigured version", func() {
+					version := "vInvalid"
+					_ = createRouterTest(cfg, fmt.Sprintf(urlPathTemplate, version))
+
+					Convey("Then the request is proxied to zebedee handler", func() {
+						verifyProxied("/"+version+"/maps/subpath", zebedeeURL)
+					})
+				})
+
+			})
+		})
 	})
 }
 
@@ -628,12 +687,13 @@ func createRouterTest(cfg *config.Config, url string) *httptest.ResponseRecorder
 	r := httptest.NewRequest(http.MethodGet, url, nil)
 	r.Header.Set(authorizationHeader, testServiceAuthToken)
 	w := httptest.NewRecorder()
+
 	router := service.CreateRouter(testCtx, cfg)
 	router.ServeHTTP(w, r)
 	return w
 }
 
-// verifyProxied asserts tha only the proxy that was registered for the expected URL is called, with the expected path
+// verifyProxied asserts that only the proxy that was registered for the expected URL is called, with the expected path
 func verifyProxied(path string, expectedURL *url.URL) {
 	pxy, found := registeredProxies[*expectedURL]
 	So(found, ShouldBeTrue)
