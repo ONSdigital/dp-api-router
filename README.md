@@ -23,6 +23,7 @@ This service is responsible for serving a JSON-LD `@context` field on configured
 | ENABLE_ARTICLES_API          | false                                 | Flag to enable routing to the articles API                                         |
 | ENABLE_RELEASE_CALENDAR_API  | false                                 | Flag to enable routing to the release calendar API                                 |
 | ENABLE_INTERACTIVES_API      | false                                 | Flag to enable routing to the interactives API                                     |
+| ENABLE_MAPS_API              | false                                 | Flag to enable routing to the maps API                                             |
 | ENABLE_ZEBEDEE_AUDIT         | false                                 |                                                                                    |
 | CONTEXT_URL                  | ""                                    | A URL to the JSON-LD context file describing the APIs                              |
 | API_POC_URL                  | "http://localhost:3000"               | A URL to the poc api                                                               |
@@ -46,10 +47,12 @@ This service is responsible for serving a JSON-LD `@context` field on configured
 | ZEBEDEE_URL                  | "http://localhost:8082"               | A URL to the zebedee service api                                                   |
 | INTERACTIVES_API_VERSIONS    | "v1"                                  | A comma delimted string with a list of versions supported by interactives api      |
 | DIMENSIONS_API_URL           | "http://localhost:27200"              | A URL to the dimensions api                                                        |
+| MAPS_API_URL:                | "http://localhost:27900"              | A URL to the maps api                                                              |
+| MAPS_API_VERSIONS:           | "v1"                                  | A comma delimted string with a list of versions supported by maps api              |
 | KAFKA_ADDR                   | localhost:9092                        | The list of kafka hosts                                                            |
 | KAFKA_MAX_BYTES              | 2000000                               | The maximum bytes that can be sent in an event to kafka topic                      |
 | KAFKA_VERSION                | "1.0.2"                               | The kafka version that this service expects to connect to                          |
-| KAFKA_SEC_PROTO              | _unset_                    (only `TLS`) | if set to `TLS`, kafka connections will use TLS                                    |
+| KAFKA_SEC_PROTO              | _unset_                    (only `TLS`) | if set to `TLS`, kafka connections will use TLS                                  |
 | KAFKA_SEC_CLIENT_KEY         | _unset_                               | PEM [2] for the client key (optional, used for client auth) [1]                    |
 | KAFKA_SEC_CLIENT_CERT        | _unset_                               | PEM [2] for the client certificate (optional, used for client auth) [1]            |
 | KAFKA_SEC_CA_CERTS           | _unset_                               | PEM [2] of CA cert chain if using private CA for the server cert [1]               |

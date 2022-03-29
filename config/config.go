@@ -61,6 +61,9 @@ type Config struct {
 	InteractivesAPIURL         string        `envconfig:"INTERACTIVES_API_URL"`
 	InteractivesAPIVersions    []string      `envconfig:"INTERACTIVES_API_VERSIONS"`
 	DimensionsAPIURL           string        `envconfig:"DIMENSIONS_API_URL"`
+	EnableMapsAPI              bool          `envconfig:"ENABLE_MAPS_API"`
+	MapsAPIURL                 string        `envconfig:"MAPS_API_URL"`
+	MapsAPIVersions            []string      `envconfig:"MAPS_API_VERSIONS"`
 }
 
 var cfg *Config
@@ -120,6 +123,9 @@ func Get() (*Config, error) {
 		EnableInteractivesAPI:      false,
 		InteractivesAPIVersions:    []string{"v1"},
 		DimensionsAPIURL:           "http://localhost:27200",
+		EnableMapsAPI:              false,
+		MapsAPIURL:                 "http://localhost:27900",
+		MapsAPIVersions:            []string{"v1"},
 	}
 
 	return cfg, envconfig.Process("", cfg)

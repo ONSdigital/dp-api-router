@@ -9,8 +9,9 @@ import (
 
 func TestGetReturnsDefaultValues(t *testing.T) {
 	t.Parallel()
-	Convey("When a loading a configuration, default values are return", t, func() {
+	Convey("When a loading a configuration, default values are returned", t, func() {
 		configuration, err := Get()
+
 		So(err, ShouldBeNil)
 		So(configuration, ShouldResemble, &Config{
 			BindAddr:                   ":23200",
@@ -61,6 +62,9 @@ func TestGetReturnsDefaultValues(t *testing.T) {
 			EnableInteractivesAPI:      false,
 			InteractivesAPIVersions:    []string{"v1"},
 			DimensionsAPIURL:           "http://localhost:27200",
+			EnableMapsAPI:              false,
+			MapsAPIURL:                 "http://localhost:27900",
+			MapsAPIVersions:            []string{"v1"},
 		})
 	})
 }
