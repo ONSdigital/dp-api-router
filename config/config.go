@@ -29,6 +29,8 @@ type Config struct {
 	UploadServiceAPIURL        string        `envconfig:"UPLOAD_SERVICE_API_URL"`
 	IdentityAPIURL             string        `envconfig:"IDENTITY_API_URL"`
 	IdentityAPIVersions        []string      `envconfig:"IDENTITY_API_VERSIONS"`
+	PermissionsAPIURL          string        `envconfig:"PERMISSIONS_API_URL"`
+	PermissionsAPIVersions     []string      `envconfig:"PERMISSIONS_API_VERSIONS"`
 	ContextURL                 string        `envconfig:"CONTEXT_URL"`
 	EnvironmentHost            string        `envconfig:"ENV_HOST"`
 	APIPocURL                  string        `envconfig:"API_POC_URL"`
@@ -96,6 +98,8 @@ func Get() (*Config, error) {
 		UploadServiceAPIURL:        "http://localhost:25100",
 		IdentityAPIURL:             "http://localhost:25600",
 		IdentityAPIVersions:        []string{"v1"},
+		PermissionsAPIURL:          "http://localhost:25400",
+		PermissionsAPIVersions:     []string{"v1"},
 		APIPocURL:                  "http://localhost:3000",
 		ContextURL:                 "",
 		EnvironmentHost:            "http://localhost:23200",

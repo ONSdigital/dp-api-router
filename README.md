@@ -42,6 +42,8 @@ This service is responsible for serving a JSON-LD `@context` field on configured
 | UPLOAD_SERVICE_API_URL:      | "http://localhost:25100"              | A URL to the upload service api                                                    |
 | IDENTITY_API_URL:            | "http://localhost:25600"              | A URL to the identity api                                                          |
 | IDENTITY_API_VERSIONS        | "v1"                                  | A comma delimted string with a list of versions supported by identity api          |
+| PERMISSIONS_API_URL:         | "http://localhost:25400"              | A URL to the permissions api                                                       |
+| PERMISSIONS_API_VERSIONS     | "v1"                                  | A comma delimted string with a list of versions supported by permissions api       |
 | RELEASE_CALENDAR_API_URL     | "http://localhost:27800"              | A URL to the release calendar api                                                  |
 | INTERACTIVES_API_URL         | "http://localhost:27500"              | A URL to the interactives api                                                      |
 | ZEBEDEE_URL                  | "http://localhost:8082"               | A URL to the zebedee service api                                                   |

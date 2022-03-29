@@ -182,6 +182,7 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 		importAPI := proxy.NewAPIProxy(ctx, cfg.ImportAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 		uploadServiceAPI := proxy.NewAPIProxy(ctx, cfg.UploadServiceAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 		identityAPI := proxy.NewAPIProxy(ctx, cfg.IdentityAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+		permissionsAPIProxy := proxy.NewAPIProxy(ctx, cfg.PermissionsAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 		addTransitionalHandler(router, recipe, "/recipes")
 		addTransitionalHandler(router, importAPI, "/jobs")
 		addTransitionalHandler(router, dataset, "/instances")
@@ -190,6 +191,9 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 		addVersionedHandlers(router, identityAPI, cfg.IdentityAPIVersions, "/users")
 		addVersionedHandlers(router, identityAPI, cfg.IdentityAPIVersions, "/groups")
 		addVersionedHandlers(router, identityAPI, cfg.IdentityAPIVersions, "/password-reset")
+		addVersionedHandlers(router, permissionsAPIProxy, cfg.PermissionsAPIVersions, "/policies")
+		addVersionedHandlers(router, permissionsAPIProxy, cfg.PermissionsAPIVersions, "/roles")
+		addVersionedHandlers(router, permissionsAPIProxy, cfg.PermissionsAPIVersions, "/permissions-bundle")
 
 		// Feature flag for Sessions API
 		if cfg.EnableSessionsAPI {
