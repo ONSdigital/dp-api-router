@@ -460,21 +460,15 @@ func TestRouterPrivateAPIs(t *testing.T) {
 
 	Convey("Given an api router and proxies with all private endpoints available", t, func() {
 
-		cfg, err := config.Get()
-		So(err, ShouldBeNil)
+		cfg, _ := config.Get()
 
-		datasetAPIURL, err := url.Parse(cfg.DatasetAPIURL)
-		So(err, ShouldBeNil)
-		recipeAPIURL, err := url.Parse(cfg.RecipeAPIURL)
-		So(err, ShouldBeNil)
-		importAPIURL, err := url.Parse(cfg.ImportAPIURL)
-		So(err, ShouldBeNil)
-		uploadServiceAPIURL, err := url.Parse(cfg.UploadServiceAPIURL)
-		So(err, ShouldBeNil)
-		identityAPIURL, err := url.Parse(cfg.IdentityAPIURL)
-		So(err, ShouldBeNil)
-		zebedeeURL, err := url.Parse(cfg.ZebedeeURL)
-		So(err, ShouldBeNil)
+		datasetAPIURL, _ := url.Parse(cfg.DatasetAPIURL)
+		recipeAPIURL, _ := url.Parse(cfg.RecipeAPIURL)
+		importAPIURL, _ := url.Parse(cfg.ImportAPIURL)
+		uploadServiceAPIURL, _ := url.Parse(cfg.UploadServiceAPIURL)
+		identityAPIURL, _ := url.Parse(cfg.IdentityAPIURL)
+		permissionsAPIURL, _ := url.Parse(cfg.PermissionsAPIURL)
+		zebedeeURL, _ := url.Parse(cfg.ZebedeeURL)
 
 		expectedPrivateURLs := map[string]*url.URL{
 			"/upload":    uploadServiceAPIURL,
@@ -483,20 +477,21 @@ func TestRouterPrivateAPIs(t *testing.T) {
 			"/instances": datasetAPIURL,
 		}
 		for _, version := range cfg.IdentityAPIVersions {
-			key := "/" + version + "/tokens"
-			expectedPrivateURLs[key] = identityAPIURL
-			key = "/" + version + "/users"
-			expectedPrivateURLs[key] = identityAPIURL
-			key = "/" + version + "/groups"
-			expectedPrivateURLs[key] = identityAPIURL
-			key = "/" + version + "/password-reset"
-			expectedPrivateURLs[key] = identityAPIURL
+			expectedPrivateURLs[fmt.Sprintf("/%s/tokens", version)] = identityAPIURL
+			expectedPrivateURLs[fmt.Sprintf("/%s/users", version)] = identityAPIURL
+			expectedPrivateURLs[fmt.Sprintf("/%s/groups", version)] = identityAPIURL
+			expectedPrivateURLs[fmt.Sprintf("/%s/password-reset", version)] = identityAPIURL
+		}
+		for _, version := range cfg.PermissionsAPIVersions {
+			expectedPrivateURLs[fmt.Sprintf("/%s/policies", version)] = permissionsAPIURL
+			expectedPrivateURLs[fmt.Sprintf("/%s/roles", version)] = permissionsAPIURL
+			expectedPrivateURLs[fmt.Sprintf("/%s/permissions-bundle", version)] = permissionsAPIURL
 		}
 
 		resetProxyMocksWithExpectations(expectedPrivateURLs)
 
 		Convey("and private endpoints enabled by configuration", func() {
-			cfg.EnableObservationAPI = true
+			cfg.EnablePrivateEndpoints = true
 
 			Convey("A request to a recipes path is proxied to recipeAPIURL", func() {
 				w := createRouterTest(cfg, "http://localhost:23200/v1/recipes")
@@ -601,6 +596,31 @@ func TestRouterPrivateAPIs(t *testing.T) {
 					verifyProxied("/"+version+"/password-reset", identityAPIURL)
 				}
 			})
+
+			Convey("A request to policies path is proxied to permissionsAPIURL", func() {
+				for _, version := range cfg.PermissionsAPIVersions {
+					w := createRouterTest(cfg, "http://localhost:23200/"+version+"/policies")
+					So(w.Code, ShouldEqual, http.StatusOK)
+					verifyProxied("/"+version+"/policies", permissionsAPIURL)
+				}
+			})
+
+			Convey("A request to roles path is proxied to permissionsAPIURL", func() {
+				for _, version := range cfg.PermissionsAPIVersions {
+					w := createRouterTest(cfg, "http://localhost:23200/"+version+"/roles")
+					So(w.Code, ShouldEqual, http.StatusOK)
+					verifyProxied("/"+version+"/roles", permissionsAPIURL)
+				}
+			})
+
+			Convey("A request to permissions-bundle path is proxied to permissionsAPIURL", func() {
+				for _, version := range cfg.PermissionsAPIVersions {
+					w := createRouterTest(cfg, "http://localhost:23200/"+version+"/permissions-bundle")
+					So(w.Code, ShouldEqual, http.StatusOK)
+					verifyProxied("/"+version+"/permissions-bundle", permissionsAPIURL)
+				}
+			})
+
 		})
 
 		Convey("and private endpoints disabled by configuration", func() {
@@ -621,6 +641,20 @@ func TestRouterPrivateAPIs(t *testing.T) {
 				assertOnlyThisURLIsCalled(zebedeeURL)
 			})
 
+			Convey("A request to a policies path is not proxied and fails with StatusNotFound", func() {
+				createRouterTest(cfg, "http://localhost:23200/v1/policies")
+				assertOnlyThisURLIsCalled(zebedeeURL)
+			})
+
+			Convey("A request to a roles path is not proxied and fails with StatusNotFound", func() {
+				createRouterTest(cfg, "http://localhost:23200/v1/roles")
+				assertOnlyThisURLIsCalled(zebedeeURL)
+			})
+
+			Convey("A request to a permissions-bundle path is not proxied and fails with StatusNotFound", func() {
+				createRouterTest(cfg, "http://localhost:23200/v1/permissions-bundle")
+				assertOnlyThisURLIsCalled(zebedeeURL)
+			})
 		})
 	})
 }

@@ -33,6 +33,8 @@ func TestGetReturnsDefaultValues(t *testing.T) {
 			UploadServiceAPIURL:        "http://localhost:25100",
 			IdentityAPIURL:             "http://localhost:25600",
 			IdentityAPIVersions:        []string{"v1"},
+			PermissionsAPIURL:          "http://localhost:25400",
+			PermissionsAPIVersions:     []string{"v1"},
 			SearchAPIURL:               "http://localhost:23900",
 			DimensionSearchAPIURL:      "http://localhost:23100",
 			APIPocURL:                  "http://localhost:3000",
