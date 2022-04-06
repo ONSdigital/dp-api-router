@@ -29,6 +29,8 @@ type Config struct {
 	UploadServiceAPIURL        string        `envconfig:"UPLOAD_SERVICE_API_URL"`
 	IdentityAPIURL             string        `envconfig:"IDENTITY_API_URL"`
 	IdentityAPIVersions        []string      `envconfig:"IDENTITY_API_VERSIONS"`
+	PermissionsAPIURL          string        `envconfig:"PERMISSIONS_API_URL"`
+	PermissionsAPIVersions     []string      `envconfig:"PERMISSIONS_API_VERSIONS"`
 	ContextURL                 string        `envconfig:"CONTEXT_URL"`
 	EnvironmentHost            string        `envconfig:"ENV_HOST"`
 	APIPocURL                  string        `envconfig:"API_POC_URL"`
@@ -49,6 +51,21 @@ type Config struct {
 	EnableSessionsAPI          bool          `envconfig:"ENABLE_SESSIONS_API"`
 	TopicAPIURL                string        `envconfig:"TOPIC_API_URL"`
 	EnableTopicAPI             bool          `envconfig:"ENABLE_TOPIC_API"`
+	EnableArticlesAPI          bool          `envconfig:"ENABLE_ARTICLES_API"`
+	ArticlesAPIURL             string        `envconfig:"ARTICLES_API_URL"`
+	ArticlesAPIVersions        []string      `envconfig:"ARTICLES_API_VERSIONS"`
+	PopulationTypesAPIURL      string        `envconfig:"POPULATION_TYPES_API_URL"`
+	EnablePopulationTypesAPI   bool          `envconfig:"ENABLE_POPULATION_TYPES_API"`
+	EnableReleaseCalendarAPI   bool          `envconfig:"ENABLE_RELEASE_CALENDAR_API"`
+	ReleaseCalendarAPIURL      string        `envconfig:"RELEASE_CALENDAR_API_URL"`
+	ReleaseCalendarAPIVersions []string      `envconfig:"RELEASE_CALENDAR_API_VERSIONS"`
+	EnableInteractivesAPI      bool          `envconfig:"ENABLE_INTERACTIVES_API"`
+	InteractivesAPIURL         string        `envconfig:"INTERACTIVES_API_URL"`
+	InteractivesAPIVersions    []string      `envconfig:"INTERACTIVES_API_VERSIONS"`
+	DimensionsAPIURL           string        `envconfig:"DIMENSIONS_API_URL"`
+	EnableMapsAPI              bool          `envconfig:"ENABLE_MAPS_API"`
+	MapsAPIURL                 string        `envconfig:"MAPS_API_URL"`
+	MapsAPIVersions            []string      `envconfig:"MAPS_API_VERSIONS"`
 }
 
 var cfg *Config
@@ -81,6 +98,8 @@ func Get() (*Config, error) {
 		UploadServiceAPIURL:        "http://localhost:25100",
 		IdentityAPIURL:             "http://localhost:25600",
 		IdentityAPIVersions:        []string{"v1"},
+		PermissionsAPIURL:          "http://localhost:25400",
+		PermissionsAPIVersions:     []string{"v1"},
 		APIPocURL:                  "http://localhost:3000",
 		ContextURL:                 "",
 		EnvironmentHost:            "http://localhost:23200",
@@ -96,6 +115,21 @@ func Get() (*Config, error) {
 		EnableSessionsAPI:          false,
 		TopicAPIURL:                "http://localhost:25300",
 		EnableTopicAPI:             false,
+		ArticlesAPIURL:             "http://localhost:27000",
+		EnableArticlesAPI:          false,
+		ArticlesAPIVersions:        []string{"v1"},
+		PopulationTypesAPIURL:      "http://localhost:27300",
+		EnablePopulationTypesAPI:   false,
+		ReleaseCalendarAPIURL:      "http://localhost:27800",
+		EnableReleaseCalendarAPI:   false,
+		ReleaseCalendarAPIVersions: []string{"v1"},
+		InteractivesAPIURL:         "http://localhost:27500",
+		EnableInteractivesAPI:      false,
+		InteractivesAPIVersions:    []string{"v1"},
+		DimensionsAPIURL:           "http://localhost:27200",
+		EnableMapsAPI:              false,
+		MapsAPIURL:                 "http://localhost:27900",
+		MapsAPIVersions:            []string{"v1"},
 	}
 
 	return cfg, envconfig.Process("", cfg)

@@ -7,10 +7,11 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestGetRetrunsDefaultValues(t *testing.T) {
+func TestGetReturnsDefaultValues(t *testing.T) {
 	t.Parallel()
-	Convey("When a loading a configuration, default values are return", t, func() {
+	Convey("When a loading a configuration, default values are returned", t, func() {
 		configuration, err := Get()
+
 		So(err, ShouldBeNil)
 		So(configuration, ShouldResemble, &Config{
 			BindAddr:                   ":23200",
@@ -19,6 +20,7 @@ func TestGetRetrunsDefaultValues(t *testing.T) {
 			EnableV1BetaRestriction:    false,
 			EnableObservationAPI:       false,
 			EnableAudit:                false,
+			EnableZebedeeAudit:         false,
 			ZebedeeURL:                 "http://localhost:8082",
 			HierarchyAPIURL:            "http://localhost:22600",
 			FilterAPIURL:               "http://localhost:22100",
@@ -31,6 +33,8 @@ func TestGetRetrunsDefaultValues(t *testing.T) {
 			UploadServiceAPIURL:        "http://localhost:25100",
 			IdentityAPIURL:             "http://localhost:25600",
 			IdentityAPIVersions:        []string{"v1"},
+			PermissionsAPIURL:          "http://localhost:25400",
+			PermissionsAPIVersions:     []string{"v1"},
 			SearchAPIURL:               "http://localhost:23900",
 			DimensionSearchAPIURL:      "http://localhost:23100",
 			APIPocURL:                  "http://localhost:3000",
@@ -48,6 +52,21 @@ func TestGetRetrunsDefaultValues(t *testing.T) {
 			EnableSessionsAPI:          false,
 			TopicAPIURL:                "http://localhost:25300",
 			EnableTopicAPI:             false,
+			ArticlesAPIURL:             "http://localhost:27000",
+			EnableArticlesAPI:          false,
+			ArticlesAPIVersions:        []string{"v1"},
+			PopulationTypesAPIURL:      "http://localhost:27300",
+			EnablePopulationTypesAPI:   false,
+			ReleaseCalendarAPIURL:      "http://localhost:27800",
+			EnableReleaseCalendarAPI:   false,
+			ReleaseCalendarAPIVersions: []string{"v1"},
+			InteractivesAPIURL:         "http://localhost:27500",
+			EnableInteractivesAPI:      false,
+			InteractivesAPIVersions:    []string{"v1"},
+			DimensionsAPIURL:           "http://localhost:27200",
+			EnableMapsAPI:              false,
+			MapsAPIURL:                 "http://localhost:27900",
+			MapsAPIVersions:            []string{"v1"},
 		})
 	})
 }

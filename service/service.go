@@ -123,6 +123,7 @@ func (svc *Service) CreateMiddleware(cfg *config.Config, router *mux.Router) ali
 }
 
 // CreateRouter creates the router with the required endpoints for proxied APIs
+// The preferred approach for new APIs is to use `addVersionedHandlers` and include the version on downstream API routes
 func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 	router := mux.NewRouter()
 
@@ -141,7 +142,17 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 	hierarchy := proxy.NewAPIProxy(ctx, cfg.HierarchyAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 	search := proxy.NewAPIProxy(ctx, cfg.SearchAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 	dimensionSearch := proxy.NewAPIProxy(ctx, cfg.DimensionSearchAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+	dimensions := proxy.NewAPIProxy(ctx, cfg.DimensionsAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.ContextURL, cfg.EnableV1BetaRestriction)
 	image := proxy.NewAPIProxy(ctx, cfg.ImageAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+
+	if cfg.EnableArticlesAPI {
+		articles := proxy.NewAPIProxy(ctx, cfg.ArticlesAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+		addVersionedHandlers(router, articles, cfg.ArticlesAPIVersions, "/articles")
+	}
+	if cfg.EnableReleaseCalendarAPI {
+		releaseCalendar := proxy.NewAPIProxy(ctx, cfg.ReleaseCalendarAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+		addVersionedHandlers(router, releaseCalendar, cfg.ReleaseCalendarAPIVersions, "/releases")
+	}
 	addTransitionalHandler(router, codeList, "/code-lists")
 	addTransitionalHandler(router, dataset, "/datasets")
 	addTransitionalHandler(router, filter, "/filters")
@@ -150,6 +161,20 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 	addTransitionalHandler(router, search, "/search")
 	addTransitionalHandler(router, dimensionSearch, "/dimension-search")
 	addTransitionalHandler(router, image, "/images")
+	addTransitionalHandler(router, dimensions, "/area-types")
+
+	if cfg.EnablePopulationTypesAPI {
+		populationTypesAPI := proxy.NewAPIProxy(ctx, cfg.PopulationTypesAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+		addTransitionalHandler(router, populationTypesAPI, "/population-types")
+	}
+	if cfg.EnableInteractivesAPI {
+		interactives := proxy.NewAPIProxy(ctx, cfg.InteractivesAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.ContextURL, cfg.EnableV1BetaRestriction)
+		addVersionedHandlers(router, interactives, cfg.InteractivesAPIVersions, "/interactives")
+	}
+	if cfg.EnableMapsAPI {
+		mapsProxy := proxy.NewAPIProxy(ctx, cfg.MapsAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+		addVersionedHandlers(router, mapsProxy, cfg.MapsAPIVersions, "/maps")
+	}
 
 	// Private APIs
 	if cfg.EnablePrivateEndpoints {
@@ -157,6 +182,7 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 		importAPI := proxy.NewAPIProxy(ctx, cfg.ImportAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 		uploadServiceAPI := proxy.NewAPIProxy(ctx, cfg.UploadServiceAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 		identityAPI := proxy.NewAPIProxy(ctx, cfg.IdentityAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+		permissionsAPIProxy := proxy.NewAPIProxy(ctx, cfg.PermissionsAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 		addTransitionalHandler(router, recipe, "/recipes")
 		addTransitionalHandler(router, importAPI, "/jobs")
 		addTransitionalHandler(router, dataset, "/instances")
@@ -165,6 +191,9 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 		addVersionedHandlers(router, identityAPI, cfg.IdentityAPIVersions, "/users")
 		addVersionedHandlers(router, identityAPI, cfg.IdentityAPIVersions, "/groups")
 		addVersionedHandlers(router, identityAPI, cfg.IdentityAPIVersions, "/password-reset")
+		addVersionedHandlers(router, permissionsAPIProxy, cfg.PermissionsAPIVersions, "/policies")
+		addVersionedHandlers(router, permissionsAPIProxy, cfg.PermissionsAPIVersions, "/roles")
+		addVersionedHandlers(router, permissionsAPIProxy, cfg.PermissionsAPIVersions, "/permissions-bundle")
 
 		// Feature flag for Sessions API
 		if cfg.EnableSessionsAPI {
