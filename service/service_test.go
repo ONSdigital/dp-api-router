@@ -469,12 +469,14 @@ func TestRouterPrivateAPIs(t *testing.T) {
 		identityAPIURL, _ := url.Parse(cfg.IdentityAPIURL)
 		permissionsAPIURL, _ := url.Parse(cfg.PermissionsAPIURL)
 		zebedeeURL, _ := url.Parse(cfg.ZebedeeURL)
+		geodataAPIURL, _ := url.Parse(cfg.GeodataAPIURL)
 
 		expectedPrivateURLs := map[string]*url.URL{
 			"/upload":    uploadServiceAPIURL,
 			"/recipes":   recipeAPIURL,
 			"/jobs":      importAPIURL,
 			"/instances": datasetAPIURL,
+			"/geodata":   geodataAPIURL,
 		}
 		for _, version := range cfg.IdentityAPIVersions {
 			expectedPrivateURLs[fmt.Sprintf("/%s/tokens", version)] = identityAPIURL
@@ -486,6 +488,9 @@ func TestRouterPrivateAPIs(t *testing.T) {
 			expectedPrivateURLs[fmt.Sprintf("/%s/policies", version)] = permissionsAPIURL
 			expectedPrivateURLs[fmt.Sprintf("/%s/roles", version)] = permissionsAPIURL
 			expectedPrivateURLs[fmt.Sprintf("/%s/permissions-bundle", version)] = permissionsAPIURL
+		}
+		for _, version := range cfg.GeodataAPIVersions {
+			expectedPrivateURLs[fmt.Sprintf("/%s/geodata", version)] = geodataAPIURL
 		}
 
 		resetProxyMocksWithExpectations(expectedPrivateURLs)
@@ -621,6 +626,14 @@ func TestRouterPrivateAPIs(t *testing.T) {
 				}
 			})
 
+			Convey("A request to geodata path is proxied to geodataAPIURL", func() {
+				for _, version := range cfg.GeodataAPIVersions {
+					w := createRouterTest(cfg, "http://localhost:23200/"+version+"/geodata")
+					So(w.Code, ShouldEqual, http.StatusOK)
+					verifyProxied("/"+version+"/geodata", geodataAPIURL)
+				}
+			})
+
 		})
 
 		Convey("and private endpoints disabled by configuration", func() {
@@ -653,6 +666,11 @@ func TestRouterPrivateAPIs(t *testing.T) {
 
 			Convey("A request to a permissions-bundle path is not proxied and fails with StatusNotFound", func() {
 				createRouterTest(cfg, "http://localhost:23200/v1/permissions-bundle")
+				assertOnlyThisURLIsCalled(zebedeeURL)
+			})
+
+			Convey("A request to a geodata path is not proxied and fails with StatusNotFound", func() {
+				createRouterTest(cfg, "http://localhost:23200/v1/geodata")
 				assertOnlyThisURLIsCalled(zebedeeURL)
 			})
 		})

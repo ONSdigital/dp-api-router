@@ -39,9 +39,9 @@ This service is responsible for serving a JSON-LD `@context` field on configured
 | SESSIONS_API_URL             | "http://localhost:24400"              | A URL to the sessions api                                                          |
 | OBSERVATION_API_URL          | "http://localhost:24500"              | A URL to the observation api                                                       |
 | IMAGE_API_URL                | "http://localhost:24700"              | A URL to the image api                                                             |
-| UPLOAD_SERVICE_API_URL:      | "http://localhost:25100"              | A URL to the upload service api
-| FILES_API_URL:      | "http://localhost:26900"              | A URL to the files API                                                                             |
-| DOWNLOAD_SERVICE_URL:      | "http://localhost:23600"              | A URL to the download service API                                                                             |
+| UPLOAD_SERVICE_API_URL:      | "http://localhost:25100"              | A URL to the upload service api                                                    |
+| FILES_API_URL:               | "http://localhost:26900"              | A URL to the files API                                                             |
+| DOWNLOAD_SERVICE_URL:        | "http://localhost:23600"              | A URL to the download service API                                                  |
 | IDENTITY_API_URL:            | "http://localhost:25600"              | A URL to the identity api                                                          |
 | IDENTITY_API_VERSIONS        | "v1"                                  | A comma delimted string with a list of versions supported by identity api          |
 | PERMISSIONS_API_URL:         | "http://localhost:25400"              | A URL to the permissions api                                                       |
@@ -53,10 +53,12 @@ This service is responsible for serving a JSON-LD `@context` field on configured
 | DIMENSIONS_API_URL           | "http://localhost:27200"              | A URL to the dimensions api                                                        |
 | MAPS_API_URL:                | "http://localhost:27900"              | A URL to the maps api                                                              |
 | MAPS_API_VERSIONS:           | "v1"                                  | A comma delimted string with a list of versions supported by maps api              |
+| GEODATA_API_URL              | "http://localhost:28200"              | A URL to the geodata api                                                           |
+| GEODATA_API_VERSIONS         | "v1"                                  | A comma delimted string with a list of versions supported by geodata api           |
 | KAFKA_ADDR                   | localhost:9092                        | The list of kafka hosts                                                            |
 | KAFKA_MAX_BYTES              | 2000000                               | The maximum bytes that can be sent in an event to kafka topic                      |
 | KAFKA_VERSION                | "1.0.2"                               | The kafka version that this service expects to connect to                          |
-| KAFKA_SEC_PROTO              | _unset_                    (only `TLS`) | if set to `TLS`, kafka connections will use TLS                                  |
+| KAFKA_SEC_PROTO              | _unset_                  (only `TLS`) | if set to `TLS`, kafka connections will use TLS                                    |
 | KAFKA_SEC_CLIENT_KEY         | _unset_                               | PEM [2] for the client key (optional, used for client auth) [1]                    |
 | KAFKA_SEC_CLIENT_CERT        | _unset_                               | PEM [2] for the client certificate (optional, used for client auth) [1]            |
 | KAFKA_SEC_CA_CERTS           | _unset_                               | PEM [2] of CA cert chain if using private CA for the server cert [1]               |

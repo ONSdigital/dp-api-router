@@ -185,6 +185,7 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 		filesApi := proxy.NewAPIProxy(ctx, cfg.FilesAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 		downloadService := proxy.NewAPIProxy(ctx, cfg.DownloadServiceURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 		permissionsAPIProxy := proxy.NewAPIProxy(ctx, cfg.PermissionsAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+		geodataAPIproxy := proxy.NewAPIProxy(ctx, cfg.GeodataAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 		addTransitionalHandler(router, recipe, "/recipes")
 		addTransitionalHandler(router, importAPI, "/jobs")
 		addTransitionalHandler(router, dataset, "/instances")
@@ -199,6 +200,7 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 		addVersionedHandlers(router, permissionsAPIProxy, cfg.PermissionsAPIVersions, "/policies")
 		addVersionedHandlers(router, permissionsAPIProxy, cfg.PermissionsAPIVersions, "/roles")
 		addVersionedHandlers(router, permissionsAPIProxy, cfg.PermissionsAPIVersions, "/permissions-bundle")
+		addVersionedHandlers(router, geodataAPIproxy, cfg.GeodataAPIVersions, "/geodata")
 
 		// Feature flag for Sessions API
 		if cfg.EnableSessionsAPI {
