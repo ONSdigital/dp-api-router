@@ -69,6 +69,8 @@ func TestGetReturnsDefaultValues(t *testing.T) {
 			EnableMapsAPI:              false,
 			MapsAPIURL:                 "http://localhost:27900",
 			MapsAPIVersions:            []string{"v1"},
+			GeodataAPIURL:              "http://localhost:28200",
+			GeodataAPIVersions:         []string{"v1"},
 		})
 	})
 }
