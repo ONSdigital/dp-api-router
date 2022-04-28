@@ -162,6 +162,7 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 	addTransitionalHandler(router, dimensionSearch, "/dimension-search")
 	addTransitionalHandler(router, image, "/images")
 	addTransitionalHandler(router, dimensions, "/area-types")
+	addTransitionalHandler(router, dimensions, "/areas")
 
 	if cfg.EnablePopulationTypesAPI {
 		populationTypesAPI := proxy.NewAPIProxy(ctx, cfg.PopulationTypesAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
