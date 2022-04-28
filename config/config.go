@@ -68,6 +68,7 @@ type Config struct {
 	EnableMapsAPI              bool          `envconfig:"ENABLE_MAPS_API"`
 	MapsAPIURL                 string        `envconfig:"MAPS_API_URL"`
 	MapsAPIVersions            []string      `envconfig:"MAPS_API_VERSIONS"`
+	EnableGeodataAPI           bool          `envconfig:"ENABLE_GEODATA_API"`
 	GeodataAPIURL              string        `envconfig:"GEODATA_API_URL"`
 	GeodataAPIVersions         []string      `envconfig:"GEODATA_API_VERSIONS"`
 }
@@ -136,6 +137,7 @@ func Get() (*Config, error) {
 		EnableMapsAPI:              false,
 		MapsAPIURL:                 "http://localhost:27900",
 		MapsAPIVersions:            []string{"v1"},
+		EnableGeodataAPI:           false,
 		GeodataAPIURL:              "http://localhost:28200",
 		GeodataAPIVersions:         []string{"v1"},
 	}
