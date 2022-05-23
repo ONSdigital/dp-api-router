@@ -162,6 +162,7 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 	addTransitionalHandler(router, dimensionSearch, "/dimension-search")
 	addTransitionalHandler(router, image, "/images")
 	addTransitionalHandler(router, dimensions, "/area-types")
+	addTransitionalHandler(router, dimensions, "/areas")
 
 	if cfg.EnablePopulationTypesAPI {
 		populationTypesAPI := proxy.NewAPIProxy(ctx, cfg.PopulationTypesAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
@@ -175,6 +176,10 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 		mapsProxy := proxy.NewAPIProxy(ctx, cfg.MapsAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 		addVersionedHandlers(router, mapsProxy, cfg.MapsAPIVersions, "/maps")
 	}
+	if cfg.EnableGeodataAPI {
+		geodataAPIproxy := proxy.NewAPIProxy(ctx, cfg.GeodataAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+		addVersionedHandlers(router, geodataAPIproxy, cfg.GeodataAPIVersions, "/geodata")
+	}
 
 	// Private APIs
 	if cfg.EnablePrivateEndpoints {
@@ -182,11 +187,16 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 		importAPI := proxy.NewAPIProxy(ctx, cfg.ImportAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 		uploadServiceAPI := proxy.NewAPIProxy(ctx, cfg.UploadServiceAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 		identityAPI := proxy.NewAPIProxy(ctx, cfg.IdentityAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+		filesApi := proxy.NewAPIProxy(ctx, cfg.FilesAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+		downloadService := proxy.NewAPIProxy(ctx, cfg.DownloadServiceURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 		permissionsAPIProxy := proxy.NewAPIProxy(ctx, cfg.PermissionsAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 		addTransitionalHandler(router, recipe, "/recipes")
 		addTransitionalHandler(router, importAPI, "/jobs")
 		addTransitionalHandler(router, dataset, "/instances")
 		addTransitionalHandler(router, uploadServiceAPI, "/upload")
+		addTransitionalHandler(router, uploadServiceAPI, "/upload-new")
+		addTransitionalHandler(router, filesApi, "/files")
+		addTransitionalHandler(router, downloadService, "/downloads-new")
 		addVersionedHandlers(router, identityAPI, cfg.IdentityAPIVersions, "/tokens")
 		addVersionedHandlers(router, identityAPI, cfg.IdentityAPIVersions, "/users")
 		addVersionedHandlers(router, identityAPI, cfg.IdentityAPIVersions, "/groups")

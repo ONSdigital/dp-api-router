@@ -31,6 +31,8 @@ func TestGetReturnsDefaultValues(t *testing.T) {
 			ImportAPIURL:               "http://localhost:21800",
 			ImageAPIURL:                "http://localhost:24700",
 			UploadServiceAPIURL:        "http://localhost:25100",
+			DownloadServiceURL:         "http://localhost:23600",
+			FilesAPIURL:                "http://localhost:26900",
 			IdentityAPIURL:             "http://localhost:25600",
 			IdentityAPIVersions:        []string{"v1"},
 			PermissionsAPIURL:          "http://localhost:25400",
@@ -67,6 +69,9 @@ func TestGetReturnsDefaultValues(t *testing.T) {
 			EnableMapsAPI:              false,
 			MapsAPIURL:                 "http://localhost:27900",
 			MapsAPIVersions:            []string{"v1"},
+			EnableGeodataAPI:           false,
+			GeodataAPIURL:              "http://localhost:28200",
+			GeodataAPIVersions:         []string{"v1"},
 		})
 	})
 }

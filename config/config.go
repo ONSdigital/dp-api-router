@@ -27,6 +27,8 @@ type Config struct {
 	DimensionSearchAPIURL      string        `envconfig:"DIMENSION_SEARCH_API_URL"`
 	ImageAPIURL                string        `envconfig:"IMAGE_API_URL"`
 	UploadServiceAPIURL        string        `envconfig:"UPLOAD_SERVICE_API_URL"`
+	DownloadServiceURL         string        `envconfig:"DOWNLOAD_SERVICE_URL"`
+	FilesAPIURL                string        `envconfig:"FILES_API_URL"`
 	IdentityAPIURL             string        `envconfig:"IDENTITY_API_URL"`
 	IdentityAPIVersions        []string      `envconfig:"IDENTITY_API_VERSIONS"`
 	PermissionsAPIURL          string        `envconfig:"PERMISSIONS_API_URL"`
@@ -66,6 +68,9 @@ type Config struct {
 	EnableMapsAPI              bool          `envconfig:"ENABLE_MAPS_API"`
 	MapsAPIURL                 string        `envconfig:"MAPS_API_URL"`
 	MapsAPIVersions            []string      `envconfig:"MAPS_API_VERSIONS"`
+	EnableGeodataAPI           bool          `envconfig:"ENABLE_GEODATA_API"`
+	GeodataAPIURL              string        `envconfig:"GEODATA_API_URL"`
+	GeodataAPIVersions         []string      `envconfig:"GEODATA_API_VERSIONS"`
 }
 
 var cfg *Config
@@ -94,9 +99,11 @@ func Get() (*Config, error) {
 		ImportAPIURL:               "http://localhost:21800",
 		SearchAPIURL:               "http://localhost:23900",
 		DimensionSearchAPIURL:      "http://localhost:23100",
+		DownloadServiceURL:         "http://localhost:23600",
 		ImageAPIURL:                "http://localhost:24700",
 		UploadServiceAPIURL:        "http://localhost:25100",
 		IdentityAPIURL:             "http://localhost:25600",
+		FilesAPIURL:                "http://localhost:26900",
 		IdentityAPIVersions:        []string{"v1"},
 		PermissionsAPIURL:          "http://localhost:25400",
 		PermissionsAPIVersions:     []string{"v1"},
@@ -130,6 +137,9 @@ func Get() (*Config, error) {
 		EnableMapsAPI:              false,
 		MapsAPIURL:                 "http://localhost:27900",
 		MapsAPIVersions:            []string{"v1"},
+		EnableGeodataAPI:           false,
+		GeodataAPIURL:              "http://localhost:28200",
+		GeodataAPIVersions:         []string{"v1"},
 	}
 
 	return cfg, envconfig.Process("", cfg)
