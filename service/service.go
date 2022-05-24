@@ -238,7 +238,7 @@ func addVersionedHandlers(router *mux.Router, proxy *proxy.APIProxy, versions []
 
 func addTransitionalHandler(router *mux.Router, proxy *proxy.APIProxy, path string) {
 	// Proxy any request after the path given to the target address
-	router.HandleFunc(fmt.Sprintf("/%s"+path+"{rest:/.*}", proxy.Version), proxy.LegacyHandle)
+	router.HandleFunc(fmt.Sprintf("/%s"+path+"{rest:$|/.*}", proxy.Version), proxy.LegacyHandle)
 }
 
 func addLegacyHandler(router *mux.Router, proxy *proxy.APIProxy, path string) {
