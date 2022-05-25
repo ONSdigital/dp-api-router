@@ -21,6 +21,7 @@ func TestGetReturnsDefaultValues(t *testing.T) {
 			EnableObservationAPI:       false,
 			EnableAudit:                false,
 			EnableZebedeeAudit:         false,
+			EnableFilesAPI:             false,
 			ZebedeeURL:                 "http://localhost:8082",
 			HierarchyAPIURL:            "http://localhost:22600",
 			FilterAPIURL:               "http://localhost:22100",

@@ -28,6 +28,7 @@ type Config struct {
 	ImageAPIURL                string        `envconfig:"IMAGE_API_URL"`
 	UploadServiceAPIURL        string        `envconfig:"UPLOAD_SERVICE_API_URL"`
 	DownloadServiceURL         string        `envconfig:"DOWNLOAD_SERVICE_URL"`
+	EnableFilesAPI             bool          `envconfig:"ENABLE_FILES_API"`
 	FilesAPIURL                string        `envconfig:"FILES_API_URL"`
 	IdentityAPIURL             string        `envconfig:"IDENTITY_API_URL"`
 	IdentityAPIVersions        []string      `envconfig:"IDENTITY_API_VERSIONS"`
@@ -89,6 +90,7 @@ func Get() (*Config, error) {
 		EnableObservationAPI:       false,
 		EnableAudit:                false,
 		EnableZebedeeAudit:         false,
+		EnableFilesAPI:             false,
 		ZebedeeURL:                 "http://localhost:8082",
 		HierarchyAPIURL:            "http://localhost:22600",
 		FilterAPIURL:               "http://localhost:22100",
