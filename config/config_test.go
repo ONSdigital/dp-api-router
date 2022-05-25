@@ -73,6 +73,7 @@ func TestGetReturnsDefaultValues(t *testing.T) {
 			EnableGeodataAPI:           false,
 			GeodataAPIURL:              "http://localhost:28200",
 			GeodataAPIVersions:         []string{"v1"},
+			EnableFilterFlexAPI:        true,
 		})
 	})
 }

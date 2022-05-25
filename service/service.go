@@ -132,6 +132,7 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 		observation := proxy.NewAPIProxy(ctx, cfg.ObservationAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.ContextURL, cfg.EnableV1BetaRestriction)
 		addTransitionalHandler(router, observation, "/datasets/{dataset_id}/editions/{edition}/versions/{version}/observations")
 	}
+
 	if cfg.EnableTopicAPI {
 		topic := proxy.NewAPIProxy(ctx, cfg.TopicAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.ContextURL, cfg.EnableV1BetaRestriction)
 		addTransitionalHandler(router, topic, "/topics")
@@ -152,6 +153,9 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 	if cfg.EnableReleaseCalendarAPI {
 		releaseCalendar := proxy.NewAPIProxy(ctx, cfg.ReleaseCalendarAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 		addVersionedHandlers(router, releaseCalendar, cfg.ReleaseCalendarAPIVersions, "/releases")
+	}
+	if cfg.EnableFilterFlexAPI {
+		addTransitionalHandler(router, filter, "/datasets/{dataset_id}/editions/{edition}/versions/{version}/filter-outputs")
 	}
 	addTransitionalHandler(router, codeList, "/code-lists")
 	addTransitionalHandler(router, dataset, "/datasets")

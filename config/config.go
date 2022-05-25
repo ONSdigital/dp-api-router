@@ -72,6 +72,7 @@ type Config struct {
 	EnableGeodataAPI           bool          `envconfig:"ENABLE_GEODATA_API"`
 	GeodataAPIURL              string        `envconfig:"GEODATA_API_URL"`
 	GeodataAPIVersions         []string      `envconfig:"GEODATA_API_VERSIONS"`
+	EnableFilterFlexAPI        bool          `envconfig:"ENABLE_FILTERFLEX_API"`
 }
 
 var cfg *Config
@@ -142,6 +143,7 @@ func Get() (*Config, error) {
 		EnableGeodataAPI:           false,
 		GeodataAPIURL:              "http://localhost:28200",
 		GeodataAPIVersions:         []string{"v1"},
+		EnableFilterFlexAPI:        true,
 	}
 
 	return cfg, envconfig.Process("", cfg)
