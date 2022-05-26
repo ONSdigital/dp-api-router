@@ -42,6 +42,12 @@ func TestNotProxied(t *testing.T) {
 			So(w.Code, ShouldEqual, http.StatusNotFound)
 			assertOnlyThisURLIsCalled(zebedeeURL)
 		})
+
+		Convey("A request to an endpoint with extra chars falls through to the default zebedee handler", func() {
+			w := createRouterTest(cfg, "http://localhost:23200/v1/datasetsNOT")
+			So(w.Code, ShouldEqual, http.StatusNotFound)
+			assertOnlyThisURLIsCalled(zebedeeURL)
+		})
 	})
 }
 
@@ -111,6 +117,12 @@ func TestRouterPublicAPIs(t *testing.T) {
 			w := createRouterTest(cfg, "http://localhost:23200/v1/code-lists")
 			So(w.Code, ShouldEqual, http.StatusOK)
 			verifyProxied("/code-lists", codelistAPIURL)
+		})
+
+		Convey("A request to code-list path with trailing slash succeeds and is proxied to codeListAPIURL", func() {
+			w := createRouterTest(cfg, "http://localhost:23200/v1/code-lists/")
+			So(w.Code, ShouldEqual, http.StatusOK)
+			verifyProxied("/code-lists/", codelistAPIURL)
 		})
 
 		Convey("A request to code-list subpath succeeds and is proxied to codeListAPIURL", func() {

@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/ONSdigital/dp-api-clients-go/v2/health"
@@ -232,18 +231,18 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 func addVersionedHandlers(router *mux.Router, proxy *proxy.APIProxy, versions []string, path string) {
 	// Proxy any request after the path given to the target address
 	for _, version := range versions {
-		router.HandleFunc("/"+version+path+"{rest:.*}", proxy.Handle)
+		router.HandleFunc("/"+version+path+"{rest:(?:/.*)?}", proxy.Handle)
 	}
 }
 
 func addTransitionalHandler(router *mux.Router, proxy *proxy.APIProxy, path string) {
 	// Proxy any request after the path given to the target address
-	router.HandleFunc(fmt.Sprintf("/%s"+path+"{rest:$|/.*}", proxy.Version), proxy.LegacyHandle)
+	router.HandleFunc("/"+proxy.Version+path+"{rest:(?:/.*)?}", proxy.LegacyHandle)
 }
 
 func addLegacyHandler(router *mux.Router, proxy *proxy.APIProxy, path string) {
 	// Proxy any request after the path given to the target address
-	router.HandleFunc(path+"{rest:.*}", proxy.LegacyHandle)
+	router.HandleFunc(path+"{rest:(?:/.*)?}", proxy.LegacyHandle)
 }
 
 // Close gracefully shuts the service down in the required order, with timeout
