@@ -70,6 +70,7 @@ func TestRouterPublicAPIs(t *testing.T) {
 		dimensionsAPIURL, _ := url.Parse(cfg.DimensionsAPIURL)
 		mapsAPIURL, _ := url.Parse(cfg.MapsAPIURL)
 		geodataAPIURL, _ := url.Parse(cfg.GeodataAPIURL)
+		topicAPIURL, _ := url.Parse(cfg.TopicAPIURL)
 
 		expectedPublicURLs := map[string]*url.URL{
 			"/code-lists": codelistAPIURL,
@@ -84,7 +85,9 @@ func TestRouterPublicAPIs(t *testing.T) {
 			"/population-types": populationTypesAPIURL,
 			"/area-types":       dimensionsAPIURL,
 			"/areas":            dimensionsAPIURL,
+			"/navigation":       topicAPIURL,
 		}
+
 		cfg.ArticlesAPIVersions = []string{"a", "b"}
 		for _, version := range cfg.ArticlesAPIVersions {
 			expectedPublicURLs["/"+version+"/articles"] = articlesAPIURL
@@ -391,6 +394,36 @@ func TestRouterPublicAPIs(t *testing.T) {
 			w := createRouterTest(cfg, "http://localhost:23200/v1/areas")
 			So(w.Code, ShouldEqual, http.StatusOK)
 			verifyProxied("/areas", dimensionsAPIURL)
+		})
+
+		Convey("Given a topic service path", func() {
+			Convey("When the feature flag is disabled", func() {
+				cfg.EnableTopicAPI = false
+
+				Convey("Then a request to the topic navigation endpoint is proxied to topicsAPIURL", func() {
+					w := createRouterTest(cfg, "http://localhost:23200/v1/navigation")
+					So(w.Code, ShouldEqual, http.StatusOK)
+					verifyProxied("/navigation", topicAPIURL)
+				})
+
+				Convey("And a request to the topics endpoint is not proxied to the topicsAPIURL", func() {
+					w := createRouterTest(cfg, "http://localhost:23200/v1/topics")
+					So(w.Code, ShouldEqual, http.StatusNotFound)
+				})
+
+				Convey("And when the feature flag is enabled", func() {
+					cfg.EnableTopicAPI = true
+
+					expectedPublicURLs["/topics"] = topicAPIURL
+					resetProxyMocksWithExpectations(expectedPublicURLs)
+
+					Convey("Then a request to the topics endpoint is proxied to the topicsAPIURL", func() {
+						w := createRouterTest(cfg, "http://localhost:23200/v1/topics")
+						So(w.Code, ShouldEqual, http.StatusOK)
+						verifyProxied("/topics", topicAPIURL)
+					})
+				})
+			})
 		})
 
 		Convey("Given a maps service path", func() {
