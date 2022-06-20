@@ -184,13 +184,20 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 		addVersionedHandlers(router, geodataAPIproxy, cfg.GeodataAPIVersions, "/geodata")
 	}
 
+	if cfg.EnableFilesAPI {
+		downloadService := proxy.NewAPIProxy(ctx, cfg.DownloadServiceURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+		filesApi := proxy.NewAPIProxy(ctx, cfg.FilesAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+
+		addTransitionalHandler(router, filesApi, "/files")
+		addTransitionalHandler(router, downloadService, "/downloads-new")
+	}
+
 	// Private APIs
 	if cfg.EnablePrivateEndpoints {
 		recipe := proxy.NewAPIProxy(ctx, cfg.RecipeAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 		importAPI := proxy.NewAPIProxy(ctx, cfg.ImportAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 		uploadServiceAPI := proxy.NewAPIProxy(ctx, cfg.UploadServiceAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 		identityAPI := proxy.NewAPIProxy(ctx, cfg.IdentityAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
-		downloadService := proxy.NewAPIProxy(ctx, cfg.DownloadServiceURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 		permissionsAPIProxy := proxy.NewAPIProxy(ctx, cfg.PermissionsAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 		addTransitionalHandler(router, recipe, "/recipes")
 		addTransitionalHandler(router, importAPI, "/jobs")
@@ -212,10 +219,7 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 
 		// Feature flag for Files API
 		if cfg.EnableFilesAPI {
-			filesApi := proxy.NewAPIProxy(ctx, cfg.FilesAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
-			addTransitionalHandler(router, filesApi, "/files")
 			addTransitionalHandler(router, uploadServiceAPI, "/upload-new")
-			addTransitionalHandler(router, downloadService, "/downloads-new")
 		}
 	}
 
