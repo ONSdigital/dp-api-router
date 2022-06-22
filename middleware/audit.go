@@ -31,14 +31,14 @@ type Router interface {
 // paths that will skip auditing (note)
 // identity api paths being added until the auditing has been updated to work with new tokens
 // TODO remove "/v1/tokens", "/v1/users", "/v1/groups", "/v1/password-reset" from this list once authorisation has been integrated into dp-identity-api
+// if you remove "/v1/tokens" unable to  login
+// responses from zebedee are "/ping" so removed to get response
+
 var pathsToIgnore = []string{
-	"/ping",
 	"/clickEventLog",
 	"/health",
 	"/v1/tokens",
-	"/v1/users",
-	"/v1/groups",
-	"/v1/password-reset",
+	"/v1/data",
 }
 
 // paths that will skip retrieveIdentity, and will be audited without identity
