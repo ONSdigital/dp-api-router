@@ -30,5 +30,3 @@ test:
 .PHONY: debug
 debug:
 	HUMAN_LOG=1 go run -race -ldflags="-X 'main.BuildTime=$(BUILD_TIME)' -X 'main.GitCommit=$(GIT_COMMIT)' -X 'main.Version=$(VERSION)'" main.go
-
-.PHONY: test build debug
