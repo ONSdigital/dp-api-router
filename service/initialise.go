@@ -5,7 +5,7 @@ import (
 
 	"github.com/ONSdigital/dp-api-router/config"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
-	kafka "github.com/ONSdigital/dp-kafka/v2"
+	kafka "github.com/ONSdigital/dp-kafka/v3"
 )
 
 // ExternalServiceList holds the initialiser and initialisation state of external services.
@@ -57,13 +57,14 @@ func (e *Init) DoGetHealthCheck(cfg *config.Config, buildTime, gitCommit, versio
 
 // DoGetKafkaProducer creates a kafka producer for the provided broker addresses, topic and envMax values in config
 func (e *Init) DoGetKafkaProducer(ctx context.Context, cfg *config.Config, topic string) (kafka.IProducer, error) {
-	producerChannels := kafka.CreateProducerChannels()
 	pConfig := &kafka.ProducerConfig{
 		KafkaVersion:    &cfg.KafkaVersion,
 		MaxMessageBytes: &cfg.KafkaMaxBytes,
+		Topic:           topic,
+		BrokerAddrs:     cfg.Brokers,
 	}
 	if cfg.KafkaSecProtocol == "TLS" {
 		pConfig.SecurityConfig = kafka.GetSecurityConfig(cfg.KafkaSecCACerts, cfg.KafkaSecClientCert, cfg.KafkaSecClientKey, cfg.KafkaSecSkipVerify)
 	}
-	return kafka.NewProducer(ctx, cfg.Brokers, topic, producerChannels, pConfig)
+	return kafka.NewProducer(ctx, pConfig)
 }

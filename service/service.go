@@ -11,7 +11,7 @@ import (
 	"github.com/ONSdigital/dp-api-router/middleware"
 	"github.com/ONSdigital/dp-api-router/proxy"
 	"github.com/ONSdigital/dp-api-router/schema"
-	kafka "github.com/ONSdigital/dp-kafka/v2"
+	kafka "github.com/ONSdigital/dp-kafka/v3"
 	dphttp "github.com/ONSdigital/dp-net/v2/http"
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/gorilla/handlers"
@@ -75,7 +75,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 
 	// kafka error channel logging go-routine
 	if cfg.EnableAudit {
-		svc.KafkaAuditProducer.Channels().LogErrors(ctx, "kafka Audit Producer")
+		svc.KafkaAuditProducer.LogErrors(ctx)
 	}
 
 	// Start healthcheck and run the http server in a new go-routine

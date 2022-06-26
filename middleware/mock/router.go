@@ -16,19 +16,19 @@ var _ middleware.Router = &RouterMock{}
 
 // RouterMock is a mock implementation of middleware.Router.
 //
-//     func TestSomethingThatUsesRouter(t *testing.T) {
+// 	func TestSomethingThatUsesRouter(t *testing.T) {
 //
-//         // make and configure a mocked middleware.Router
-//         mockedRouter := &RouterMock{
-//             MatchFunc: func(req *http.Request, match *mux.RouteMatch) bool {
-// 	               panic("mock out the Match method")
-//             },
-//         }
+// 		// make and configure a mocked middleware.Router
+// 		mockedRouter := &RouterMock{
+// 			MatchFunc: func(req *http.Request, match *mux.RouteMatch) bool {
+// 				panic("mock out the Match method")
+// 			},
+// 		}
 //
-//         // use mockedRouter in code that requires middleware.Router
-//         // and then make assertions.
+// 		// use mockedRouter in code that requires middleware.Router
+// 		// and then make assertions.
 //
-//     }
+// 	}
 type RouterMock struct {
 	// MatchFunc mocks the Match method.
 	MatchFunc func(req *http.Request, match *mux.RouteMatch) bool
