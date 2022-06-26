@@ -301,6 +301,6 @@ func getServiceAuthToken(ctx context.Context, req *http.Request) (string, error)
 }
 
 // Now is a time.Now wrapper specifically for testing purposes, and should not me unlambda'd - despite what golangci-lint says
-var Now = func() time.Time {
+var Now = func() time.Time { //nolint:gocritic
 	return time.Now()
 }

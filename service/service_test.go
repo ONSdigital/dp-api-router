@@ -274,7 +274,7 @@ func TestRouterPublicAPIs(t *testing.T) {
 				cfg.EnableArticlesAPI = false
 				for _, version := range cfg.ArticlesAPIVersions {
 					Convey("When we make a GET request using the mapped version "+version, func() {
-						//deliberately not configured v1 to get around legacyhandle stripping it
+						// deliberately not configured v1 to get around legacy handle stripping it
 						w := createRouterTest(cfg, fmt.Sprintf(urlPattern, version))
 						Convey("Then it falls through to the default zebedee handler", func() {
 							So(w.Code, ShouldEqual, http.StatusOK)
@@ -316,7 +316,7 @@ func TestRouterPublicAPIs(t *testing.T) {
 				cfg.EnableReleaseCalendarAPI = false
 				Convey("Then all requests falls through to the default zebedee handler", func() {
 					for _, version := range cfg.ReleaseCalendarAPIVersions {
-						//deliberately not configured v1 to get around legacyhandle stripping it
+						// deliberately not configured v1 to get around legacy handle stripping it
 						w := createRouterTest(cfg, fmt.Sprintf(urlPattern, version))
 						So(w.Code, ShouldEqual, http.StatusOK)
 						verifyProxied(fmt.Sprintf(path, version), zebedeeURL)
@@ -375,7 +375,7 @@ func TestRouterPublicAPIs(t *testing.T) {
 				cfg.EnableInteractivesAPI = false
 				Convey("Then the request falls through for all interactives versions to the default zebedee handler", func() {
 					for _, version := range cfg.InteractivesAPIVersions {
-						//deliberately not configured v1 to get around legacyhandle stripping it
+						// deliberately not configured v1 to get around legacy handle stripping it
 						w := createRouterTest(cfg, "http://localhost:23200/"+version+"/interactives/subpath")
 						So(w.Code, ShouldEqual, http.StatusOK)
 						verifyProxied("/"+version+"/interactives/subpath", zebedeeURL)

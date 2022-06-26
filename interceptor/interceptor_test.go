@@ -46,7 +46,7 @@ func TestUnitInterceptor(t *testing.T) {
 	})
 
 	Convey("test interceptor doesn't throw an error for a nil body", t, func() {
-		//testJSON := ``
+		// testJSON := ``
 		transp := dummyRT{}
 
 		t := NewRoundTripper(testDomain, "", transp)
@@ -63,7 +63,7 @@ func TestUnitInterceptor(t *testing.T) {
 	})
 
 	Convey("test interceptor doesn't throw an error for a nil body with correct URI", t, func() {
-		//testJSON := ``
+		// testJSON := ``
 		transp := dummyRT{}
 
 		t := NewRoundTripper(testDomain, "", transp)
