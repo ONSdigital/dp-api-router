@@ -71,6 +71,7 @@ func TestRouterPublicAPIs(t *testing.T) {
 		mapsAPIURL, _ := url.Parse(cfg.MapsAPIURL)
 		geodataAPIURL, _ := url.Parse(cfg.GeodataAPIURL)
 		topicAPIURL, _ := url.Parse(cfg.TopicAPIURL)
+		areasAPIURL, _ := url.Parse(cfg.AreasAPIURL)
 
 		expectedPublicURLs := map[string]*url.URL{
 			"/code-lists": codelistAPIURL,
@@ -84,7 +85,6 @@ func TestRouterPublicAPIs(t *testing.T) {
 			"/images":           imageAPIURL,
 			"/population-types": populationTypesAPIURL,
 			"/area-types":       dimensionsAPIURL,
-			"/areas":            dimensionsAPIURL,
 			"/navigation":       topicAPIURL,
 		}
 
@@ -107,7 +107,9 @@ func TestRouterPublicAPIs(t *testing.T) {
 		for _, version := range cfg.GeodataAPIVersions {
 			expectedPublicURLs["/"+version+"/geodata"] = geodataAPIURL
 		}
-
+		for _, version := range cfg.AreasAPIVersions {
+			expectedPublicURLs["/"+version+"/areas"] = areasAPIURL
+		}
 		resetProxyMocksWithExpectations(expectedPublicURLs)
 
 		Convey("A request to code-list path succeeds and is proxied to codeListAPIURL", func() {
@@ -390,12 +392,6 @@ func TestRouterPublicAPIs(t *testing.T) {
 			verifyProxied("/area-types", dimensionsAPIURL)
 		})
 
-		Convey("A request to the dimensions areas endpoint is proxied to dimensionsAPIURL", func() {
-			w := createRouterTest(cfg, "http://localhost:23200/v1/areas")
-			So(w.Code, ShouldEqual, http.StatusOK)
-			verifyProxied("/areas", dimensionsAPIURL)
-		})
-
 		Convey("Given a topic service path", func() {
 			Convey("When the feature flag is disabled", func() {
 				cfg.EnableTopicAPI = false
@@ -422,6 +418,39 @@ func TestRouterPublicAPIs(t *testing.T) {
 						So(w.Code, ShouldEqual, http.StatusOK)
 						verifyProxied("/topics", topicAPIURL)
 					})
+				})
+			})
+		})
+
+		Convey("Given an areas endpoint", func() {
+			So(len(cfg.AreasAPIVersions), ShouldBeGreaterThanOrEqualTo, 1)
+
+			Convey("When the areas feature flag is disabled", func() {
+				cfg.EnableAreasAPI = false
+
+				Convey("Then requests to the areas endpoints are proxied to zebedee", func() {
+					for _, version := range cfg.AreasAPIVersions {
+						w := createRouterTest(cfg, "http://localhost:23200/"+version+"/areas")
+						So(w.Code, ShouldEqual, http.StatusNotFound)
+						assertOnlyThisURLIsCalled(zebedeeURL)
+					}
+				})
+			})
+
+			Convey("And when the feature flag is enabled", func() {
+				cfg.EnableAreasAPI = true
+
+				for _, version := range cfg.AreasAPIVersions {
+					expectedPublicURLs["/"+version+"/areas"] = areasAPIURL
+				}
+				resetProxyMocksWithExpectations(expectedPublicURLs)
+
+				Convey("Then a request to the areas endpoint is proxied to the areasAPIURL", func() {
+					for _, version := range cfg.AreasAPIVersions {
+						w := createRouterTest(cfg, "http://localhost:23200/"+version+"/areas")
+						So(w.Code, ShouldEqual, http.StatusOK)
+						verifyProxied("/"+version+"/areas", areasAPIURL)
+					}
 				})
 			})
 		})

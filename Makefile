@@ -16,7 +16,7 @@ all: audit test build
 
 .PHONY: audit
 audit:
-	go list -m all | nancy sleuth
+	set -o pipefail; go list -m all | nancy sleuth
 
 .PHONY: build
 build:
@@ -25,8 +25,12 @@ build:
 
 .PHONY: test
 test:
-	go test -race -cover ./...
+	go test -count=1 -race -cover ./...
 
 .PHONY: debug
 debug:
 	HUMAN_LOG=1 go run -race -ldflags="-X 'main.BuildTime=$(BUILD_TIME)' -X 'main.GitCommit=$(GIT_COMMIT)' -X 'main.Version=$(VERSION)'" main.go
+
+.PHONY: generate
+generate:
+	go generate -v ./...
