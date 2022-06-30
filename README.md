@@ -24,6 +24,7 @@ This service is responsible for serving a JSON-LD `@context` field on configured
 | ENABLE_RELEASE_CALENDAR_API  | false                                 | Flag to enable routing to the release calendar API                                 |
 | ENABLE_INTERACTIVES_API      | false                                 | Flag to enable routing to the interactives API                                     |
 | ENABLE_MAPS_API              | false                                 | Flag to enable routing to the maps API                                             |
+| ENABLE_AREAS_API             | false                                 | Flag to enable routing to the areas API                                            |
 | ENABLE_ZEBEDEE_AUDIT         | false                                 |                                                                                    |
 | CONTEXT_URL                  | ""                                    | A URL to the JSON-LD context file describing the APIs                              |
 | API_POC_URL                  | "http://localhost:3000"               | A URL to the poc api                                                               |
@@ -55,6 +56,8 @@ This service is responsible for serving a JSON-LD `@context` field on configured
 | MAPS_API_VERSIONS:           | "v1"                                  | A comma delimted string with a list of versions supported by maps api              |
 | GEODATA_API_URL              | "http://localhost:28200"              | A URL to the geodata api                                                           |
 | GEODATA_API_VERSIONS         | "v1"                                  | A comma delimted string with a list of versions supported by geodata api           |
+| AREAS_API_URL                | "http://localhost:25500"              | A URL to the areas API                                                             |
+| AREAS_API_VERSIONS           | "v1"                                  | A comma-delimited string list: versions supported by the areas API                 |
 | KAFKA_ADDR                   | localhost:9092                        | The list of kafka hosts                                                            |
 | KAFKA_MAX_BYTES              | 2000000                               | The maximum bytes that can be sent in an event to kafka topic                      |
 | KAFKA_VERSION                | "1.0.2"                               | The kafka version that this service expects to connect to                          |

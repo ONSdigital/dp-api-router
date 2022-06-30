@@ -72,6 +72,9 @@ type Config struct {
 	EnableGeodataAPI           bool          `envconfig:"ENABLE_GEODATA_API"`
 	GeodataAPIURL              string        `envconfig:"GEODATA_API_URL"`
 	GeodataAPIVersions         []string      `envconfig:"GEODATA_API_VERSIONS"`
+	EnableAreasAPI             bool          `envconfig:"ENABLE_AREAS_API"`
+	AreasAPIURL                string        `envconfig:"AREAS_API_URL"`
+	AreasAPIVersions           []string      `envconfig:"AREAS_API_VERSIONS"`
 }
 
 var cfg *Config
@@ -124,6 +127,9 @@ func Get() (*Config, error) {
 		EnableSessionsAPI:          false,
 		TopicAPIURL:                "http://localhost:25300",
 		EnableTopicAPI:             false,
+		AreasAPIURL:                "http://localhost:25500",
+		EnableAreasAPI:             false,
+		AreasAPIVersions:           []string{"v1"},
 		ArticlesAPIURL:             "http://localhost:27000",
 		EnableArticlesAPI:          false,
 		ArticlesAPIVersions:        []string{"v1"},
