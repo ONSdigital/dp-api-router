@@ -76,9 +76,9 @@ type Config struct {
 	EnableAreasAPI                         bool          `envconfig:"ENABLE_AREAS_API"`
 	AreasAPIURL                            string        `envconfig:"AREAS_API_URL"`
 	AreasAPIVersions                       []string      `envconfig:"AREAS_API_VERSIONS"`
+	EnableCantabularMetadataExtractorAPI   bool          `envconfig:"ENABLE_CANTABULAR_METADATA_EXTRACTOR_API"`
 	CantabularMetadataExtractorAPIURL      string        `envconfig:"CANTABULAR_METADATA_API_URL"`
 	CantabularMetadataExtractorAPIVersions []string      `envconfig:"CANTABULAR_METADATA_API_VERSIONS"`
-	EnableCantabularMetadataExtractorAPI   bool          `envconfig:"ENABLE_CANTABULAR_METADATA_EXTRACTOR_API"`
 }
 
 var cfg *Config
@@ -153,9 +153,9 @@ func Get() (*Config, error) {
 		EnableGeodataAPI:                       false,
 		GeodataAPIURL:                          "http://localhost:28200",
 		GeodataAPIVersions:                     []string{"v1"},
+		EnableCantabularMetadataExtractorAPI:   false,
 		CantabularMetadataExtractorAPIURL:      "http://localhost:28300",
 		CantabularMetadataExtractorAPIVersions: []string{"v1"},
-		EnableCantabularMetadataExtractorAPI:   false,
 	}
 
 	return cfg, envconfig.Process("", cfg)

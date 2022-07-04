@@ -77,9 +77,9 @@ func TestGetReturnsDefaultValues(t *testing.T) {
 			EnableAreasAPI:                         false,
 			AreasAPIURL:                            "http://localhost:25500",
 			AreasAPIVersions:                       []string{"v1"},
+			EnableCantabularMetadataExtractorAPI:   false,
 			CantabularMetadataExtractorAPIURL:      "http://localhost:28300",
 			CantabularMetadataExtractorAPIVersions: []string{"v1"},
-			EnableCantabularMetadataExtractorAPI:   false,
 		})
 	})
 }

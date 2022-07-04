@@ -758,6 +758,7 @@ func TestRouterPrivateAPIs(t *testing.T) {
 			})
 			
 			Convey("A request to cantabular-metadata path is proxied to cantabularMetadataExtractorAPIURL", func() {
+				cfg.EnableCantabularMetadataExtractorAPI = true
 				for _, version := range cfg.CantabularMetadataExtractorAPIVersions {
 					w := createRouterTest(cfg, "http://localhost:23200/"+version+"/cantabular-metadata")
 					So(w.Code, ShouldEqual, http.StatusOK)
@@ -805,6 +806,7 @@ func TestRouterPrivateAPIs(t *testing.T) {
 			})
 
 			Convey("A request to a cantabular-metadata path is not proxied and fails with StatusNotFound", func() {
+				cfg.EnableCantabularMetadataExtractorAPI = false
 				createRouterTest(cfg, "http://localhost:23200/v1/cantabular-metadata")
 				assertOnlyThisURLIsCalled(zebedeeURL)
 			})
