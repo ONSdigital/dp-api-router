@@ -229,7 +229,8 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 		// Feature flag for Cantabular Metadata Extractor API
 		if cfg.EnableCantabularMetadataExtractorAPI {
 			cantMetadataExtractorAPIProxy := proxy.NewAPIProxy(ctx, cfg.CantabularMetadataExtractorAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
-			addVersionedHandlers(router, cantMetadataExtractorAPIProxy, cfg.CantabularMetadataExtractorAPIVersions, "/cantabular-metadata")
+			// addVersionedHandlers(router, cantMetadataExtractorAPIProxy, cfg.CantabularMetadataExtractorAPIVersions, "/dataset/{datasetID}/cantabular/{cantdataset}/lang/{lang}")
+			addTransitionalHandler(router, cantMetadataExtractorAPIProxy, "/dataset/{datasetID}/cantabular/{cantdataset}/lang/{lang}")
 		}
 	}
 
