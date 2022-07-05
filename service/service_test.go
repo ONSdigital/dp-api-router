@@ -803,7 +803,7 @@ func TestRouterPrivateAPIs(t *testing.T) {
 				assertOnlyThisURLIsCalled(zebedeeURL)
 			})
 
-			Convey("A request to a cantabular-metadata path is not proxied and fails with StatusNotFound", func() {
+			Convey("A request to a cantabular-metadata subpath is not proxied and fails with StatusNotFound", func() {
 				cfg.EnableCantabularMetadataExtractorAPI = false
 				createRouterTest(cfg, "http://localhost:23200/v1/cantabular-metadata")
 				assertOnlyThisURLIsCalled(zebedeeURL)
