@@ -757,13 +757,11 @@ func TestRouterPrivateAPIs(t *testing.T) {
 				}
 			})
 			
-			Convey("A request to cantabular-metadata path is proxied to cantabularMetadataExtractorAPIURL", func() {
+			Convey("A request to a cantabular-metadata subpath is proxied to cantabularMetadataExtractorAPIURL", func() {
 				cfg.EnableCantabularMetadataExtractorAPI = true
-				for _, version := range cfg.CantabularMetadataExtractorAPIVersions {
-					w := createRouterTest(cfg, "http://localhost:23200/"+version+"/cantabular-metadata")
-					So(w.Code, ShouldEqual, http.StatusOK)
-					verifyProxied("/"+version+"/cantabular-metadata", cantabularMetadataExtractorAPIURL)
-				}
+				w := createRouterTest(cfg, "http://localhost:23200/v1/cantabular-metadata/subpath")
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/cantabular-metadata/subpath", cantabularMetadataExtractorAPIURL)
 			})
 		})
 
