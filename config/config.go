@@ -152,7 +152,7 @@ func Get() (*Config, error) {
 		EnableGeodataAPI:                       false,
 		GeodataAPIURL:                          "http://localhost:28200",
 		GeodataAPIVersions:                     []string{"v1"},
-		EnableCantabularMetadataExtractorAPI:   true,
+		EnableCantabularMetadataExtractorAPI:   false,
 		CantabularMetadataExtractorAPIURL:      "http://localhost:28300",
 	}
 
