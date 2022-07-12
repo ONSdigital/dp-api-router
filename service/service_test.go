@@ -636,13 +636,13 @@ func TestRouterPrivateAPIs(t *testing.T) {
 			})
 
 			Convey("A request to a jobs path is proxied to uploadServiceAPIURL", func() {
-				w := createRouterTest(cfg, "http://localhost:25100/v1/upload")
+				w := createRouterTest(cfg, "http://localhost:23200/v1/upload")
 				So(w.Code, ShouldEqual, http.StatusOK)
 				verifyProxied("/upload", uploadServiceAPIURL)
 			})
 
 			Convey("A request to a jobs subpath is proxied to uploadServiceAPIURL", func() {
-				w := createRouterTest(cfg, "http://localhost:25100/v1/upload/subpath")
+				w := createRouterTest(cfg, "http://localhost:23200/v1/upload/subpath")
 				So(w.Code, ShouldEqual, http.StatusOK)
 				verifyProxied("/upload/subpath", uploadServiceAPIURL)
 			})
