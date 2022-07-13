@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/ONSdigital/dp-api-router/config"
+	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	kafka "github.com/ONSdigital/dp-kafka/v2"
 )
@@ -66,4 +67,9 @@ func (e *Init) DoGetKafkaProducer(ctx context.Context, cfg *config.Config, topic
 		pConfig.SecurityConfig = kafka.GetSecurityConfig(cfg.KafkaSecCACerts, cfg.KafkaSecClientCert, cfg.KafkaSecClientKey, cfg.KafkaSecSkipVerify)
 	}
 	return kafka.NewProducer(ctx, cfg.Brokers, topic, producerChannels, pConfig)
+}
+
+// DoGetAuthorisationMiddleware creates authorisation middleware for the given config
+func (e *Init) DoGetAuthorisationMiddleware(ctx context.Context, authorisationConfig *authorisation.Config) (authorisation.Middleware, error) {
+	return authorisation.NewFeatureFlaggedMiddleware(ctx, authorisationConfig, authorisationConfig.JWTVerificationPublicKeys)
 }
