@@ -11,6 +11,7 @@ replace (
 
 require (
 	github.com/ONSdigital/dp-api-clients-go/v2 v2.153.0-beta.99
+	github.com/ONSdigital/dp-authorisation/v2 v2.20.0-beta.1
 	github.com/ONSdigital/dp-healthcheck v1.4.0-beta.1
 	github.com/ONSdigital/dp-kafka/v3 v3.4.0-beta
 	github.com/ONSdigital/dp-net/v2 v2.5.0-beta
@@ -33,6 +34,7 @@ require (
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
 	github.com/go-avro/avro v0.0.0-20171219232920-444163702c11 // indirect
+	github.com/golang-jwt/jwt/v4 v4.4.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect

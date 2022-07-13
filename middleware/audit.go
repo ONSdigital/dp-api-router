@@ -16,6 +16,7 @@ import (
 	"github.com/ONSdigital/dp-api-clients-go/v2/health"
 	clientsidentity "github.com/ONSdigital/dp-api-clients-go/v2/identity"
 	"github.com/ONSdigital/dp-api-router/event"
+	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	dphttp "github.com/ONSdigital/dp-net/v2/http"
 	dprequest "github.com/ONSdigital/dp-net/v2/request"
 
@@ -31,14 +32,14 @@ type Router interface {
 // paths that will skip auditing (note)
 // identity api paths being added until the auditing has been updated to work with new tokens
 // TODO remove "/v1/tokens", "/v1/users", "/v1/groups", "/v1/password-reset" from this list once authorisation has been integrated into dp-identity-api
+// if you remove "/v1/tokens" unable to  login
+// responses from zebedee are "/ping" so removed to get response
+
 var pathsToIgnore = []string{
-	"/ping",
 	"/clickEventLog",
 	"/health",
 	"/v1/tokens",
-	"/v1/users",
-	"/v1/groups",
-	"/v1/password-reset",
+	"/v1/data",
 }
 
 // paths that will skip retrieveIdentity, and will be audited without identity
@@ -227,6 +228,37 @@ func retrieveIdentity(w http.ResponseWriter, req *http.Request, idClient *client
 		return ctx, http.StatusInternalServerError, err
 	}
 
+	fmt.Println("***** florenceToken ", florenceToken, "*****")
+	print("***** ", strings.Contains(florenceToken, "."), "*****")
+
+	if strings.Contains(florenceToken, ".") {
+		// // decode the token - get the user
+		// // put the user in ctx
+		// parser, err := jwt.NewCognitoRSAParser("fixme")
+		// if err!=nil {
+		// 	// return ...
+		// }
+		cfg := authorisation.NewDefaultConfig()
+		cfg.JWTVerificationPublicKeys = nil
+		authorisationMiddleware, err := authorisation.NewFeatureFlaggedMiddleware(ctx, cfg, nil)
+		if err != nil {
+			fmt.Println(err)
+		}
+		if err != nil {
+			fmt.Println(err)
+		}
+		entityData, err := authorisationMiddleware.Parse(florenceToken)
+
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		fmt.Printf("%+v\n", entityData)
+		ctx = context.WithValue(ctx, dprequest.UserIdentityKey, entityData.UserID)
+
+		return ctx, http.StatusOK, nil
+	}
+
 	serviceAuthToken, err := getServiceAuthToken(ctx, req)
 	if err != nil {
 		handleError(ctx, w, req, http.StatusInternalServerError, "error getting service access token from request", err, nil)
@@ -259,7 +291,6 @@ func handleError(ctx context.Context, w http.ResponseWriter, r *http.Request, st
 
 func getFlorenceToken(ctx context.Context, req *http.Request) (string, error) {
 	var florenceToken string
-
 	token, err := headers.GetUserAuthToken(req)
 	if err == nil {
 		florenceToken = token
