@@ -11,8 +11,6 @@ func TestGetReturnsDefaultValues(t *testing.T) {
 	t.Parallel()
 	Convey("When a loading a configuration, default values are returned", t, func() {
 		configuration, err := Get()
-		//temporary until live
-		configuration.EnableCantabularMetadataExtractorAPI=false
 
 		So(err, ShouldBeNil)
 		So(configuration, ShouldResemble, &Config{
