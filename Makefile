@@ -25,7 +25,7 @@ build:
 
 .PHONY: test
 test:
-	go test -race -cover ./...
+	go test -count=1 -race -cover ./...
 
 .PHONY: debug
 debug:
@@ -34,3 +34,7 @@ debug:
 .PHONY: lint
 lint:
 	golangci-lint --deadline=10m --fast --enable=gosec --enable=gocritic --enable=gofmt --enable=gocyclo --enable=bodyclose --enable=gocognit run
+
+.PHONY: generate
+generate:
+	go generate -v ./...
