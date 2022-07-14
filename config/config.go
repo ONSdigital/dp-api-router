@@ -24,6 +24,8 @@ type Config struct {
 	RecipeAPIURL               string        `envconfig:"RECIPE_API_URL"`
 	ImportAPIURL               string        `envconfig:"IMPORT_API_URL"`
 	SearchAPIURL               string        `envconfig:"SEARCH_API_URL"`
+	SearchReindexAPIURL        string        `envconfig:"SEARCH_REINDEX_API_URL"`
+	SearchReindexAPIVersions   []string      `envconfig:"SEARCH_REINDEX_API_VERSIONS"`
 	DimensionSearchAPIURL      string        `envconfig:"DIMENSION_SEARCH_API_URL"`
 	ImageAPIURL                string        `envconfig:"IMAGE_API_URL"`
 	UploadServiceAPIURL        string        `envconfig:"UPLOAD_SERVICE_API_URL"`
@@ -103,6 +105,8 @@ func Get() (*Config, error) {
 		RecipeAPIURL:               "http://localhost:22300",
 		ImportAPIURL:               "http://localhost:21800",
 		SearchAPIURL:               "http://localhost:23900",
+		SearchReindexAPIURL:        "http://localhost:25700",
+		SearchReindexAPIVersions:   []string{"v1"},
 		DimensionSearchAPIURL:      "http://localhost:23100",
 		DownloadServiceURL:         "http://localhost:23600",
 		ImageAPIURL:                "http://localhost:24700",
