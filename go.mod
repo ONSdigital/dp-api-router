@@ -4,7 +4,7 @@ go 1.18
 
 replace github.com/ONSdigital/dp-authorisation/v2 => /Users/ann/workspace/github.com/ONSdigital/dp-authorisation/v2
 
-// replace github.com/ONSdigital/dp-net/v2 => github.com/ONSdigital/dp-net/v2 v2.2.0-beta
+replace github.com/ONSdigital/dp-net/v2 => github.com/ONSdigital/dp-net/v2 v2.2.0-beta
 
 require (
 	github.com/ONSdigital/dp-api-clients-go v1.43.0 // indirect
@@ -59,5 +59,4 @@ require (
 	github.com/aws/aws-sdk-go v1.44.52 // indirect
 	github.com/golang-jwt/jwt/v4 v4.4.2 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
-	github.com/rogpeppe/go-internal v1.8.1 // indirect
 )
