@@ -71,6 +71,7 @@ func TestRouterPublicAPIs(t *testing.T) {
 		mapsAPIURL, _ := url.Parse(cfg.MapsAPIURL)
 		geodataAPIURL, _ := url.Parse(cfg.GeodataAPIURL)
 		topicAPIURL, _ := url.Parse(cfg.TopicAPIURL)
+		areasAPIURL, _ := url.Parse(cfg.AreasAPIURL)
 
 		expectedPublicURLs := map[string]*url.URL{
 			"/code-lists": codelistAPIURL,
@@ -84,7 +85,6 @@ func TestRouterPublicAPIs(t *testing.T) {
 			"/images":           imageAPIURL,
 			"/population-types": populationTypesAPIURL,
 			"/area-types":       dimensionsAPIURL,
-			"/areas":            dimensionsAPIURL,
 			"/navigation":       topicAPIURL,
 		}
 
@@ -107,7 +107,9 @@ func TestRouterPublicAPIs(t *testing.T) {
 		for _, version := range cfg.GeodataAPIVersions {
 			expectedPublicURLs["/"+version+"/geodata"] = geodataAPIURL
 		}
-
+		for _, version := range cfg.AreasAPIVersions {
+			expectedPublicURLs["/"+version+"/areas"] = areasAPIURL
+		}
 		resetProxyMocksWithExpectations(expectedPublicURLs)
 
 		Convey("A request to code-list path succeeds and is proxied to codeListAPIURL", func() {
@@ -390,12 +392,6 @@ func TestRouterPublicAPIs(t *testing.T) {
 			verifyProxied("/area-types", dimensionsAPIURL)
 		})
 
-		Convey("A request to the dimensions areas endpoint is proxied to dimensionsAPIURL", func() {
-			w := createRouterTest(cfg, "http://localhost:23200/v1/areas")
-			So(w.Code, ShouldEqual, http.StatusOK)
-			verifyProxied("/areas", dimensionsAPIURL)
-		})
-
 		Convey("Given a topic service path", func() {
 			Convey("When the feature flag is disabled", func() {
 				cfg.EnableTopicAPI = false
@@ -422,6 +418,39 @@ func TestRouterPublicAPIs(t *testing.T) {
 						So(w.Code, ShouldEqual, http.StatusOK)
 						verifyProxied("/topics", topicAPIURL)
 					})
+				})
+			})
+		})
+
+		Convey("Given an areas endpoint", func() {
+			So(len(cfg.AreasAPIVersions), ShouldBeGreaterThanOrEqualTo, 1)
+
+			Convey("When the areas feature flag is disabled", func() {
+				cfg.EnableAreasAPI = false
+
+				Convey("Then requests to the areas endpoints are proxied to zebedee", func() {
+					for _, version := range cfg.AreasAPIVersions {
+						w := createRouterTest(cfg, "http://localhost:23200/"+version+"/areas")
+						So(w.Code, ShouldEqual, http.StatusNotFound)
+						assertOnlyThisURLIsCalled(zebedeeURL)
+					}
+				})
+			})
+
+			Convey("And when the feature flag is enabled", func() {
+				cfg.EnableAreasAPI = true
+
+				for _, version := range cfg.AreasAPIVersions {
+					expectedPublicURLs["/"+version+"/areas"] = areasAPIURL
+				}
+				resetProxyMocksWithExpectations(expectedPublicURLs)
+
+				Convey("Then a request to the areas endpoint is proxied to the areasAPIURL", func() {
+					for _, version := range cfg.AreasAPIVersions {
+						w := createRouterTest(cfg, "http://localhost:23200/"+version+"/areas")
+						So(w.Code, ShouldEqual, http.StatusOK)
+						verifyProxied("/"+version+"/areas", areasAPIURL)
+					}
 				})
 			})
 		})
@@ -557,13 +586,15 @@ func TestRouterPrivateAPIs(t *testing.T) {
 		uploadServiceAPIURL, _ := url.Parse(cfg.UploadServiceAPIURL)
 		identityAPIURL, _ := url.Parse(cfg.IdentityAPIURL)
 		permissionsAPIURL, _ := url.Parse(cfg.PermissionsAPIURL)
+		searchReindexURL, _ := url.Parse(cfg.SearchReindexAPIURL)
 		zebedeeURL, _ := url.Parse(cfg.ZebedeeURL)
 
 		expectedPrivateURLs := map[string]*url.URL{
-			"/upload":    uploadServiceAPIURL,
-			"/recipes":   recipeAPIURL,
-			"/jobs":      importAPIURL,
-			"/instances": datasetAPIURL,
+			"/upload":              uploadServiceAPIURL,
+			"/recipes":             recipeAPIURL,
+			"/jobs":                importAPIURL,
+			"/instances":           datasetAPIURL,
+			"/search-reindex-jobs": searchReindexURL,
 		}
 		for _, version := range cfg.IdentityAPIVersions {
 			expectedPrivateURLs[fmt.Sprintf("/%s/tokens", version)] = identityAPIURL
@@ -575,6 +606,9 @@ func TestRouterPrivateAPIs(t *testing.T) {
 			expectedPrivateURLs[fmt.Sprintf("/%s/policies", version)] = permissionsAPIURL
 			expectedPrivateURLs[fmt.Sprintf("/%s/roles", version)] = permissionsAPIURL
 			expectedPrivateURLs[fmt.Sprintf("/%s/permissions-bundle", version)] = permissionsAPIURL
+		}
+		for _, version := range cfg.SearchReindexAPIVersions {
+			expectedPrivateURLs[fmt.Sprintf("/%s/search-reindex-jobs", version)] = searchReindexURL
 		}
 
 		resetProxyMocksWithExpectations(expectedPrivateURLs)
@@ -607,13 +641,13 @@ func TestRouterPrivateAPIs(t *testing.T) {
 			})
 
 			Convey("A request to a jobs path is proxied to uploadServiceAPIURL", func() {
-				w := createRouterTest(cfg, "http://localhost:25100/v1/upload")
+				w := createRouterTest(cfg, "http://localhost:23200/v1/upload")
 				So(w.Code, ShouldEqual, http.StatusOK)
 				verifyProxied("/upload", uploadServiceAPIURL)
 			})
 
 			Convey("A request to a jobs subpath is proxied to uploadServiceAPIURL", func() {
-				w := createRouterTest(cfg, "http://localhost:25100/v1/upload/subpath")
+				w := createRouterTest(cfg, "http://localhost:23200/v1/upload/subpath")
 				So(w.Code, ShouldEqual, http.StatusOK)
 				verifyProxied("/upload/subpath", uploadServiceAPIURL)
 			})
@@ -709,6 +743,22 @@ func TestRouterPrivateAPIs(t *testing.T) {
 					verifyProxied("/"+version+"/permissions-bundle", permissionsAPIURL)
 				}
 			})
+
+			Convey("A request to a search-reindex-jobs path is proxied to searchReindexURL", func() {
+				for _, version := range cfg.SearchReindexAPIVersions {
+					w := createRouterTest(cfg, "http://localhost:23200/"+version+"/search-reindex-jobs")
+					So(w.Code, ShouldEqual, http.StatusOK)
+					verifyProxied("/"+version+"/search-reindex-jobs", searchReindexURL)
+				}
+			})
+
+			Convey("A request to a search-reindex-jobs subpath is proxied to identityAPIURL", func() {
+				for _, version := range cfg.SearchReindexAPIVersions {
+					w := createRouterTest(cfg, "http://localhost:23200/"+version+"/search-reindex-jobs/subpath")
+					So(w.Code, ShouldEqual, http.StatusOK)
+					verifyProxied("/"+version+"/search-reindex-jobs/subpath", searchReindexURL)
+				}
+			})
 		})
 
 		Convey("and private endpoints disabled by configuration", func() {
@@ -741,6 +791,11 @@ func TestRouterPrivateAPIs(t *testing.T) {
 
 			Convey("A request to a permissions-bundle path is not proxied and fails with StatusNotFound", func() {
 				createRouterTest(cfg, "http://localhost:23200/v1/permissions-bundle")
+				assertOnlyThisURLIsCalled(zebedeeURL)
+			})
+
+			Convey("A request to a search-reindex-jobs path is not proxied and fails with StatusNotFound", func() {
+				createRouterTest(cfg, "http://localhost:23200/v1/search-reindex-jobs")
 				assertOnlyThisURLIsCalled(zebedeeURL)
 			})
 		})

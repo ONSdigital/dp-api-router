@@ -15,19 +15,19 @@ var _ proxy.IReverseProxy = &IReverseProxyMock{}
 
 // IReverseProxyMock is a mock implementation of proxy.IReverseProxy.
 //
-//     func TestSomethingThatUsesIReverseProxy(t *testing.T) {
+// 	func TestSomethingThatUsesIReverseProxy(t *testing.T) {
 //
-//         // make and configure a mocked proxy.IReverseProxy
-//         mockedIReverseProxy := &IReverseProxyMock{
-//             ServeHTTPFunc: func(rw http.ResponseWriter, req *http.Request)  {
-// 	               panic("mock out the ServeHTTP method")
-//             },
-//         }
+// 		// make and configure a mocked proxy.IReverseProxy
+// 		mockedIReverseProxy := &IReverseProxyMock{
+// 			ServeHTTPFunc: func(rw http.ResponseWriter, req *http.Request)  {
+// 				panic("mock out the ServeHTTP method")
+// 			},
+// 		}
 //
-//         // use mockedIReverseProxy in code that requires proxy.IReverseProxy
-//         // and then make assertions.
+// 		// use mockedIReverseProxy in code that requires proxy.IReverseProxy
+// 		// and then make assertions.
 //
-//     }
+// 	}
 type IReverseProxyMock struct {
 	// ServeHTTPFunc mocks the ServeHTTP method.
 	ServeHTTPFunc func(rw http.ResponseWriter, req *http.Request)
