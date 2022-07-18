@@ -386,10 +386,10 @@ func TestRouterPublicAPIs(t *testing.T) {
 			})
 		})
 
-		Convey("A request to the dimensions area-types endpoint is proxied to dimensionsAPIURL", func() {
+		Convey("A request to the dimensions area-types endpoint is proxied to PopulationTypesAPIURL", func() {
 			w := createRouterTest(cfg, "http://localhost:23200/v1/area-types")
 			So(w.Code, ShouldEqual, http.StatusOK)
-			verifyProxied("/area-types", dimensionsAPIURL)
+			verifyProxied("/area-types", populationTypesAPIURL)
 		})
 
 		Convey("Given a topic service path", func() {
