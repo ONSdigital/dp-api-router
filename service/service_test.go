@@ -580,6 +580,7 @@ func TestRouterPrivateAPIs(t *testing.T) {
 		permissionsAPIURL, _ := url.Parse(cfg.PermissionsAPIURL)
 		searchReindexURL, _ := url.Parse(cfg.SearchReindexAPIURL)
 		zebedeeURL, _ := url.Parse(cfg.ZebedeeURL)
+		cantabularMetadataExtractorAPIURL, _ := url.Parse(cfg.CantabularMetadataExtractorAPIURL)
 
 		expectedPrivateURLs := map[string]*url.URL{
 			"/upload":              uploadServiceAPIURL,
@@ -587,6 +588,7 @@ func TestRouterPrivateAPIs(t *testing.T) {
 			"/jobs":                importAPIURL,
 			"/instances":           datasetAPIURL,
 			"/search-reindex-jobs": searchReindexURL,
+			"/cantabular-metadata": cantabularMetadataExtractorAPIURL,
 		}
 		for _, version := range cfg.IdentityAPIVersions {
 			expectedPrivateURLs[fmt.Sprintf("/%s/tokens", version)] = identityAPIURL
@@ -751,6 +753,13 @@ func TestRouterPrivateAPIs(t *testing.T) {
 					verifyProxied("/"+version+"/search-reindex-jobs/subpath", searchReindexURL)
 				}
 			})
+
+			Convey("A request to a cantabular-metadata subpath is proxied to cantabularMetadataExtractorAPIURL", func() {
+				cfg.EnableCantabularMetadataExtractorAPI = true
+				w := createRouterTest(cfg, "http://localhost:23200/v1/cantabular-metadata/subpath")
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/cantabular-metadata/subpath", cantabularMetadataExtractorAPIURL)
+			})
 		})
 
 		Convey("and private endpoints disabled by configuration", func() {
@@ -788,6 +797,12 @@ func TestRouterPrivateAPIs(t *testing.T) {
 
 			Convey("A request to a search-reindex-jobs path is not proxied and fails with StatusNotFound", func() {
 				createRouterTest(cfg, "http://localhost:23200/v1/search-reindex-jobs")
+				assertOnlyThisURLIsCalled(zebedeeURL)
+			})
+
+			Convey("A request to a cantabular-metadata subpath is not proxied and fails with StatusNotFound", func() {
+				cfg.EnableCantabularMetadataExtractorAPI = false
+				createRouterTest(cfg, "http://localhost:23200/v1/cantabular-metadata")
 				assertOnlyThisURLIsCalled(zebedeeURL)
 			})
 		})

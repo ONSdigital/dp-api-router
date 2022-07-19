@@ -225,6 +225,12 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 		if cfg.EnableFilesAPI {
 			addTransitionalHandler(router, uploadServiceAPI, "/upload-new")
 		}
+
+		// Feature flag for Cantabular Metadata Extractor API
+		if cfg.EnableCantabularMetadataExtractorAPI {
+			cantMetadataExtractorAPIProxy := proxy.NewAPIProxy(ctx, cfg.CantabularMetadataExtractorAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+			addTransitionalHandler(router, cantMetadataExtractorAPIProxy, "/cantabular-metadata")
+		}
 	}
 
 	// Legacy API
