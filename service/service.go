@@ -146,7 +146,6 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 	hierarchy := proxy.NewAPIProxy(ctx, cfg.HierarchyAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 	search := proxy.NewAPIProxy(ctx, cfg.SearchAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 	dimensionSearch := proxy.NewAPIProxy(ctx, cfg.DimensionSearchAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
-	populations := proxy.NewAPIProxy(ctx, cfg.PopulationTypesAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.ContextURL, cfg.EnableV1BetaRestriction)
 	image := proxy.NewAPIProxy(ctx, cfg.ImageAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 
 	if cfg.EnableArticlesAPI {
@@ -169,7 +168,6 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 	addTransitionalHandler(router, search, "/search")
 	addTransitionalHandler(router, dimensionSearch, "/dimension-search")
 	addTransitionalHandler(router, image, "/images")
-	addTransitionalHandler(router, populations, "/area-types")
 
 	if cfg.EnablePopulationTypesAPI {
 		populationTypesAPI := proxy.NewAPIProxy(ctx, cfg.PopulationTypesAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
