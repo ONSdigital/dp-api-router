@@ -51,7 +51,6 @@ This service is responsible for serving a JSON-LD `@context` field on configured
 | INTERACTIVES_API_URL         | "http://localhost:27500"              | A URL to the interactives api                                                      |
 | ZEBEDEE_URL                  | "http://localhost:8082"               | A URL to the zebedee service api                                                   |
 | INTERACTIVES_API_VERSIONS    | "v1"                                  | A comma delimted string with a list of versions supported by interactives api      |
-| DIMENSIONS_API_URL           | "http://localhost:27200"              | A URL to the dimensions api                                                        |
 | MAPS_API_URL:                | "http://localhost:27900"              | A URL to the maps api                                                              |
 | MAPS_API_VERSIONS:           | "v1"                                  | A comma delimted string with a list of versions supported by maps api              |
 | GEODATA_API_URL              | "http://localhost:28200"              | A URL to the geodata api                                                           |
