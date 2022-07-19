@@ -754,11 +754,23 @@ func TestRouterPrivateAPIs(t *testing.T) {
 				}
 			})
 
-			Convey("A request to a cantabular-metadata subpath is proxied to cantabularMetadataExtractorAPIURL", func() {
+			Convey("When the enable cantabular metadata extractor API feature flag is enabled", func() {
 				cfg.EnableCantabularMetadataExtractorAPI = true
-				w := createRouterTest(cfg, "http://localhost:23200/v1/cantabular-metadata/subpath")
-				So(w.Code, ShouldEqual, http.StatusOK)
-				verifyProxied("/cantabular-metadata/subpath", cantabularMetadataExtractorAPIURL)
+
+				Convey("A request to a cantabular-metadata subpath is proxied to cantabularMetadataExtractorAPIURL", func() {
+					w := createRouterTest(cfg, "http://localhost:23200/v1/cantabular-metadata/subpath")
+					So(w.Code, ShouldEqual, http.StatusOK)
+					verifyProxied("/cantabular-metadata/subpath", cantabularMetadataExtractorAPIURL)
+				})
+			})
+
+			Convey("When the enable cantabular metadata extractor API feature flag is disabled", func() {
+				cfg.EnableCantabularMetadataExtractorAPI = false
+
+				Convey("A request to a cantabular-metadata subpath is not proxied", func() {
+					createRouterTest(cfg, "http://localhost:23200/v1/cantabular-metadata/subpath")
+					assertOnlyThisURLIsCalled(zebedeeURL)
+				})
 			})
 		})
 
@@ -800,9 +812,8 @@ func TestRouterPrivateAPIs(t *testing.T) {
 				assertOnlyThisURLIsCalled(zebedeeURL)
 			})
 
-			Convey("A request to a cantabular-metadata subpath is not proxied and fails with StatusNotFound", func() {
-				cfg.EnableCantabularMetadataExtractorAPI = false
-				createRouterTest(cfg, "http://localhost:23200/v1/cantabular-metadata")
+			Convey("A request to a cantabular-metadata subpath is not proxied", func() {
+				createRouterTest(cfg, "http://localhost:23200/v1/cantabular-metadata/subpath")
 				assertOnlyThisURLIsCalled(zebedeeURL)
 			})
 		})
