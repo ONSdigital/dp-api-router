@@ -67,7 +67,6 @@ func TestRouterPublicAPIs(t *testing.T) {
 		releaseCalendarAPIURL, _ := url.Parse(cfg.ReleaseCalendarAPIURL)
 		populationTypesAPIURL, _ := url.Parse(cfg.PopulationTypesAPIURL)
 		interactivesAPIURL, _ := url.Parse(cfg.InteractivesAPIURL)
-		dimensionsAPIURL, _ := url.Parse(cfg.DimensionsAPIURL)
 		mapsAPIURL, _ := url.Parse(cfg.MapsAPIURL)
 		geodataAPIURL, _ := url.Parse(cfg.GeodataAPIURL)
 		topicAPIURL, _ := url.Parse(cfg.TopicAPIURL)
@@ -84,7 +83,6 @@ func TestRouterPublicAPIs(t *testing.T) {
 			"/dimension-search": dimensionSearchAPIURL,
 			"/images":           imageAPIURL,
 			"/population-types": populationTypesAPIURL,
-			"/area-types":       dimensionsAPIURL,
 			"/navigation":       topicAPIURL,
 		}
 
@@ -384,12 +382,6 @@ func TestRouterPublicAPIs(t *testing.T) {
 					}
 				})
 			})
-		})
-
-		Convey("A request to the dimensions area-types endpoint is proxied to dimensionsAPIURL", func() {
-			w := createRouterTest(cfg, "http://localhost:23200/v1/area-types")
-			So(w.Code, ShouldEqual, http.StatusOK)
-			verifyProxied("/area-types", dimensionsAPIURL)
 		})
 
 		Convey("Given a topic service path", func() {
