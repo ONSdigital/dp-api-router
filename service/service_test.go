@@ -604,9 +604,6 @@ func TestRouterPrivateAPIs(t *testing.T) {
 		for _, version := range cfg.SearchReindexAPIVersions {
 			expectedPrivateURLs[fmt.Sprintf("/%s/search-reindex-jobs", version)] = searchReindexURL
 		}
-		for _, version := range cfg.CantabularMetadataExtractorAPIVersions {
-			expectedPrivateURLs[fmt.Sprintf("/%s/cantabular-metadata", version)] = cantabularMetadataExtractorAPIURL
-		}
 
 		resetProxyMocksWithExpectations(expectedPrivateURLs)
 
@@ -756,7 +753,7 @@ func TestRouterPrivateAPIs(t *testing.T) {
 					verifyProxied("/"+version+"/search-reindex-jobs/subpath", searchReindexURL)
 				}
 			})
-			
+
 			Convey("A request to a cantabular-metadata subpath is proxied to cantabularMetadataExtractorAPIURL", func() {
 				cfg.EnableCantabularMetadataExtractorAPI = true
 				w := createRouterTest(cfg, "http://localhost:23200/v1/cantabular-metadata/subpath")
