@@ -228,34 +228,21 @@ func retrieveIdentity(w http.ResponseWriter, req *http.Request, idClient *client
 		return ctx, http.StatusInternalServerError, err
 	}
 
-	fmt.Println("***** florenceToken ", florenceToken, "*****")
-	print("***** ", strings.Contains(florenceToken, "."), "*****")
-
 	if strings.Contains(florenceToken, ".") {
-		// // decode the token - get the user
-		// // put the user in ctx
-		// parser, err := jwt.NewCognitoRSAParser("fixme")
-		// if err!=nil {
-		// 	// return ...
-		// }
+		print("***** ", florenceToken, "*****")
 		cfg := authorisation.NewDefaultConfig()
 		cfg.JWTVerificationPublicKeys = nil
 		authorisationMiddleware, err := authorisation.NewFeatureFlaggedMiddleware(ctx, cfg, nil)
 		if err != nil {
-			fmt.Println(err)
-		}
-		if err != nil {
-			fmt.Println(err)
+			fmt.Println("authorisationMiddleware", err)
 		}
 		entityData, err := authorisationMiddleware.Parse(florenceToken)
-
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("entityData", err)
 		}
 
 		fmt.Printf("%+v\n", entityData)
 		ctx = context.WithValue(ctx, dprequest.UserIdentityKey, entityData.UserID)
-
 		return ctx, http.StatusOK, nil
 	}
 
