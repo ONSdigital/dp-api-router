@@ -67,7 +67,6 @@ func TestRouterPublicAPIs(t *testing.T) {
 		releaseCalendarAPIURL, _ := url.Parse(cfg.ReleaseCalendarAPIURL)
 		populationTypesAPIURL, _ := url.Parse(cfg.PopulationTypesAPIURL)
 		interactivesAPIURL, _ := url.Parse(cfg.InteractivesAPIURL)
-		dimensionsAPIURL, _ := url.Parse(cfg.DimensionsAPIURL)
 		mapsAPIURL, _ := url.Parse(cfg.MapsAPIURL)
 		geodataAPIURL, _ := url.Parse(cfg.GeodataAPIURL)
 		topicAPIURL, _ := url.Parse(cfg.TopicAPIURL)
@@ -84,7 +83,6 @@ func TestRouterPublicAPIs(t *testing.T) {
 			"/dimension-search": dimensionSearchAPIURL,
 			"/images":           imageAPIURL,
 			"/population-types": populationTypesAPIURL,
-			"/area-types":       dimensionsAPIURL,
 			"/navigation":       topicAPIURL,
 		}
 
@@ -386,12 +384,6 @@ func TestRouterPublicAPIs(t *testing.T) {
 			})
 		})
 
-		Convey("A request to the dimensions area-types endpoint is proxied to dimensionsAPIURL", func() {
-			w := createRouterTest(cfg, "http://localhost:23200/v1/area-types")
-			So(w.Code, ShouldEqual, http.StatusOK)
-			verifyProxied("/area-types", dimensionsAPIURL)
-		})
-
 		Convey("Given a topic service path", func() {
 			Convey("When the feature flag is disabled", func() {
 				cfg.EnableTopicAPI = false
@@ -588,6 +580,7 @@ func TestRouterPrivateAPIs(t *testing.T) {
 		permissionsAPIURL, _ := url.Parse(cfg.PermissionsAPIURL)
 		searchReindexURL, _ := url.Parse(cfg.SearchReindexAPIURL)
 		zebedeeURL, _ := url.Parse(cfg.ZebedeeURL)
+		cantabularMetadataExtractorAPIURL, _ := url.Parse(cfg.CantabularMetadataExtractorAPIURL)
 
 		expectedPrivateURLs := map[string]*url.URL{
 			"/upload":              uploadServiceAPIURL,
@@ -595,6 +588,7 @@ func TestRouterPrivateAPIs(t *testing.T) {
 			"/jobs":                importAPIURL,
 			"/instances":           datasetAPIURL,
 			"/search-reindex-jobs": searchReindexURL,
+			"/cantabular-metadata": cantabularMetadataExtractorAPIURL,
 		}
 		for _, version := range cfg.IdentityAPIVersions {
 			expectedPrivateURLs[fmt.Sprintf("/%s/tokens", version)] = identityAPIURL
@@ -759,6 +753,25 @@ func TestRouterPrivateAPIs(t *testing.T) {
 					verifyProxied("/"+version+"/search-reindex-jobs/subpath", searchReindexURL)
 				}
 			})
+
+			Convey("When the enable cantabular metadata extractor API feature flag is enabled", func() {
+				cfg.EnableCantabularMetadataExtractorAPI = true
+
+				Convey("A request to a cantabular-metadata subpath is proxied to cantabularMetadataExtractorAPIURL", func() {
+					w := createRouterTest(cfg, "http://localhost:23200/v1/cantabular-metadata/subpath")
+					So(w.Code, ShouldEqual, http.StatusOK)
+					verifyProxied("/cantabular-metadata/subpath", cantabularMetadataExtractorAPIURL)
+				})
+			})
+
+			Convey("When the enable cantabular metadata extractor API feature flag is disabled", func() {
+				cfg.EnableCantabularMetadataExtractorAPI = false
+
+				Convey("A request to a cantabular-metadata subpath is not proxied", func() {
+					createRouterTest(cfg, "http://localhost:23200/v1/cantabular-metadata/subpath")
+					assertOnlyThisURLIsCalled(zebedeeURL)
+				})
+			})
 		})
 
 		Convey("and private endpoints disabled by configuration", func() {
@@ -796,6 +809,11 @@ func TestRouterPrivateAPIs(t *testing.T) {
 
 			Convey("A request to a search-reindex-jobs path is not proxied and fails with StatusNotFound", func() {
 				createRouterTest(cfg, "http://localhost:23200/v1/search-reindex-jobs")
+				assertOnlyThisURLIsCalled(zebedeeURL)
+			})
+
+			Convey("A request to a cantabular-metadata subpath is not proxied", func() {
+				createRouterTest(cfg, "http://localhost:23200/v1/cantabular-metadata/subpath")
 				assertOnlyThisURLIsCalled(zebedeeURL)
 			})
 		})
