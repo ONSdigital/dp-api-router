@@ -229,19 +229,21 @@ func retrieveIdentity(w http.ResponseWriter, req *http.Request, idClient *client
 	}
 
 	if strings.Contains(florenceToken, ".") {
-		print("***** ", florenceToken, "*****")
+		tmpToken := strings.Split(florenceToken, " ")
+
 		cfg := authorisation.NewDefaultConfig()
 		cfg.JWTVerificationPublicKeys = nil
 		authorisationMiddleware, err := authorisation.NewFeatureFlaggedMiddleware(ctx, cfg, nil)
 		if err != nil {
-			fmt.Println("authorisationMiddleware", err)
+			handleError(ctx, w, req, http.StatusInternalServerError, "error getting jwtRSAPublicKeys from request", err, nil)
+			return ctx, http.StatusInternalServerError, err
 		}
-		entityData, err := authorisationMiddleware.Parse(florenceToken)
+		entityData, err := authorisationMiddleware.Parse(tmpToken[0])
 		if err != nil {
-			fmt.Println("entityData", err)
+			handleError(ctx, w, req, http.StatusInternalServerError, "error getting parsing token from request", err, nil)
+			return ctx, http.StatusInternalServerError, err
 		}
 
-		fmt.Printf("%+v\n", entityData)
 		ctx = context.WithValue(ctx, dprequest.UserIdentityKey, entityData.UserID)
 		return ctx, http.StatusOK, nil
 	}
