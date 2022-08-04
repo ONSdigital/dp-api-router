@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	"io"
 	"net/http"
 	"net/url"
@@ -16,7 +17,6 @@ import (
 	"github.com/ONSdigital/dp-api-clients-go/v2/health"
 	clientsidentity "github.com/ONSdigital/dp-api-clients-go/v2/identity"
 	"github.com/ONSdigital/dp-api-router/event"
-	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	dphttp "github.com/ONSdigital/dp-net/v2/http"
 	dprequest "github.com/ONSdigital/dp-net/v2/request"
 
@@ -32,14 +32,14 @@ type Router interface {
 // paths that will skip auditing (note)
 // identity api paths being added until the auditing has been updated to work with new tokens
 // TODO remove "/v1/tokens", "/v1/users", "/v1/groups", "/v1/password-reset" from this list once authorisation has been integrated into dp-identity-api
-// if you remove "/v1/tokens" unable to  login
-// responses from zebedee are "/ping" so removed to get response
-
 var pathsToIgnore = []string{
+	"/ping",
 	"/clickEventLog",
 	"/health",
 	"/v1/tokens",
-	"/v1/data",
+	//"/v1/users",
+	//"/v1/groups",
+	//"/v1/password-reset",
 }
 
 // paths that will skip retrieveIdentity, and will be audited without identity
@@ -223,29 +223,20 @@ func retrieveIdentity(w http.ResponseWriter, req *http.Request, idClient *client
 	ctx = req.Context()
 
 	florenceToken, err := getFlorenceToken(ctx, req)
+	print("***** florenceToken", florenceToken, "*****\n")
+
 	if err != nil {
 		handleError(ctx, w, req, http.StatusInternalServerError, "error getting florence access token from request", err, nil)
 		return ctx, http.StatusInternalServerError, err
 	}
 
 	if strings.Contains(florenceToken, ".") {
-		tmpToken := strings.Split(florenceToken, " ")
-
-		cfg := authorisation.NewDefaultConfig()
-		cfg.JWTVerificationPublicKeys = nil
-		authorisationMiddleware, err := authorisation.NewFeatureFlaggedMiddleware(ctx, cfg, nil)
+		ctx, status, err = getFlorenceJWTToken(ctx, req, w, florenceToken)
 		if err != nil {
-			handleError(ctx, w, req, http.StatusInternalServerError, "error getting jwtRSAPublicKeys from request", err, nil)
-			return ctx, http.StatusInternalServerError, err
+			handleError(ctx, w, req, http.StatusInternalServerError, "error getting service access token from request", err, nil)
+			return ctx, status, err
 		}
-		entityData, err := authorisationMiddleware.Parse(tmpToken[0])
-		if err != nil {
-			handleError(ctx, w, req, http.StatusInternalServerError, "error getting parsing token from request", err, nil)
-			return ctx, http.StatusInternalServerError, err
-		}
-
-		ctx = context.WithValue(ctx, dprequest.UserIdentityKey, entityData.UserID)
-		return ctx, http.StatusOK, nil
+		return ctx, status, nil
 	}
 
 	serviceAuthToken, err := getServiceAuthToken(ctx, req)
@@ -321,6 +312,25 @@ func getServiceAuthToken(ctx context.Context, req *http.Request) (string, error)
 }
 
 // Now is a time.Now wrapper specifically for testing purposes, and should not me unlambda'd - despite what golangci-lint says
-var Now = func() time.Time { //nolint:gocritic
+var Now = func() time.Time {
 	return time.Now()
+}
+
+func getFlorenceJWTToken(ctx context.Context, req *http.Request, w http.ResponseWriter, florenceToken string) (newctx context.Context, status int, err error) {
+	token := strings.Split(florenceToken, " ")
+
+	cfg := authorisation.NewDefaultConfig()
+	cfg.JWTVerificationPublicKeys = nil
+	authorisationMiddleware, err := authorisation.NewFeatureFlaggedMiddleware(ctx, cfg, nil)
+	if err != nil {
+		return ctx, http.StatusInternalServerError, err
+	}
+
+	entityData, err := authorisationMiddleware.Parse(token[0])
+	if err != nil {
+		return ctx, http.StatusInternalServerError, err
+	}
+
+	ctx = context.WithValue(ctx, dprequest.UserIdentityKey, entityData.UserID)
+	return ctx, http.StatusOK, nil
 }

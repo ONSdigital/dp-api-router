@@ -21,8 +21,8 @@ import (
 	"github.com/ONSdigital/dp-api-router/middleware"
 	"github.com/ONSdigital/dp-api-router/schema"
 
-	kafka "github.com/ONSdigital/dp-kafka/v3"
-	"github.com/ONSdigital/dp-kafka/v3/kafkatest"
+	kafka "github.com/ONSdigital/dp-kafka/v2"
+	"github.com/ONSdigital/dp-kafka/v2/kafkatest"
 	dphttp "github.com/ONSdigital/dp-net/v2/http"
 	dprequest "github.com/ONSdigital/dp-net/v2/request"
 
@@ -36,6 +36,7 @@ var (
 	testIdentity                 = "myIdentity"
 	testCollectionID             = "myCollection"
 	testFlorenceToken            = "myFlorenceToken"
+	testJWTFlorenceToken         = "Bearer eyJraWQiOiJBQzBnOXBzZzBwTEJ1Q2Nqa00yVkZEbXlzUlNxNm5KWlNxbkNXd1wvMFk1RT0iLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiI0ZWNjY2NiOS01MDJkLTQxZDEtYWZlMC0xZWRhNWJhNzY2NzAiLCJjb2duaXRvOmdyb3VwcyI6WyJyb2xlLWFkbWluIl0sImlzcyI6Imh0dHBzOlwvXC9jb2duaXRvLWlkcC5ldS13ZXN0LTEuYW1hem9uYXdzLmNvbVwvZXUtd2VzdC0xX0JuN0RhSXU3SCIsImNsaWVudF9pZCI6ImdoMGg4aTdja2N1OGJmMjFwOHIwb2pta2QiLCJvcmlnaW5fanRpIjoiNTViMGY1MGQtOGQyYS00ZThjLWJjN2EtYmMwZjU1OTcxY2ZhIiwiZXZlbnRfaWQiOiI1NWM0YmI3OS1kNjNiLTQ5NzEtYjM4OS04OTlkNmU1MjVkNTUiLCJ0b2tlbl91c2UiOiJhY2Nlc3MiLCJzY29wZSI6ImF3cy5jb2duaXRvLnNpZ25pbi51c2VyLmFkbWluIiwiYXV0aF90aW1lIjoxNjU5NDQ0MDQ2LCJleHAiOjE2NTk0NDQ0MDYsImlhdCI6MTY1OTQ0NDA0NiwianRpIjoiNGE5NWUzYmQtNDk2Yi00YmM0LTk4MTAtOTZhODU4MjgxMTJhIiwidXNlcm5hbWUiOiJhYjMzNDI2My0yYzBiLTRlZDYtODQzNC04Yzg4NDdmZGRhMjgifQ.J5xMdW_ovcOBQWSy9vbxGiF8YeK6p7M_K-miumvPLWFIWv5EwcrjCfCna8Pp3kOk03DOJVRyUWk3hgsrC_sIIJOLKixSTMqM95xUQsP4jd0WSGJF_7rUwBwbfpvj_HLB9hGkzx7LsGAUh2eInjP5oudHHLOPdy9bPwVevg9IBPEfZZ8I9UZ8qnkFCbi2Y29ETOjXUogZL_SCpSs2QQdKG-CuqnWeWVHBvdFfZ-KOPao7ObJsfs_mKFWcro6YKa1J4jxfQhKJjC9qeMz8l7SfcqpeatfmoLogx_wyxyL36319WBXgUthMBb4rpNdFjMerSAv1eq92JkT7dhgtKW3Gpw\n"
 	testServiceAuthToken         = "myServiceAuthToken"
 	testTimeInbound              = time.Date(2020, time.April, 26, 7, 5, 52, 123000000, time.UTC)
 	testTimeMillisInbound  int64 = 1587884752123
@@ -459,6 +460,64 @@ func TestAuditHandler(t *testing.T) {
 			// execute request and expect only 1 audit event
 			auditEvents := serveAndCaptureAudit(c, w, req, auditHandler, p.Channels().Output, 1)
 
+			Convey("Then status 500 and empty body is returned", func(c C) {
+				c.So(w.Code, ShouldEqual, http.StatusInternalServerError)
+				b, err := ioutil.ReadAll(w.Body)
+				So(err, ShouldBeNil)
+				c.So(b, ShouldResemble, []byte{})
+			})
+
+			Convey("The expected audit event is sent before proxying the call", func(c C) {
+				c.So(auditEvents[0], ShouldResemble, inboundAuditEvent)
+			})
+		})
+	})
+}
+func TestAuditHandlerJWTFlorenceToken(t *testing.T) {
+
+	Convey("Given deterministic inbound and outbound timestamps, and an incoming request with invalid  JWT_Florence and Service tokens", t, func(c C) {
+
+		isInbound := true
+		middleware.Now = func() time.Time {
+			if isInbound {
+				isInbound = false
+				return testTimeInbound
+			}
+			return testTimeOutbound
+		}
+
+		req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", nil)
+		So(err, ShouldBeNil)
+		req.Header.Set(dprequest.FlorenceHeaderKey, testJWTFlorenceToken)
+		req.Header.Set(dprequest.AuthHeaderKey, testServiceAuthToken)
+		w := httptest.NewRecorder()
+
+		Convey("And an audit handler that fails only on the outbound auditing with unsuccessful (Forbidden) downstream", func(c C) {
+			cliMock := createHTTPClientMock(http.StatusOK, testIdentityResponse)
+			inboundAuditEvent := event.Audit{
+				CreatedAt: testTimeMillisInbound,
+				Path:      "/v1/datasets",
+				Method:    http.MethodGet,
+			}
+			nMarshalCall := 0
+			failingMarshaller := &eventmock.MarshallerMock{
+				MarshalFunc: func(s interface{}) ([]byte, error) {
+					if nMarshalCall == 0 {
+						nMarshalCall++
+						b, err := schema.AuditEvent.Marshal(inboundAuditEvent)
+						c.So(err, ShouldBeNil)
+						return b, nil
+					}
+					return []byte{}, errMarshal
+				},
+			}
+			p := kafkatest.NewMessageProducer(true)
+			a := event.NewAvroProducer(p.Channels().Output, failingMarshaller)
+			enableZebedeeAudit := true
+			auditHandler := middleware.AuditHandler(a, cliMock, testZebedeeURL, testVersionPrefix, enableZebedeeAudit, nil)(testHandler(http.StatusForbidden, testBody, c))
+
+			// execute request and expect only 1 audit event
+			auditEvents := serveAndCaptureAudit(c, w, req, auditHandler, p.Channels().Output, 1)
 			Convey("Then status 500 and empty body is returned", func(c C) {
 				c.So(w.Code, ShouldEqual, http.StatusInternalServerError)
 				b, err := ioutil.ReadAll(w.Body)

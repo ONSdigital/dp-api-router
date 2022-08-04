@@ -13,6 +13,7 @@ require (
 	github.com/ONSdigital/dp-api-clients-go/v2 v2.153.0-beta.99
 	github.com/ONSdigital/dp-authorisation/v2 v2.20.0-beta.1
 	github.com/ONSdigital/dp-healthcheck v1.4.0-beta.1
+	github.com/ONSdigital/dp-kafka/v2 v2.5.0
 	github.com/ONSdigital/dp-kafka/v3 v3.4.0-beta
 	github.com/ONSdigital/dp-net/v2 v2.5.0-beta
 	github.com/ONSdigital/go-ns v0.0.0-20210916104633-ac1c1c52327e
