@@ -223,7 +223,6 @@ func retrieveIdentity(w http.ResponseWriter, req *http.Request, idClient *client
 	ctx = req.Context()
 
 	florenceToken, err := getFlorenceToken(ctx, req)
-	print("***** florenceToken", florenceToken, "*****\n")
 
 	if err != nil {
 		handleError(ctx, w, req, http.StatusInternalServerError, "error getting florence access token from request", err, nil)
@@ -255,7 +254,6 @@ func retrieveIdentity(w http.ResponseWriter, req *http.Request, idClient *client
 
 	if authFailure != nil {
 		handleError(ctx, w, req, statusCode, "identity client check request returned an auth error", authFailure, logData)
-		log.Error(ctx, "identity client check request returned an auth error", authFailure, logData)
 		return ctx, statusCode, authFailure
 	}
 
