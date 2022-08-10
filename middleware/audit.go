@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	"io"
 	"net/http"
 	"net/url"
@@ -16,10 +15,11 @@ import (
 	"github.com/ONSdigital/dp-api-clients-go/v2/headers"
 	"github.com/ONSdigital/dp-api-clients-go/v2/health"
 	clientsidentity "github.com/ONSdigital/dp-api-clients-go/v2/identity"
+	"github.com/ONSdigital/dp-api-router/config"
 	"github.com/ONSdigital/dp-api-router/event"
+	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	dphttp "github.com/ONSdigital/dp-net/v2/http"
 	dprequest "github.com/ONSdigital/dp-net/v2/request"
-
 	"github.com/ONSdigital/log.go/v2/log"
 )
 
@@ -230,7 +230,8 @@ func retrieveIdentity(w http.ResponseWriter, req *http.Request, idClient *client
 	}
 
 	if strings.Contains(florenceToken, ".") {
-		ctx, status, err = getFlorenceJWTToken(ctx, req, w, florenceToken)
+		cfg, _ := config.Get()
+		ctx, status, err = getFlorenceJWTToken(ctx, &cfg.Auth, req, w, florenceToken)
 		if err != nil {
 			handleError(ctx, w, req, http.StatusInternalServerError, "error getting service access token from request", err, nil)
 			return ctx, status, err
@@ -314,11 +315,9 @@ var Now = func() time.Time {
 	return time.Now()
 }
 
-func getFlorenceJWTToken(ctx context.Context, req *http.Request, w http.ResponseWriter, florenceToken string) (newctx context.Context, status int, err error) {
+func getFlorenceJWTToken(ctx context.Context, cfg *authorisation.Config, req *http.Request, w http.ResponseWriter, florenceToken string) (newctx context.Context, status int, err error) {
 	token := strings.Split(florenceToken, " ")
 
-	cfg := authorisation.NewDefaultConfig()
-	cfg.JWTVerificationPublicKeys = nil
 	authorisationMiddleware, err := authorisation.NewFeatureFlaggedMiddleware(ctx, cfg, nil)
 	if err != nil {
 		return ctx, http.StatusInternalServerError, err
@@ -327,6 +326,9 @@ func getFlorenceJWTToken(ctx context.Context, req *http.Request, w http.Response
 	entityData, err := authorisationMiddleware.Parse(token[0])
 	if err != nil {
 		return ctx, http.StatusInternalServerError, err
+	}
+	if entityData == nil {
+		return ctx, http.StatusInternalServerError, nil
 	}
 
 	ctx = context.WithValue(ctx, dprequest.UserIdentityKey, entityData.UserID)

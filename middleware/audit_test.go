@@ -475,7 +475,7 @@ func TestAuditHandler(t *testing.T) {
 }
 func TestAuditHandlerJWTFlorenceToken(t *testing.T) {
 
-	Convey("Given deterministic inbound and outbound timestamps, and an incoming request with invalid  JWT_Florence and Service tokens", t, func(c C) {
+	Convey("Given deterministic inbound and outbound timestamps, and an incoming request with invalid JWT_Florence and Service tokens", t, func(c C) {
 
 		isInbound := true
 		middleware.Now = func() time.Time {
@@ -518,8 +518,8 @@ func TestAuditHandlerJWTFlorenceToken(t *testing.T) {
 
 			// execute request and expect only 1 audit event
 			auditEvents := serveAndCaptureAudit(c, w, req, auditHandler, p.Channels().Output, 1)
-			Convey("Then status 500 and empty body is returned", func(c C) {
-				c.So(w.Code, ShouldEqual, http.StatusInternalServerError)
+			Convey("Then status 401 and empty body is returned", func(c C) {
+				c.So(w.Code, ShouldEqual, http.StatusUnauthorized)
 				b, err := ioutil.ReadAll(w.Body)
 				So(err, ShouldBeNil)
 				c.So(b, ShouldResemble, []byte{})
