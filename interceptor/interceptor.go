@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -47,13 +46,6 @@ var (
 	re = regexp.MustCompile(`^(.+://)(.+)(/v\d)$`)
 )
 
-var pathsToIgnore = []string{
-	"/v1/tokens",
-	"/v1/users",
-	"/v1/groups",
-	"/v1/password-reset",
-}
-
 var pathsToUse = []string{
 	"/v1/datasets",
 	"/v1/filter-outputs",
@@ -64,16 +56,6 @@ var pathsToUse = []string{
 	"/v1/images",
 	"/v1/jobs", // this is more commonly referred to as 'imports'
 	"/v1/instances",
-}
-
-// Check to see whether the response should be remapped
-func shallIgnore(path string) bool {
-	for _, pathToIgnore := range pathsToIgnore {
-		if strings.HasPrefix(path, pathToIgnore) {
-			return true
-		}
-	}
-	return false
 }
 
 func shallUse(path string) bool {
@@ -103,9 +85,8 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 	// "contentEncoding": "gzip" ... might need to exclude these things at some point
 
 	if shallUse(req.RequestURI) {
-
 		// get small number of bytes from resp
-		readdata, err := ioutil.ReadAll(io.LimitReader(resp.Body, maxBodyLengthToLog))
+		readdata, err := io.ReadAll(io.LimitReader(resp.Body, maxBodyLengthToLog))
 		if err != nil {
 			rawQuery := ""
 			if resp.Request != nil && resp.Request.URL != nil {
@@ -123,7 +104,7 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 			if err != nil {
 				return nil, err
 			}
-			resp.Body = ioutil.NopCloser(bytes.NewReader([]byte{}))
+			resp.Body = io.NopCloser(bytes.NewReader([]byte{}))
 			return resp, nil
 		}
 
@@ -145,7 +126,7 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 		}
 
 		// get the rest of the stream, which should be of reasonable size
-		b, err := ioutil.ReadAll(NewMultiReadCloser(bytes.NewReader(readdata), resp.Body))
+		b, err := io.ReadAll(NewMultiReadCloser(bytes.NewReader(readdata), resp.Body))
 		if err != nil {
 			return nil, err
 		}
@@ -173,12 +154,12 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 				"raw_query":        rawQuery,                            // as above
 			})
 			// return original body
-			resp.Body = ioutil.NopCloser(bytes.NewReader(b))
+			resp.Body = io.NopCloser(bytes.NewReader(b))
 			return resp, nil
 		}
 
 		// return updated body
-		resp.Body = ioutil.NopCloser(bytes.NewReader(updatedB))
+		resp.Body = io.NopCloser(bytes.NewReader(updatedB))
 		resp.ContentLength = int64(len(updatedB))
 		resp.Header.Set("Content-Length", strconv.Itoa(len(updatedB)))
 	}
@@ -220,7 +201,8 @@ func (t *Transport) update(b []byte) ([]byte, error) {
 		resource interface{}
 	)
 
-	if err = json.Unmarshal(b, &resource); err != nil {
+	err = json.Unmarshal(b, &resource)
+	if err != nil {
 		return nil, err
 	}
 
@@ -265,9 +247,9 @@ func (t *Transport) updateMap(document map[string]interface{}) ([]byte, error) {
 
 func (t *Transport) updateSlice(documents []interface{}) ([]byte, error) {
 	var (
-		documentList []map[string]interface{}
-		err          error
+		err error
 	)
+	documentList := make([]map[string]interface{}, len(documents), len(documents))
 
 	for i := range documents {
 		document := documents[i].(map[string]interface{})
@@ -275,7 +257,7 @@ func (t *Transport) updateSlice(documents []interface{}) ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		documentList = append(documentList, document)
+		documentList[i] = document
 	}
 
 	var updatedB []byte
@@ -392,7 +374,6 @@ func updateArray(docArray []interface{}, domain string) ([]interface{}, error) {
 }
 
 func getLink(field, domain string) (string, error) {
-
 	// if the URL is already correct, return it
 	if strings.HasPrefix(field, domain) {
 		return field, nil
@@ -405,9 +386,8 @@ func getLink(field, domain string) (string, error) {
 
 	queries := uri.RawQuery
 
-	if len(queries) == 0 {
+	if queries == "" {
 		return fmt.Sprintf("%s%s", domain, uri.Path), nil
 	}
 	return fmt.Sprintf("%s%s?%s", domain, uri.Path, queries), nil
-
 }

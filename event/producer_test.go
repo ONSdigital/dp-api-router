@@ -24,9 +24,7 @@ var testAuditEvent = &event.Audit{
 }
 
 func TestAvroProducer(t *testing.T) {
-
 	Convey("Given a successful message producer mock", t, func() {
-
 		// channel to capture messages sent.
 		outputChannel := make(chan []byte, 1)
 
@@ -41,7 +39,6 @@ func TestAvroProducer(t *testing.T) {
 		}
 
 		Convey("when Audit is called with a nil event", func() {
-
 			// eventProducer under test
 			eventProducer := event.NewAvroProducer(outputChannel, marshallerMock)
 			err := eventProducer.Audit(nil)
@@ -56,7 +53,6 @@ func TestAvroProducer(t *testing.T) {
 		})
 
 		Convey("When Audit is called on the event producer", func() {
-
 			// eventProducer under test
 			eventProducer := event.NewAvroProducer(outputChannel, schema.AuditEvent)
 			err := eventProducer.Audit(testAuditEvent)
@@ -73,7 +69,6 @@ func TestAvroProducer(t *testing.T) {
 	})
 
 	Convey("Given a message producer mock that fails to marshall", t, func() {
-
 		// mock that represents a marshaller
 		marshallerMock := &mock.MarshallerMock{
 			MarshalFunc: func(s interface{}) ([]byte, error) {

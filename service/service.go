@@ -92,7 +92,6 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 
 // CreateMiddleware creates an Alice middleware chain of handlers in the required order
 func (svc *Service) CreateMiddleware(cfg *config.Config, router *mux.Router) alice.Chain {
-
 	// Allow health check endpoint to skip any further middleware
 	healthCheckFilter := middleware.HealthcheckFilter(svc.HealthCheck.Handler)
 	versionedHealthCheckFilter := middleware.VersionedHealthCheckFilter(cfg.Version, svc.HealthCheck.Handler)
@@ -188,9 +187,9 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 
 	if cfg.EnableFilesAPI {
 		downloadService := proxy.NewAPIProxy(ctx, cfg.DownloadServiceURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
-		filesApi := proxy.NewAPIProxy(ctx, cfg.FilesAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+		filesAPI := proxy.NewAPIProxy(ctx, cfg.FilesAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 
-		addTransitionalHandler(router, filesApi, "/files")
+		addTransitionalHandler(router, filesAPI, "/files")
 		addTransitionalHandler(router, downloadService, "/downloads-new")
 	}
 
@@ -246,21 +245,21 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 	return router
 }
 
-func addVersionedHandlers(router *mux.Router, proxy *proxy.APIProxy, versions []string, path string) {
+func addVersionedHandlers(router *mux.Router, apiProxy *proxy.APIProxy, versions []string, path string) {
 	// Proxy any request after the path given to the target address
 	for _, version := range versions {
-		router.HandleFunc("/"+version+path+"{rest:.*}", proxy.Handle)
+		router.HandleFunc("/"+version+path+"{rest:.*}", apiProxy.Handle)
 	}
 }
 
-func addTransitionalHandler(router *mux.Router, proxy *proxy.APIProxy, path string) {
+func addTransitionalHandler(router *mux.Router, apiProxy *proxy.APIProxy, path string) {
 	// Proxy any request after the path given to the target address
-	router.HandleFunc(fmt.Sprintf("/%s"+path+"{rest:$|/.*}", proxy.Version), proxy.LegacyHandle)
+	router.HandleFunc(fmt.Sprintf("/%s"+path+"{rest:$|/.*}", apiProxy.Version), apiProxy.LegacyHandle)
 }
 
-func addLegacyHandler(router *mux.Router, proxy *proxy.APIProxy, path string) {
+func addLegacyHandler(router *mux.Router, apiProxy *proxy.APIProxy, path string) {
 	// Proxy any request after the path given to the target address
-	router.HandleFunc(path+"{rest:.*}", proxy.LegacyHandle)
+	router.HandleFunc(path+"{rest:.*}", apiProxy.LegacyHandle)
 }
 
 // Close gracefully shuts the service down in the required order, with timeout

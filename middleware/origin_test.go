@@ -20,7 +20,6 @@ var (
 )
 
 func TestOriginHandler(t *testing.T) {
-
 	Convey("origin handler should wrap another handler", t, func() {
 		handler := SetAllowOriginHeader([]string{"origin-is-allowed.com"})
 		wrapped := handler(dummyHandler)
@@ -28,7 +27,7 @@ func TestOriginHandler(t *testing.T) {
 	})
 
 	Convey("origin handler should serve the request where the origin is allowed", t, func() {
-		req, err := http.NewRequest("GET", "/", nil)
+		req, err := http.NewRequest("GET", "/", http.NoBody)
 		So(err, ShouldBeNil)
 
 		req.Header.Set("Origin", whiteListedOrigin1)
@@ -43,7 +42,7 @@ func TestOriginHandler(t *testing.T) {
 	})
 
 	Convey("origin handler should serve the request where the origin is allowed because of asterisk wildchar", t, func() {
-		req, err := http.NewRequest("GET", "/", nil)
+		req, err := http.NewRequest("GET", "/", http.NoBody)
 		So(err, ShouldBeNil)
 
 		req.Header.Set("Origin", "anything")
@@ -58,7 +57,7 @@ func TestOriginHandler(t *testing.T) {
 	})
 
 	Convey("origin handler should return 401 unauthorised where origin is not allowed", t, func() {
-		req, err := http.NewRequest("GET", "/", nil)
+		req, err := http.NewRequest("GET", "/", http.NoBody)
 		So(err, ShouldBeNil)
 
 		req.Header.Set("Origin", whiteListedOrigin1)
@@ -70,5 +69,4 @@ func TestOriginHandler(t *testing.T) {
 		wrapped.ServeHTTP(w, req)
 		So(w.Code, ShouldEqual, 401)
 	})
-
 }

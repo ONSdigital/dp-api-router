@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"sync"
@@ -95,22 +95,19 @@ func createHTTPClientMock(retCode int, retBody interface{}) *dphttp.ClienterMock
 			body, _ := json.Marshal(retBody)
 			return &http.Response{
 				StatusCode: retCode,
-				Body:       ioutil.NopCloser(bytes.NewReader(body)),
+				Body:       io.NopCloser(bytes.NewReader(body)),
 			}, nil
 		},
 	}
 }
 
 func TestGenerateAuditEvent(t *testing.T) {
-
 	Convey("Given a mocked time.Now", t, func(c C) {
-
 		middleware.Now = func() time.Time {
 			return testTimeInbound
 		}
-
 		Convey("A request with query paramters generates a valid audit event, with the expected values", func() {
-			req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", nil)
+			req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", http.NoBody)
 			So(err, ShouldBeNil)
 			e := middleware.GenerateAuditEvent(req)
 			So(*e, ShouldResemble, event.Audit{
@@ -122,7 +119,7 @@ func TestGenerateAuditEvent(t *testing.T) {
 		})
 
 		Convey("A request with query paramters including escaped characters generates a valid audit event, with the expected unescaped values", func() {
-			req, err := http.NewRequest(http.MethodGet, "/v1/data?lang=en\u0026uri=%2Fhealth", nil)
+			req, err := http.NewRequest(http.MethodGet, "/v1/data?lang=en\u0026uri=%2Fhealth", http.NoBody)
 			So(err, ShouldBeNil)
 			e := middleware.GenerateAuditEvent(req)
 			So(*e, ShouldResemble, event.Audit{
@@ -134,7 +131,7 @@ func TestGenerateAuditEvent(t *testing.T) {
 		})
 
 		Convey("A request with query paramters including incorrectly escaped characters defaults to the raw query value when generating the audit event", func() {
-			req, err := http.NewRequest(http.MethodGet, "/v1/data?uri=%wxhealth", nil)
+			req, err := http.NewRequest(http.MethodGet, "/v1/data?uri=%wxhealth", http.NoBody)
 			So(err, ShouldBeNil)
 			e := middleware.GenerateAuditEvent(req)
 			So(*e, ShouldResemble, event.Audit{
@@ -144,14 +141,11 @@ func TestGenerateAuditEvent(t *testing.T) {
 				QueryParam: "uri=%wxhealth",
 			})
 		})
-
 	})
 }
 
 func TestAuditHandlerHeaders(t *testing.T) {
-
 	Convey("Given deterministic inbound and outbound timestamps", t, func(c C) {
-
 		isInbound := true
 		middleware.Now = func() time.Time {
 			if isInbound {
@@ -162,7 +156,7 @@ func TestAuditHandlerHeaders(t *testing.T) {
 		}
 
 		Convey("An incoming request with no auth headers", func(c C) {
-			req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", nil)
+			req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", http.NoBody)
 			So(err, ShouldBeNil)
 			w := httptest.NewRecorder()
 
@@ -175,7 +169,7 @@ func TestAuditHandlerHeaders(t *testing.T) {
 
 				Convey("Then status Unauthorised and empty body is returned", func(c C) {
 					c.So(w.Code, ShouldEqual, http.StatusUnauthorized)
-					b, err := ioutil.ReadAll(w.Body)
+					b, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					c.So(b, ShouldResemble, []byte{})
 				})
@@ -200,7 +194,7 @@ func TestAuditHandlerHeaders(t *testing.T) {
 
 				Convey("Then status Unauthorised and empty body is returned", func(c C) {
 					c.So(w.Code, ShouldEqual, http.StatusUnauthorized)
-					b, err := ioutil.ReadAll(w.Body)
+					b, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					c.So(b, ShouldResemble, []byte{})
 				})
@@ -208,7 +202,7 @@ func TestAuditHandlerHeaders(t *testing.T) {
 		})
 
 		Convey("An incoming request with a valid Florence Token", func(c C) {
-			req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", nil)
+			req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", http.NoBody)
 			So(err, ShouldBeNil)
 			req.Header.Set(dprequest.FlorenceHeaderKey, testFlorenceToken)
 			w := httptest.NewRecorder()
@@ -222,7 +216,7 @@ func TestAuditHandlerHeaders(t *testing.T) {
 
 				Convey("Then status OK and expected body is returned", func(c C) {
 					c.So(w.Code, ShouldEqual, http.StatusOK)
-					b, err := ioutil.ReadAll(w.Body)
+					b, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					c.So(b, ShouldResemble, testBody)
 				})
@@ -255,7 +249,7 @@ func TestAuditHandlerHeaders(t *testing.T) {
 
 				Convey("Then status 500 and empty body is returned", func(c C) {
 					c.So(w.Code, ShouldEqual, http.StatusInternalServerError)
-					b, err := ioutil.ReadAll(w.Body)
+					b, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					c.So(b, ShouldResemble, []byte{})
 				})
@@ -263,7 +257,7 @@ func TestAuditHandlerHeaders(t *testing.T) {
 		})
 
 		Convey("An incoming request with a valid Service Auth Token", func(c C) {
-			req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", nil)
+			req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", http.NoBody)
 			So(err, ShouldBeNil)
 			req.Header.Set(dprequest.AuthHeaderKey, testServiceAuthToken)
 			w := httptest.NewRecorder()
@@ -277,7 +271,7 @@ func TestAuditHandlerHeaders(t *testing.T) {
 
 				Convey("Then status OK and expected body is returned", func(c C) {
 					c.So(w.Code, ShouldEqual, http.StatusOK)
-					b, err := ioutil.ReadAll(w.Body)
+					b, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					c.So(b, ShouldResemble, testBody)
 				})
@@ -310,7 +304,7 @@ func TestAuditHandlerHeaders(t *testing.T) {
 
 				Convey("Then status 500 and empty body is returned", func(c C) {
 					c.So(w.Code, ShouldEqual, http.StatusInternalServerError)
-					b, err := ioutil.ReadAll(w.Body)
+					b, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					c.So(b, ShouldResemble, []byte{})
 				})
@@ -318,7 +312,7 @@ func TestAuditHandlerHeaders(t *testing.T) {
 		})
 
 		Convey("An incoming request with all headers", func(c C) {
-			req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", nil)
+			req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", http.NoBody)
 			So(err, ShouldBeNil)
 			req.Header.Set(dprequest.AuthHeaderKey, testServiceAuthToken)
 			req.Header.Set(dprequest.FlorenceHeaderKey, testFlorenceToken)
@@ -335,7 +329,7 @@ func TestAuditHandlerHeaders(t *testing.T) {
 
 				Convey("Then status OK and expected body is returned", func(c C) {
 					c.So(w.Code, ShouldEqual, http.StatusOK)
-					b, err := ioutil.ReadAll(w.Body)
+					b, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					c.So(b, ShouldResemble, testBody)
 				})
@@ -367,9 +361,7 @@ func TestAuditHandlerHeaders(t *testing.T) {
 }
 
 func TestAuditHandler(t *testing.T) {
-
 	Convey("Given deterministic inbound and outbound timestamps, and an incoming request with valid Florence and Service tokens", t, func(c C) {
-
 		isInbound := true
 		middleware.Now = func() time.Time {
 			if isInbound {
@@ -379,7 +371,7 @@ func TestAuditHandler(t *testing.T) {
 			return testTimeOutbound
 		}
 
-		req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", nil)
+		req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", http.NoBody)
 		So(err, ShouldBeNil)
 		req.Header.Set(dprequest.FlorenceHeaderKey, testFlorenceToken)
 		req.Header.Set(dprequest.AuthHeaderKey, testServiceAuthToken)
@@ -394,7 +386,7 @@ func TestAuditHandler(t *testing.T) {
 
 			Convey("Then status Forbidden and expected body is returned", func(c C) {
 				c.So(w.Code, ShouldEqual, http.StatusForbidden)
-				b, err := ioutil.ReadAll(w.Body)
+				b, err := io.ReadAll(w.Body)
 				So(err, ShouldBeNil)
 				c.So(b, ShouldResemble, testBody)
 			})
@@ -427,7 +419,7 @@ func TestAuditHandler(t *testing.T) {
 
 			Convey("Then status 500 and empty body is returned", func(c C) {
 				c.So(w.Code, ShouldEqual, http.StatusInternalServerError)
-				b, err := ioutil.ReadAll(w.Body)
+				b, err := io.ReadAll(w.Body)
 				So(err, ShouldBeNil)
 				c.So(b, ShouldResemble, []byte{})
 			})
@@ -462,7 +454,7 @@ func TestAuditHandler(t *testing.T) {
 
 			Convey("Then status 500 and empty body is returned", func(c C) {
 				c.So(w.Code, ShouldEqual, http.StatusInternalServerError)
-				b, err := ioutil.ReadAll(w.Body)
+				b, err := io.ReadAll(w.Body)
 				So(err, ShouldBeNil)
 				c.So(b, ShouldResemble, []byte{})
 			})
@@ -474,9 +466,7 @@ func TestAuditHandler(t *testing.T) {
 	})
 }
 func TestAuditHandlerJWTFlorenceToken(t *testing.T) {
-
 	Convey("Given deterministic inbound and outbound timestamps, and an incoming request with invalid JWT_Florence and Service tokens", t, func(c C) {
-
 		isInbound := true
 		middleware.Now = func() time.Time {
 			if isInbound {
@@ -486,7 +476,7 @@ func TestAuditHandlerJWTFlorenceToken(t *testing.T) {
 			return testTimeOutbound
 		}
 
-		req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", nil)
+		req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", http.NoBody)
 		So(err, ShouldBeNil)
 		req.Header.Set(dprequest.FlorenceHeaderKey, testJWTFlorenceToken)
 		req.Header.Set(dprequest.AuthHeaderKey, testServiceAuthToken)
@@ -520,7 +510,7 @@ func TestAuditHandlerJWTFlorenceToken(t *testing.T) {
 			auditEvents := serveAndCaptureAudit(c, w, req, auditHandler, p.Channels().Output, 1)
 			Convey("Then status 401 and empty body is returned", func(c C) {
 				c.So(w.Code, ShouldEqual, http.StatusUnauthorized)
-				b, err := ioutil.ReadAll(w.Body)
+				b, err := io.ReadAll(w.Body)
 				So(err, ShouldBeNil)
 				c.So(b, ShouldResemble, []byte{})
 			})
@@ -533,23 +523,19 @@ func TestAuditHandlerJWTFlorenceToken(t *testing.T) {
 }
 
 func TestAuditIgnoreSkip(t *testing.T) {
-
 	Convey("Given an incoming request to an ignored path", t, func(c C) {
-		req, err := http.NewRequest(http.MethodGet, "/ping", nil)
+		req, err := http.NewRequest(http.MethodGet, "/ping", http.NoBody)
 		So(err, ShouldBeNil)
 		w := httptest.NewRecorder()
-
 		Convey("And a valid audit handler without downstream", func(c C) {
-
 			p, a := createValidAuditHandler()
 			auditHandler := a(testHandler(http.StatusForbidden, testBody, c))
-
 			// execute request and don't wait for audit events
 			serveAndCaptureAudit(c, w, req, auditHandler, p.Channels().Output, 0)
 
 			Convey("Then status Forbidden and expected body is returned", func(c C) {
 				c.So(w.Code, ShouldEqual, http.StatusForbidden)
-				b, err := ioutil.ReadAll(w.Body)
+				b, err := io.ReadAll(w.Body)
 				So(err, ShouldBeNil)
 				c.So(b, ShouldResemble, testBody)
 			})
@@ -557,21 +543,19 @@ func TestAuditIgnoreSkip(t *testing.T) {
 	})
 
 	Convey("Given an incoming request to a path for which identity check needs to be skipped", t, func(c C) {
-		req, err := http.NewRequest(http.MethodGet, "/login", nil)
+		req, err := http.NewRequest(http.MethodGet, "/login", http.NoBody)
 		So(err, ShouldBeNil)
 		w := httptest.NewRecorder()
 
 		Convey("And a valid audit handler without downstream", func(c C) {
-
 			p, a := createValidAuditHandler()
 			auditHandler := a(testHandler(http.StatusForbidden, testBody, c))
-
 			// execute request and wait for 2 audit events
 			auditEvents := serveAndCaptureAudit(c, w, req, auditHandler, p.Channels().Output, 2)
 
 			Convey("Then status Forbidden and expected body is returned", func(c C) {
 				c.So(w.Code, ShouldEqual, http.StatusForbidden)
-				b, err := ioutil.ReadAll(w.Body)
+				b, err := io.ReadAll(w.Body)
 				So(err, ShouldBeNil)
 				c.So(b, ShouldResemble, testBody)
 			})
@@ -580,15 +564,12 @@ func TestAuditIgnoreSkip(t *testing.T) {
 				c.So(auditEvents[0].Identity, ShouldResemble, "")
 				c.So(auditEvents[1].Identity, ShouldResemble, "")
 			})
-
 		})
 	})
 }
 
 func TestSkipZebedeeAudit(t *testing.T) {
-
 	Convey("Given an audit handler configured to not audit zebedee requests", t, func(c C) {
-
 		cliMock := createHTTPClientMock(http.StatusOK, testIdentityResponse)
 		p := kafkatest.NewMessageProducer(true)
 		auditProducer := event.NewAvroProducer(p.Channels().Output, schema.AuditEvent)
@@ -603,7 +584,7 @@ func TestSkipZebedeeAudit(t *testing.T) {
 		auditHandler := auditMiddleware(testHandler(http.StatusOK, testBody, c))
 
 		Convey("When the handler receives a Zebedee request", func(c C) {
-			req, err := http.NewRequest(http.MethodGet, "/data", nil)
+			req, err := http.NewRequest(http.MethodGet, "/data", http.NoBody)
 			So(err, ShouldBeNil)
 			w := httptest.NewRecorder()
 
@@ -612,7 +593,7 @@ func TestSkipZebedeeAudit(t *testing.T) {
 
 			Convey("Then status OK and expected body is returned", func(c C) {
 				c.So(w.Code, ShouldEqual, http.StatusOK)
-				b, err := ioutil.ReadAll(w.Body)
+				b, err := io.ReadAll(w.Body)
 				So(err, ShouldBeNil)
 				c.So(b, ShouldResemble, testBody)
 			})
@@ -642,7 +623,7 @@ func TestSkipZebedeeAudit(t *testing.T) {
 		auditHandler := auditMiddleware(testHandler(http.StatusOK, testBody, c))
 
 		Convey("When the handler receives a request for a known route (not zebedee)", func(c C) {
-			req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", nil)
+			req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", http.NoBody)
 			req.Header.Set(dprequest.FlorenceHeaderKey, testFlorenceToken)
 			req.Header.Set(dprequest.AuthHeaderKey, testServiceAuthToken)
 			So(err, ShouldBeNil)
@@ -653,7 +634,7 @@ func TestSkipZebedeeAudit(t *testing.T) {
 
 			Convey("Then status OK and expected body is returned", func(c C) {
 				c.So(w.Code, ShouldEqual, http.StatusOK)
-				b, err := ioutil.ReadAll(w.Body)
+				b, err := io.ReadAll(w.Body)
 				So(err, ShouldBeNil)
 				c.So(b, ShouldResemble, testBody)
 			})
@@ -697,7 +678,6 @@ func TestShallSkipIdentity(t *testing.T) {
 // aux function for testing that serves HTTP, wrapping the provided handler with AuditHandler,
 // and waits for the number of expected audit events, which are then returned in an array
 func serveAndCaptureAudit(c C, w http.ResponseWriter, req *http.Request, auditHandler http.Handler, outChan chan []byte, numExpectedMessages int) (auditEvents []event.Audit) {
-
 	// run HTTP server in a parallel go-routine
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
