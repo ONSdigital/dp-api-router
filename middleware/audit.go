@@ -229,8 +229,11 @@ func retrieveIdentity(w http.ResponseWriter, req *http.Request, idClient *client
 	}
 
 	if strings.Contains(florenceToken, ".") {
-		token := strings.Split(florenceToken, " ")
-
+		token := florenceToken
+		bearerPrefix := "Bearer "
+		if strings.HasPrefix(florenceToken, bearerPrefix) {
+			token = strings.TrimPrefix(florenceToken, bearerPrefix)
+		}
 		cfg := authorisation.NewDefaultConfig()
 		cfg.JWTVerificationPublicKeys = nil
 		authorisationMiddleware, err := authorisation.NewFeatureFlaggedMiddleware(ctx, cfg, nil)
@@ -239,7 +242,7 @@ func retrieveIdentity(w http.ResponseWriter, req *http.Request, idClient *client
 			return ctx, http.StatusInternalServerError, err
 		}
 
-		entityData, err := authorisationMiddleware.Parse(token[1])
+		entityData, err := authorisationMiddleware.Parse(token)
 		if err != nil {
 			handleError(ctx, w, req, http.StatusInternalServerError, "error getting parsing token from request", err, nil)
 			return ctx, http.StatusInternalServerError, err
