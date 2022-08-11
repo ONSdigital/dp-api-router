@@ -518,8 +518,8 @@ func TestAuditHandlerJWTFlorenceToken(t *testing.T) {
 
 			// execute request and expect only 1 audit event
 			auditEvents := serveAndCaptureAudit(c, w, req, auditHandler, p.Channels().Output, 1)
-			Convey("Then status 401 and empty body is returned", func(c C) {
-				c.So(w.Code, ShouldEqual, http.StatusUnauthorized)
+			Convey("Then status 500 and empty body is returned", func(c C) {
+				c.So(w.Code, ShouldEqual, http.StatusInternalServerError)
 				b, err := ioutil.ReadAll(w.Body)
 				So(err, ShouldBeNil)
 				c.So(b, ShouldResemble, []byte{})

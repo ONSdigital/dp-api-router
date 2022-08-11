@@ -248,6 +248,10 @@ func retrieveIdentity(w http.ResponseWriter, req *http.Request, idClient *client
 			return ctx, http.StatusInternalServerError, err
 		}
 		ctx = context.WithValue(ctx, dprequest.UserIdentityKey, entityData.UserID)
+		print("***** dprequest.UserIdentityKey", dprequest.UserIdentityKey, "*****\n")
+		print("***** entityData.UserID", entityData.UserID, "*****\n")
+		print("***** ctx", ctx, "*****\n")
+
 		return ctx, http.StatusOK, nil
 	}
 
@@ -325,24 +329,4 @@ func getServiceAuthToken(ctx context.Context, req *http.Request) (string, error)
 // Now is a time.Now wrapper specifically for testing purposes, and should not me unlambda'd - despite what golangci-lint says
 var Now = func() time.Time {
 	return time.Now()
-}
-
-func getFlorenceJWTToken(ctx context.Context, cfg *authorisation.Config, req *http.Request, w http.ResponseWriter, florenceToken string) (newctx context.Context, status int, err error) {
-	token := strings.Split(florenceToken, " ")
-
-	authorisationMiddleware, err := authorisation.NewFeatureFlaggedMiddleware(ctx, cfg, nil)
-	if err != nil {
-		return ctx, http.StatusInternalServerError, err
-	}
-
-	entityData, err := authorisationMiddleware.Parse(token[0])
-	if err != nil {
-		return ctx, http.StatusInternalServerError, err
-	}
-	if entityData == nil {
-		return ctx, http.StatusInternalServerError, nil
-	}
-
-	ctx = context.WithValue(ctx, dprequest.UserIdentityKey, entityData.UserID)
-	return ctx, http.StatusOK, nil
 }
