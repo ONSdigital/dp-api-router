@@ -248,9 +248,6 @@ func retrieveIdentity(w http.ResponseWriter, req *http.Request, idClient *client
 			return ctx, http.StatusInternalServerError, err
 		}
 		ctx = context.WithValue(ctx, dprequest.UserIdentityKey, entityData.UserID)
-		print("***** dprequest.UserIdentityKey", dprequest.UserIdentityKey, "*****\n")
-		print("***** entityData.UserID", entityData.UserID, "*****\n")
-		print("***** ctx", ctx, "*****\n")
 
 		return ctx, http.StatusOK, nil
 	}
