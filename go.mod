@@ -10,13 +10,13 @@ replace (
 )
 
 require (
-	github.com/ONSdigital/dp-api-clients-go/v2 v2.153.0-beta.99
-	github.com/ONSdigital/dp-authorisation/v2 v2.20.0-beta.1
-	github.com/ONSdigital/dp-healthcheck v1.4.0-beta.1
-	github.com/ONSdigital/dp-kafka/v3 v3.4.0-beta
-	github.com/ONSdigital/dp-net/v2 v2.5.0-beta
+	github.com/ONSdigital/dp-api-clients-go/v2 v2.159.2-0.20220814173922-c9dcae7a7372
+	github.com/ONSdigital/dp-authorisation/v2 v2.24.1-0.20220814133514-df7ba85b57ca
+	github.com/ONSdigital/dp-healthcheck v1.3.0
+	github.com/ONSdigital/dp-kafka/v3 v3.3.2
+	github.com/ONSdigital/dp-net/v2 v2.4.0
 	github.com/ONSdigital/go-ns v0.0.0-20210916104633-ac1c1c52327e
-	github.com/ONSdigital/log.go/v2 v2.3.0-beta
+	github.com/ONSdigital/log.go/v2 v2.2.0
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/justinas/alice v1.2.0
@@ -26,7 +26,11 @@ require (
 )
 
 require (
+	github.com/ONSdigital/dp-api-clients-go v1.43.0 // indirect
+	github.com/ONSdigital/dp-net v1.4.2-0.20220814172910-182caaa380f9 // indirect
+	github.com/ONSdigital/dp-rchttp v1.0.0 // indirect
 	github.com/Shopify/sarama v1.36.0 // indirect
+	github.com/aws/aws-sdk-go v1.44.76 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/eapache/go-resiliency v1.3.0 // indirect
 	github.com/eapache/go-xerial-snappy v0.0.0-20180814174437-776d5712da21 // indirect
@@ -46,6 +50,7 @@ require (
 	github.com/jcmturner/gofork v1.7.6 // indirect
 	github.com/jcmturner/gokrb5/v8 v8.4.3 // indirect
 	github.com/jcmturner/rpc/v2 v2.0.3 // indirect
+	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/klauspost/compress v1.15.9 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
@@ -54,6 +59,6 @@ require (
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/smartystreets/assertions v1.13.0 // indirect
 	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa // indirect
-	golang.org/x/net v0.0.0-20220811182439-13a9a731de15 // indirect
+	golang.org/x/net v0.0.0-20220812174116-3211cb980234 // indirect
 	golang.org/x/sys v0.0.0-20220811171246-fbc7d0a398ab // indirect
 )
