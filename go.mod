@@ -10,7 +10,7 @@ replace (
 )
 
 require (
-	github.com/ONSdigital/dp-api-clients-go/v2 v2.159.2-0.20220815060943-993d3a631997
+	github.com/ONSdigital/dp-api-clients-go/v2 v2.162.0
 	github.com/ONSdigital/dp-authorisation/v2 v2.24.1-0.20220814133514-df7ba85b57ca
 	github.com/ONSdigital/dp-healthcheck v1.3.0
 	github.com/ONSdigital/dp-kafka/v3 v3.3.2
@@ -27,7 +27,7 @@ require (
 
 require (
 	github.com/ONSdigital/dp-api-clients-go v1.43.0 // indirect
-	github.com/ONSdigital/dp-net v1.4.2-0.20220815060453-ae2039c4bf38 // indirect
+	github.com/ONSdigital/dp-net v1.5.0 // indirect
 	github.com/ONSdigital/dp-rchttp v1.0.0 // indirect
 	github.com/Shopify/sarama v1.36.0 // indirect
 	github.com/aws/aws-sdk-go v1.44.76 // indirect

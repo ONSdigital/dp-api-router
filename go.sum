@@ -39,8 +39,8 @@ github.com/ONSdigital/dp-api-clients-go v1.34.3/go.mod h1:kX+YKuoLYLfkeLHMvQKRRy
 github.com/ONSdigital/dp-api-clients-go v1.41.1/go.mod h1:Ga1+ANjviu21NFJI9wp5NctJIdB4TJLDGbpQFl2V8Wc=
 github.com/ONSdigital/dp-api-clients-go v1.43.0 h1:0982P/YxnYXvba1RhEcFmwF3xywC4eXokWQ8YH3Mm24=
 github.com/ONSdigital/dp-api-clients-go v1.43.0/go.mod h1:V5MfINik+o3OAF985UXUoMjXIfrZe3JKYa5AhZn5jts=
-github.com/ONSdigital/dp-api-clients-go/v2 v2.159.2-0.20220815060943-993d3a631997 h1:T08P1I9VjeE3KcoUTCekFXbvEq6TwzFDXJm20FSu4YI=
-github.com/ONSdigital/dp-api-clients-go/v2 v2.159.2-0.20220815060943-993d3a631997/go.mod h1:aHaY8mOwimRHxyl3ndJgSVj1KQ9vf0UB7+YhUEefAx8=
+github.com/ONSdigital/dp-api-clients-go/v2 v2.162.0 h1:/UOja333hqFdnjKc0S77QKiFH20rPMmzoYgVcLJSUTI=
+github.com/ONSdigital/dp-api-clients-go/v2 v2.162.0/go.mod h1:2IF90BHkQjNBzs3El66r0qOPFQ0kJq+zPfHUwCk5rgo=
 github.com/ONSdigital/dp-authorisation/v2 v2.24.1-0.20220814133514-df7ba85b57ca h1:+Qq397SYY2fKgxE86IVwnXAGwZO3Uuw2ZKenAJZHkOk=
 github.com/ONSdigital/dp-authorisation/v2 v2.24.1-0.20220814133514-df7ba85b57ca/go.mod h1:JlbkHRYbYj1BSJ/Y7tR89GtfWh6PsbPC4zrIDTHqulA=
 github.com/ONSdigital/dp-frontend-models v1.1.0/go.mod h1:TT96P7Mi69N3Tc/jFNdbjiwG4GAaMjP26HLotFQ6BPw=
@@ -59,8 +59,8 @@ github.com/ONSdigital/dp-net v1.0.5-0.20200805150805-cac050646ab5/go.mod h1:de3L
 github.com/ONSdigital/dp-net v1.0.7/go.mod h1:1QFzx32FwPKD2lgZI6MtcsUXritsBdJihlzIWDrQ/gc=
 github.com/ONSdigital/dp-net v1.0.12/go.mod h1:2lvIKOlD4T3BjWQwjHhBUO2UNWDk82u/+mHRn0R3C9A=
 github.com/ONSdigital/dp-net v1.2.0/go.mod h1:NinlaqcsPbIR+X7j5PXCl3UI5G2zCL041SDF6WIiiO4=
-github.com/ONSdigital/dp-net v1.4.2-0.20220815060453-ae2039c4bf38 h1:owYPDteOsjB+beaj+VEw/q56/EylLXHT1EN207KG3NU=
-github.com/ONSdigital/dp-net v1.4.2-0.20220815060453-ae2039c4bf38/go.mod h1:d/S4n6FJlQwmVIa2rnVt1HnAUgM8XsG0QEJBQp48uGg=
+github.com/ONSdigital/dp-net v1.5.0 h1:H47O5N+eXyXCYqPoQGWwuK12uLds3pCgzxpYwepg+bQ=
+github.com/ONSdigital/dp-net v1.5.0/go.mod h1:d/S4n6FJlQwmVIa2rnVt1HnAUgM8XsG0QEJBQp48uGg=
 github.com/ONSdigital/dp-net/v2 v2.4.0 h1:GYJM8ZFGfWOAjUUMO8rXavowAT700q3Zi/vYjc2jh8o=
 github.com/ONSdigital/dp-net/v2 v2.4.0/go.mod h1:8X7E1wiJxL59qaDFt3ShDfFLfIGs4WMRPx1sZIgAqbU=
 github.com/ONSdigital/dp-rchttp v0.0.0-20190919143000-bb5699e6fd59/go.mod h1:KkW68U3FPuivW4ogi9L8CPKNj9ZxGko4qcUY7KoAAkQ=
