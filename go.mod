@@ -11,7 +11,7 @@ replace (
 
 require (
 	github.com/ONSdigital/dp-api-clients-go/v2 v2.162.0
-	github.com/ONSdigital/dp-authorisation/v2 v2.24.1-0.20220814133514-df7ba85b57ca
+	github.com/ONSdigital/dp-authorisation/v2 v2.25.0
 	github.com/ONSdigital/dp-healthcheck v1.3.0
 	github.com/ONSdigital/dp-kafka/v3 v3.3.2
 	github.com/ONSdigital/dp-net/v2 v2.4.0
@@ -53,7 +53,7 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/klauspost/compress v1.15.9 // indirect
-	github.com/mattn/go-colorable v0.1.12 // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect
 	github.com/pierrec/lz4/v4 v4.1.15 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
