@@ -15,6 +15,7 @@ import (
 	"github.com/ONSdigital/dp-api-clients-go/v2/headers"
 	"github.com/ONSdigital/dp-api-clients-go/v2/health"
 	clientsidentity "github.com/ONSdigital/dp-api-clients-go/v2/identity"
+	"github.com/ONSdigital/dp-api-router/config"
 	"github.com/ONSdigital/dp-api-router/event"
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	dphttp "github.com/ONSdigital/dp-net/v2/http"
@@ -234,9 +235,13 @@ func retrieveIdentity(w http.ResponseWriter, req *http.Request, idClient *client
 		if strings.HasPrefix(florenceToken, bearerPrefix) {
 			token = strings.TrimPrefix(florenceToken, bearerPrefix)
 		}
-		cfg := authorisation.NewDefaultConfig()
-		cfg.JWTVerificationPublicKeys = nil
-		authorisationMiddleware, err := authorisation.NewFeatureFlaggedMiddleware(ctx, cfg, nil)
+
+		cfg, err := config.Get()
+		if err != nil {
+			handleError(ctx, w, req, http.StatusInternalServerError, "error getting config for request", err, nil)
+			return ctx, http.StatusInternalServerError, err
+		}
+		authorisationMiddleware, err := authorisation.NewFeatureFlaggedMiddleware(ctx, &cfg.Auth, nil)
 		if err != nil {
 			handleError(ctx, w, req, http.StatusInternalServerError, "error getting jwtRSAPublicKeys from request", err, nil)
 			return ctx, http.StatusInternalServerError, err
@@ -247,9 +252,10 @@ func retrieveIdentity(w http.ResponseWriter, req *http.Request, idClient *client
 			handleError(ctx, w, req, http.StatusInternalServerError, "error getting parsing token from request", err, nil)
 			return ctx, http.StatusInternalServerError, err
 		}
-		ctx = context.WithValue(ctx, dprequest.UserIdentityKey, entityData.UserID)
-
-		return ctx, http.StatusOK, nil
+		if entityData != nil {
+			ctx = context.WithValue(ctx, dprequest.UserIdentityKey, entityData.UserID)
+			return ctx, http.StatusOK, nil
+		}
 	}
 
 	serviceAuthToken, err := getServiceAuthToken(ctx, req)
