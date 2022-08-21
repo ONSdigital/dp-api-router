@@ -1,0 +1,19 @@
+---
+
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: golang
+    tag: 1.18.3
+
+inputs:
+  - name: dp-api-router
+    path: dp-api-router
+
+caches:
+  - path: go/
+
+run:
+  path: dp-api-router/ci/scripts/lint.sh
