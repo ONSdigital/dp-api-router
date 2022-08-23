@@ -13,18 +13,18 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ONSdigital/dp-api-router/middleware/mock"
 	"github.com/gorilla/mux"
-
-	kafka "github.com/ONSdigital/dp-kafka/v3"
-	"github.com/ONSdigital/dp-kafka/v3/kafkatest"
-	dphttp "github.com/ONSdigital/dp-net/v2/http"
-	dprequest "github.com/ONSdigital/dp-net/v2/request"
 
 	"github.com/ONSdigital/dp-api-router/event"
 	eventmock "github.com/ONSdigital/dp-api-router/event/mock"
 	"github.com/ONSdigital/dp-api-router/middleware"
-	"github.com/ONSdigital/dp-api-router/middleware/mock"
 	"github.com/ONSdigital/dp-api-router/schema"
+
+	kafka "github.com/ONSdigital/dp-kafka/v2"
+	"github.com/ONSdigital/dp-kafka/v2/kafkatest"
+	dphttp "github.com/ONSdigital/dp-net/v2/http"
+	dprequest "github.com/ONSdigital/dp-net/v2/request"
 
 	. "github.com/smartystreets/goconvey/convey"
 )

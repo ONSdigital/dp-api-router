@@ -26,9 +26,7 @@ var (
 )
 
 func TestNotProxied(t *testing.T) {
-
 	Convey("Given a healthy api router", t, func() {
-
 		cfg, err := config.Get()
 		So(err, ShouldBeNil)
 
@@ -46,9 +44,7 @@ func TestNotProxied(t *testing.T) {
 }
 
 func TestRouterPublicAPIs(t *testing.T) {
-
 	Convey("Given an api router and proxies with all public endpoints available", t, func() {
-
 		cfg, _ := config.Get()
 
 		// This is temporary and needs to be removed when it is ready for SearchAPIURL to point to dp-search-query
@@ -326,12 +322,12 @@ func TestRouterPublicAPIs(t *testing.T) {
 		})
 
 		Convey("Given an url to the population types api", func() {
-			url := "http://localhost:23200/v1/population-types"
+			urlStr := "http://localhost:23200/v1/population-types"
 
 			Convey("And the feature flag is enabled", func() {
 				cfg.EnablePopulationTypesAPI = true
 				Convey("When a GET request is made", func() {
-					w := createRouterTest(cfg, url)
+					w := createRouterTest(cfg, urlStr)
 					Convey("Then the population types API should respond", func() {
 						So(w.Code, ShouldEqual, http.StatusOK)
 						verifyProxied("/population-types", populationTypesAPIURL)
@@ -342,7 +338,7 @@ func TestRouterPublicAPIs(t *testing.T) {
 			Convey("And the feature flag is disabled", func() {
 				cfg.EnablePopulationTypesAPI = false
 				Convey("When a GET request is made", func() {
-					w := createRouterTest(cfg, url)
+					w := createRouterTest(cfg, urlStr)
 					Convey("Then the default zebedee handler should respond", func() {
 						So(w.Code, ShouldEqual, http.StatusOK)
 						verifyProxied("/population-types", zebedeeURL)
@@ -487,7 +483,6 @@ func TestRouterPublicAPIs(t *testing.T) {
 					}
 				})
 			})
-
 		})
 
 		Convey("Given a maps service subpath", func() {
@@ -515,12 +510,10 @@ func TestRouterPublicAPIs(t *testing.T) {
 						verifyProxied("/"+version+"/maps/subpath", zebedeeURL)
 					})
 				})
-
 			})
 		})
 
 		Convey("Given an url to the geodata api", func() {
-
 			Convey("And the feature flag is enabled", func() {
 				cfg.EnableGeodataAPI = true
 
@@ -567,9 +560,7 @@ func TestRouterPublicAPIs(t *testing.T) {
 }
 
 func TestRouterPrivateAPIs(t *testing.T) {
-
 	Convey("Given an api router and proxies with all private endpoints available", t, func() {
-
 		cfg, _ := config.Get()
 
 		datasetAPIURL, _ := url.Parse(cfg.DatasetAPIURL)
@@ -821,9 +812,7 @@ func TestRouterPrivateAPIs(t *testing.T) {
 }
 
 func TestRouterLegacyAPIs(t *testing.T) {
-
 	Convey("Given an api router and proxies with all legacy endpoints available", t, func() {
-
 		cfg, err := config.Get()
 		So(err, ShouldBeNil)
 
@@ -867,19 +856,17 @@ func TestRouterLegacyAPIs(t *testing.T) {
 
 func assertOnlyThisURLIsCalled(expectedURL *url.URL) {
 	for urlToCheck, pxy := range registeredProxies {
-
 		if urlToCheck == *expectedURL {
 			So(len(pxy.ServeHTTPCalls()), ShouldEqual, 1)
 			continue
 		}
-
 		So(len(pxy.ServeHTTPCalls()), ShouldEqual, 0)
 	}
 }
 
 // createRouterTest calls service CreateRouter httptest request, recorder, and healthcheck mock
-func createRouterTest(cfg *config.Config, url string) *httptest.ResponseRecorder {
-	r := httptest.NewRequest(http.MethodGet, url, nil)
+func createRouterTest(cfg *config.Config, urlStr string) *httptest.ResponseRecorder {
+	r := httptest.NewRequest(http.MethodGet, urlStr, http.NoBody)
 	r.Header.Set(authorizationHeader, testServiceAuthToken)
 	w := httptest.NewRecorder()
 
@@ -910,7 +897,6 @@ func resetProxyMocksWithExpectations(expectedURLs map[string]*url.URL) {
 	proxy.NewSingleHostReverseProxy = func(target *url.URL, version, envHost, contextURL string) proxy.IReverseProxy {
 		pxyMock := &proxyMock.IReverseProxyMock{
 			ServeHTTPFunc: func(rw http.ResponseWriter, req *http.Request) {
-
 				for path := range expectedURLs {
 					if strings.HasPrefix(req.URL.Path, path) {
 						return

@@ -18,7 +18,6 @@ func SetAllowOriginHeader(allowedOrigins []string) func(h http.Handler) http.Han
 
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
 			if acceptAllOrigins {
 				w.Header().Set("Access-Control-Allow-Origin", "*")
 			} else {
@@ -28,7 +27,6 @@ func SetAllowOriginHeader(allowedOrigins []string) func(h http.Handler) http.Han
 				if origin != "" {
 					acceptedOrigin := ""
 					for _, v := range allowedOrigins {
-
 						if v == origin || v == "*" {
 							acceptedOrigin = origin
 							break

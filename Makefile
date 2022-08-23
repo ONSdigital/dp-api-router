@@ -14,6 +14,11 @@ VERSION ?= $(shell git tag --points-at HEAD | grep ^v | head -n 1)
 .PHONY: all
 all: audit test build
 
+.PHONY: lint
+lint:
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.45.2
+	golangci-lint run ./...
+
 .PHONY: audit
 audit:
 	set -o pipefail; go list -m all | nancy sleuth
@@ -30,10 +35,6 @@ test:
 .PHONY: debug
 debug:
 	HUMAN_LOG=1 go run -race -ldflags="-X 'main.BuildTime=$(BUILD_TIME)' -X 'main.GitCommit=$(GIT_COMMIT)' -X 'main.Version=$(VERSION)'" main.go
-
-.PHONY: lint
-lint:
-	golangci-lint --deadline=10m --fast --enable=gosec --enable=gocritic --enable=gofmt --enable=gocyclo --enable=bodyclose --enable=gocognit run
 
 .PHONY: generate
 generate:

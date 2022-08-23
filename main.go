@@ -54,8 +54,8 @@ func run(ctx context.Context) error {
 
 	// blocks until an os interrupt or a fatal error occurs
 	select {
-	case err := <-svcErrors:
-		return errors.Wrap(err, "service error received")
+	case svcErr := <-svcErrors:
+		return errors.Wrap(svcErr, "service error received")
 	case sig := <-signals:
 		ctx := context.Background()
 		log.Info(ctx, "os signal received", log.Data{"signal": sig})

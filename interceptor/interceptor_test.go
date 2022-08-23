@@ -1,7 +1,7 @@
 package interceptor
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -20,14 +20,13 @@ type dummyRT struct {
 func (t dummyRT) RoundTrip(req *http.Request) (resp *http.Response, err error) {
 	_ = req // shut some linters up
 	resp = httptest.NewRecorder().Result()
-	resp.Body = ioutil.NopCloser(strings.NewReader(t.testJSON))
+	resp.Body = io.NopCloser(strings.NewReader(t.testJSON))
 	return
 }
 
 var _ http.RoundTripper = dummyRT{}
 
 func TestUnitInterceptor(t *testing.T) {
-
 	Convey("test interceptor doesn't throw an error for an empty response", t, func() {
 		testJSON := ``
 		transp := dummyRT{testJSON}
@@ -37,7 +36,7 @@ func TestUnitInterceptor(t *testing.T) {
 		resp, err := t.RoundTrip(&http.Request{})
 		So(err, ShouldBeNil)
 
-		b, err := ioutil.ReadAll(resp.Body)
+		b, err := io.ReadAll(resp.Body)
 		So(err, ShouldBeNil)
 
 		err = resp.Body.Close()
@@ -46,7 +45,6 @@ func TestUnitInterceptor(t *testing.T) {
 	})
 
 	Convey("test interceptor doesn't throw an error for a nil body", t, func() {
-		// testJSON := ``
 		transp := dummyRT{}
 
 		t := NewRoundTripper(testDomain, "", transp)
@@ -54,7 +52,7 @@ func TestUnitInterceptor(t *testing.T) {
 		resp, err := t.RoundTrip(&http.Request{})
 		So(err, ShouldBeNil)
 
-		b, err := ioutil.ReadAll(resp.Body)
+		b, err := io.ReadAll(resp.Body)
 		So(err, ShouldBeNil)
 
 		err = resp.Body.Close()
@@ -63,7 +61,6 @@ func TestUnitInterceptor(t *testing.T) {
 	})
 
 	Convey("test interceptor doesn't throw an error for a nil body with correct URI", t, func() {
-		// testJSON := ``
 		transp := dummyRT{}
 
 		t := NewRoundTripper(testDomain, "", transp)
@@ -71,7 +68,7 @@ func TestUnitInterceptor(t *testing.T) {
 		resp, err := t.RoundTrip(&http.Request{RequestURI: "/datasets"})
 		So(err, ShouldBeNil)
 
-		b, err := ioutil.ReadAll(resp.Body)
+		b, err := io.ReadAll(resp.Body)
 		So(err, ShouldBeNil)
 
 		err = resp.Body.Close()
@@ -88,7 +85,7 @@ func TestUnitInterceptor(t *testing.T) {
 		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
 
-		b, err := ioutil.ReadAll(resp.Body)
+		b, err := io.ReadAll(resp.Body)
 		So(err, ShouldBeNil)
 
 		err = resp.Body.Close()
@@ -105,7 +102,7 @@ func TestUnitInterceptor(t *testing.T) {
 		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
 
-		b, err := ioutil.ReadAll(resp.Body)
+		b, err := io.ReadAll(resp.Body)
 		So(err, ShouldBeNil)
 
 		err = resp.Body.Close()
@@ -123,7 +120,7 @@ func TestUnitInterceptor(t *testing.T) {
 		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
 
-		b, err := ioutil.ReadAll(resp.Body)
+		b, err := io.ReadAll(resp.Body)
 		So(err, ShouldBeNil)
 
 		err = resp.Body.Close()
@@ -141,7 +138,7 @@ func TestUnitInterceptor(t *testing.T) {
 		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets/1234"})
 		So(err, ShouldBeNil)
 
-		b, err := ioutil.ReadAll(resp.Body)
+		b, err := io.ReadAll(resp.Body)
 		So(err, ShouldBeNil)
 
 		err = resp.Body.Close()
@@ -159,7 +156,7 @@ func TestUnitInterceptor(t *testing.T) {
 		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/code-lists"})
 		So(err, ShouldBeNil)
 
-		b, err := ioutil.ReadAll(resp.Body)
+		b, err := io.ReadAll(resp.Body)
 		So(err, ShouldBeNil)
 
 		err = resp.Body.Close()
@@ -177,7 +174,7 @@ func TestUnitInterceptor(t *testing.T) {
 		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
 
-		b, err := ioutil.ReadAll(resp.Body)
+		b, err := io.ReadAll(resp.Body)
 		So(err, ShouldBeNil)
 
 		err = resp.Body.Close()
@@ -195,7 +192,7 @@ func TestUnitInterceptor(t *testing.T) {
 		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
 
-		b, err := ioutil.ReadAll(resp.Body)
+		b, err := io.ReadAll(resp.Body)
 		So(err, ShouldBeNil)
 
 		err = resp.Body.Close()
@@ -213,7 +210,7 @@ func TestUnitInterceptor(t *testing.T) {
 		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
 
-		b, err := ioutil.ReadAll(resp.Body)
+		b, err := io.ReadAll(resp.Body)
 		So(err, ShouldBeNil)
 
 		err = resp.Body.Close()
@@ -231,7 +228,7 @@ func TestUnitInterceptor(t *testing.T) {
 		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
 
-		b, err := ioutil.ReadAll(resp.Body)
+		b, err := io.ReadAll(resp.Body)
 		So(err, ShouldBeNil)
 
 		err = resp.Body.Close()
@@ -249,7 +246,7 @@ func TestUnitInterceptor(t *testing.T) {
 		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
 
-		b, err := ioutil.ReadAll(resp.Body)
+		b, err := io.ReadAll(resp.Body)
 		So(err, ShouldBeNil)
 
 		err = resp.Body.Close()
@@ -270,7 +267,7 @@ func TestUnitInterceptor(t *testing.T) {
 		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
 
-		b, err := ioutil.ReadAll(resp.Body)
+		b, err := io.ReadAll(resp.Body)
 		So(err, ShouldBeNil)
 
 		err = resp.Body.Close()
@@ -291,7 +288,7 @@ func TestUnitInterceptor(t *testing.T) {
 		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
 
-		b, err := ioutil.ReadAll(resp.Body)
+		b, err := io.ReadAll(resp.Body)
 		So(err, ShouldBeNil)
 
 		err = resp.Body.Close()
@@ -313,7 +310,7 @@ func TestUnitInterceptor(t *testing.T) {
 		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
 
-		b, err := ioutil.ReadAll(resp.Body)
+		b, err := io.ReadAll(resp.Body)
 		So(err, ShouldBeNil)
 
 		err = resp.Body.Close()
@@ -331,7 +328,7 @@ func TestUnitInterceptor(t *testing.T) {
 		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
 
-		b, err := ioutil.ReadAll(resp.Body)
+		b, err := io.ReadAll(resp.Body)
 		So(err, ShouldBeNil)
 
 		err = resp.Body.Close()
@@ -352,7 +349,7 @@ func TestUnitInterceptor(t *testing.T) {
 		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
 
-		b, err := ioutil.ReadAll(resp.Body)
+		b, err := io.ReadAll(resp.Body)
 		So(err, ShouldBeNil)
 
 		err = resp.Body.Close()

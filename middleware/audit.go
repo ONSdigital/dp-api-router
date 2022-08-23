@@ -37,9 +37,6 @@ var pathsToIgnore = []string{
 	"/clickEventLog",
 	"/health",
 	"/v1/tokens",
-	//"/v1/users",
-	//"/v1/groups",
-	//"/v1/password-reset",
 }
 
 // paths that will skip retrieveIdentity, and will be audited without identity
@@ -78,7 +75,6 @@ func AuditHandler(auditProducer *event.AvroProducer,
 	zebedeeURL, versionPrefix string,
 	enableZebedeeAudit bool,
 	router Router) func(h http.Handler) http.Handler {
-
 	// create Identity client that will be used by middleware to check callers identity
 	idClient := clientsidentity.NewWithHealthClient(&health.Client{
 		Client: cli,
@@ -88,7 +84,6 @@ func AuditHandler(auditProducer *event.AvroProducer,
 
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
 			// if path does not need to be audited, ignore it and proceed to next handler
 			if shallIgnore(r.URL.Path) {
 				h.ServeHTTP(w, r)
@@ -110,15 +105,14 @@ func AuditHandler(auditProducer *event.AvroProducer,
 			auditEvent := GenerateAuditEvent(r)
 
 			if !ShallSkipIdentity(versionPrefix, r.URL.Path) {
-
 				// Retrieve Identity from Zebedee, which is stored in context.
 				// if it fails, try to audit with the statusCode before returning
 				ctx, statusCode, err := retrieveIdentity(w, r, idClient)
 				if err != nil {
 					// error already handled in retrieveIdentity. Try to audit it.
 					auditEvent.StatusCode = int32(statusCode)
-					if err := auditProducer.Audit(auditEvent); err != nil {
-						log.Error(ctx, "inbound audit event could not be sent", err, log.Data{"event": auditEvent})
+					if auditErr := auditProducer.Audit(auditEvent); auditErr != nil {
+						log.Error(ctx, "inbound audit event could not be sent", auditErr, log.Data{"event": auditEvent})
 					}
 					return
 				}
@@ -281,8 +275,8 @@ func retrieveIdentity(w http.ResponseWriter, req *http.Request, idClient *client
 }
 
 // handleError adhering to the DRY principle - clean up for failed identity requests, log the error, drain the request body and write the status code.
-func handleError(ctx context.Context, w http.ResponseWriter, r *http.Request, status int, event string, err error, data log.Data) {
-	log.Error(ctx, event, err, data)
+func handleError(ctx context.Context, w http.ResponseWriter, r *http.Request, status int, eventDetails string, err error, data log.Data) {
+	log.Error(ctx, eventDetails, err, data)
 	dphttp.DrainBody(r)
 	w.WriteHeader(status)
 }
