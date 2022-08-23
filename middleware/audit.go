@@ -224,17 +224,18 @@ func retrieveIdentity(w http.ResponseWriter, req *http.Request, idClient *client
 	}
 
 	if strings.Contains(florenceToken, ".") {
+
 		token := florenceToken
 		bearerPrefix := "Bearer "
 		if strings.HasPrefix(florenceToken, bearerPrefix) {
 			token = strings.TrimPrefix(florenceToken, bearerPrefix)
 		}
-
 		cfg, err := config.Get()
 		if err != nil {
 			handleError(ctx, w, req, http.StatusInternalServerError, "error getting config for request", err, nil)
 			return ctx, http.StatusInternalServerError, err
 		}
+
 		authorisationMiddleware, err := authorisation.NewFeatureFlaggedMiddleware(ctx, &cfg.Auth, nil)
 		if err != nil {
 			handleError(ctx, w, req, http.StatusInternalServerError, "error getting jwtRSAPublicKeys from request", err, nil)
@@ -242,6 +243,7 @@ func retrieveIdentity(w http.ResponseWriter, req *http.Request, idClient *client
 		}
 
 		entityData, err := authorisationMiddleware.Parse(token)
+
 		if err != nil {
 			handleError(ctx, w, req, http.StatusInternalServerError, "error getting parsing token from request", err, nil)
 			return ctx, http.StatusInternalServerError, err
