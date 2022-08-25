@@ -145,14 +145,11 @@ func TestGenerateAuditEvent(t *testing.T) {
 				QueryParam: "uri=%wxhealth",
 			})
 		})
-
 	})
 }
 
 func TestAuditHandlerHeaders(t *testing.T) {
-
 	Convey("Given deterministic inbound and outbound timestamps", t, func(c C) {
-
 		isInbound := true
 		middleware.Now = func() time.Time {
 			if isInbound {
@@ -368,9 +365,7 @@ func TestAuditHandlerHeaders(t *testing.T) {
 }
 
 func TestAuditHandler(t *testing.T) {
-
 	Convey("Given deterministic inbound and outbound timestamps, and an incoming request with valid Florence and Service tokens", t, func(c C) {
-
 		isInbound := true
 		middleware.Now = func() time.Time {
 			if isInbound {
@@ -476,9 +471,7 @@ func TestAuditHandler(t *testing.T) {
 	})
 }
 func TestAuditHandlerJWTFlorenceToken(t *testing.T) {
-
 	Convey("Given deterministic inbound and outbound timestamps, and an incoming request with invalid JWT_Florence and Service tokens", t, func(c C) {
-
 		isInbound := true
 		middleware.Now = func() time.Time {
 			if isInbound {
@@ -522,7 +515,7 @@ func TestAuditHandlerJWTFlorenceToken(t *testing.T) {
 			// execute request and expect only 1 audit event
 			auditEvents := serveAndCaptureAudit(c, w, req, auditHandler, p.Channels().Output, 1)
 			Convey("Then status 500 and empty body is returned", func(c C) {
-				c.So(w.Code, ShouldEqual, http.StatusUnauthorized)
+				c.So(w.Code, ShouldEqual, http.StatusInternalServerError)
 				b, err := io.ReadAll(w.Body)
 				So(err, ShouldBeNil)
 				c.So(b, ShouldResemble, []byte{})
@@ -536,14 +529,12 @@ func TestAuditHandlerJWTFlorenceToken(t *testing.T) {
 }
 
 func TestAuditIgnoreSkip(t *testing.T) {
-
 	Convey("Given an incoming request to an ignored path", t, func(c C) {
 		req, err := http.NewRequest(http.MethodGet, "/ping", http.NoBody)
 		So(err, ShouldBeNil)
 		w := httptest.NewRecorder()
 
 		Convey("And a valid audit handler without downstream", func(c C) {
-
 			p, a := createValidAuditHandler()
 			auditHandler := a(testHandler(http.StatusForbidden, testBody, c))
 
@@ -565,7 +556,6 @@ func TestAuditIgnoreSkip(t *testing.T) {
 		w := httptest.NewRecorder()
 
 		Convey("And a valid audit handler without downstream", func(c C) {
-
 			p, a := createValidAuditHandler()
 			auditHandler := a(testHandler(http.StatusForbidden, testBody, c))
 
@@ -583,15 +573,12 @@ func TestAuditIgnoreSkip(t *testing.T) {
 				c.So(auditEvents[0].Identity, ShouldResemble, "")
 				c.So(auditEvents[1].Identity, ShouldResemble, "")
 			})
-
 		})
 	})
 }
 
 func TestSkipZebedeeAudit(t *testing.T) {
-
 	Convey("Given an audit handler configured to not audit zebedee requests", t, func(c C) {
-
 		cliMock := createHTTPClientMock(http.StatusOK, testIdentityResponse)
 		p := kafkatest.NewMessageProducer(true)
 		auditProducer := event.NewAvroProducer(p.Channels().Output, schema.AuditEvent)
@@ -702,7 +689,6 @@ func TestShallSkipIdentity(t *testing.T) {
 // aux function for testing that serves HTTP, wrapping the provided handler with AuditHandler,
 // and waits for the number of expected audit events, which are then returned in an array
 func serveAndCaptureAudit(c C, w http.ResponseWriter, req *http.Request, auditHandler http.Handler, outChan chan []byte, numExpectedMessages int) (auditEvents []event.Audit) {
-
 	// run HTTP server in a parallel go-routine
 	wg := &sync.WaitGroup{}
 	wg.Add(1)

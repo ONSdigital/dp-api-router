@@ -220,7 +220,6 @@ func retrieveIdentity(w http.ResponseWriter, req *http.Request, idClient *client
 	ctx = req.Context()
 
 	florenceToken, err := getFlorenceToken(ctx, req)
-
 	if err != nil {
 		handleError(ctx, w, req, http.StatusInternalServerError, "error getting florence access token from request", err, nil)
 		return ctx, http.StatusInternalServerError, err
@@ -247,9 +246,6 @@ func retrieveIdentity(w http.ResponseWriter, req *http.Request, idClient *client
 		if entityData != nil {
 			ctx = context.WithValue(ctx, dprequest.UserIdentityKey, entityData.UserID)
 			return ctx, http.StatusOK, nil
-		} else {
-			handleError(ctx, w, req, http.StatusUnauthorized, "error getting parsing token from request", err, nil)
-			return ctx, http.StatusUnauthorized, err
 		}
 	}
 
