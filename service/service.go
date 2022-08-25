@@ -106,7 +106,9 @@ func (svc *Service) CreateMiddleware(cfg *config.Config, router *mux.Router) ali
 			cfg.ZebedeeURL,
 			cfg.Version,
 			cfg.EnableZebedeeAudit,
-			router))
+			router,
+			cfg.Auth,
+		))
 	}
 
 	if cfg.EnablePrivateEndpoints {

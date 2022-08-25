@@ -25,6 +25,10 @@ import (
 
 //go:generate moq -out ./mock/router.go -pkg mock . Router
 
+type Config struct {
+	Config *config.Config
+}
+
 type Router interface {
 	Match(req *http.Request, match *mux.RouteMatch) bool
 }
@@ -45,6 +49,9 @@ var pathsSkipIdentity = []string{
 	"/password",
 	"/hierarchies",
 }
+
+// Now is a time.Now wrapper specifically for testing purposes, and should not me unlambda'd - despite what golangci-lint says
+var Now = time.Now
 
 func ShallSkipIdentity(versionPrefix, path string) bool {
 	// TODO need to revisit this if we start supporting multiple versions of the APIs.
@@ -74,7 +81,8 @@ func AuditHandler(auditProducer *event.AvroProducer,
 	cli dphttp.Clienter,
 	zebedeeURL, versionPrefix string,
 	enableZebedeeAudit bool,
-	router Router) func(h http.Handler) http.Handler {
+	router Router,
+	auth authorisation.Config) func(h http.Handler) http.Handler {
 	// create Identity client that will be used by middleware to check callers identity
 	idClient := clientsidentity.NewWithHealthClient(&health.Client{
 		Client: cli,
@@ -107,7 +115,7 @@ func AuditHandler(auditProducer *event.AvroProducer,
 			if !ShallSkipIdentity(versionPrefix, r.URL.Path) {
 				// Retrieve Identity from Zebedee, which is stored in context.
 				// if it fails, try to audit with the statusCode before returning
-				ctx, statusCode, err := retrieveIdentity(w, r, idClient)
+				ctx, statusCode, err := retrieveIdentity(w, r, idClient, auth)
 				if err != nil {
 					// error already handled in retrieveIdentity. Try to audit it.
 					auditEvent.StatusCode = int32(statusCode)
@@ -213,7 +221,7 @@ func GenerateAuditEvent(req *http.Request) *event.Audit {
 }
 
 // retrieveIdentity requests the user and caller identity from Zebedee, using the provided client.
-func retrieveIdentity(w http.ResponseWriter, req *http.Request, idClient *clientsidentity.Client) (ctx context.Context, status int, err error) {
+func retrieveIdentity(w http.ResponseWriter, req *http.Request, idClient *clientsidentity.Client, auth authorisation.Config) (ctx context.Context, status int, err error) {
 	ctx = req.Context()
 
 	florenceToken, err := getFlorenceToken(ctx, req)
@@ -224,19 +232,13 @@ func retrieveIdentity(w http.ResponseWriter, req *http.Request, idClient *client
 	}
 
 	if strings.Contains(florenceToken, ".") {
-
 		token := florenceToken
 		bearerPrefix := "Bearer "
 		if strings.HasPrefix(florenceToken, bearerPrefix) {
 			token = strings.TrimPrefix(florenceToken, bearerPrefix)
 		}
-		cfg, err := config.Get()
-		if err != nil {
-			handleError(ctx, w, req, http.StatusInternalServerError, "error getting config for request", err, nil)
-			return ctx, http.StatusInternalServerError, err
-		}
 
-		authorisationMiddleware, err := authorisation.NewFeatureFlaggedMiddleware(ctx, &cfg.Auth, nil)
+		authorisationMiddleware, err := authorisation.NewFeatureFlaggedMiddleware(ctx, &auth, nil)
 		if err != nil {
 			handleError(ctx, w, req, http.StatusInternalServerError, "error getting jwtRSAPublicKeys from request", err, nil)
 			return ctx, http.StatusInternalServerError, err
@@ -251,6 +253,9 @@ func retrieveIdentity(w http.ResponseWriter, req *http.Request, idClient *client
 		if entityData != nil {
 			ctx = context.WithValue(ctx, dprequest.UserIdentityKey, entityData.UserID)
 			return ctx, http.StatusOK, nil
+		} else {
+			handleError(ctx, w, req, http.StatusUnauthorized, "error getting parsing token from request", err, nil)
+			return ctx, http.StatusUnauthorized, err
 		}
 	}
 
@@ -323,9 +328,4 @@ func getServiceAuthToken(ctx context.Context, req *http.Request) (string, error)
 	}
 
 	return authToken, err
-}
-
-// Now is a time.Now wrapper specifically for testing purposes, and should not me unlambda'd - despite what golangci-lint says
-var Now = func() time.Time {
-	return time.Now()
 }
