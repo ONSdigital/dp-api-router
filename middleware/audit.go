@@ -237,7 +237,7 @@ func retrieveIdentity(w http.ResponseWriter, req *http.Request, idClient *client
 		if strings.HasPrefix(florenceToken, bearerPrefix) {
 			token = strings.TrimPrefix(florenceToken, bearerPrefix)
 		}
-		
+
 		authorisationMiddleware, err := authorisation.NewFeatureFlaggedMiddleware(ctx, &auth, nil)
 		if err != nil {
 			handleError(ctx, w, req, http.StatusInternalServerError, "error getting jwtRSAPublicKeys from request", err, nil)

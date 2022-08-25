@@ -105,9 +105,7 @@ func createHTTPClientMock(retCode int, retBody interface{}) *dphttp.ClienterMock
 }
 
 func TestGenerateAuditEvent(t *testing.T) {
-
 	Convey("Given a mocked time.Now", t, func(c C) {
-
 		middleware.Now = func() time.Time {
 			return testTimeInbound
 		}
@@ -125,7 +123,7 @@ func TestGenerateAuditEvent(t *testing.T) {
 		})
 
 		Convey("A request with query paramters including escaped characters generates a valid audit event, with the expected unescaped values", func() {
-			req, err := http.NewRequest(http.MethodGet, "/v1/data?lang=en\u0026uri=%2Fhealth", nil)
+			req, err := http.NewRequest(http.MethodGet, "/v1/data?lang=en\u0026uri=%2Fhealth", http.NoBody)
 			So(err, ShouldBeNil)
 			e := middleware.GenerateAuditEvent(req)
 			So(*e, ShouldResemble, event.Audit{
@@ -137,7 +135,7 @@ func TestGenerateAuditEvent(t *testing.T) {
 		})
 
 		Convey("A request with query paramters including incorrectly escaped characters defaults to the raw query value when generating the audit event", func() {
-			req, err := http.NewRequest(http.MethodGet, "/v1/data?uri=%wxhealth", nil)
+			req, err := http.NewRequest(http.MethodGet, "/v1/data?uri=%wxhealth", http.NoBody)
 			So(err, ShouldBeNil)
 			e := middleware.GenerateAuditEvent(req)
 			So(*e, ShouldResemble, event.Audit{
@@ -165,7 +163,7 @@ func TestAuditHandlerHeaders(t *testing.T) {
 		}
 
 		Convey("An incoming request with no auth headers", func(c C) {
-			req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", nil)
+			req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", http.NoBody)
 			So(err, ShouldBeNil)
 			w := httptest.NewRecorder()
 
@@ -211,7 +209,7 @@ func TestAuditHandlerHeaders(t *testing.T) {
 		})
 
 		Convey("An incoming request with a valid Florence Token", func(c C) {
-			req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", nil)
+			req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", http.NoBody)
 			So(err, ShouldBeNil)
 			req.Header.Set(dprequest.FlorenceHeaderKey, testFlorenceToken)
 			w := httptest.NewRecorder()
@@ -266,7 +264,7 @@ func TestAuditHandlerHeaders(t *testing.T) {
 		})
 
 		Convey("An incoming request with a valid Service Auth Token", func(c C) {
-			req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", nil)
+			req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", http.NoBody)
 			So(err, ShouldBeNil)
 			req.Header.Set(dprequest.AuthHeaderKey, testServiceAuthToken)
 			w := httptest.NewRecorder()
@@ -321,7 +319,7 @@ func TestAuditHandlerHeaders(t *testing.T) {
 		})
 
 		Convey("An incoming request with all headers", func(c C) {
-			req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", nil)
+			req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", http.NoBody)
 			So(err, ShouldBeNil)
 			req.Header.Set(dprequest.AuthHeaderKey, testServiceAuthToken)
 			req.Header.Set(dprequest.FlorenceHeaderKey, testFlorenceToken)
@@ -382,7 +380,7 @@ func TestAuditHandler(t *testing.T) {
 			return testTimeOutbound
 		}
 
-		req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", nil)
+		req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", http.NoBody)
 		So(err, ShouldBeNil)
 		req.Header.Set(dprequest.FlorenceHeaderKey, testFlorenceToken)
 		req.Header.Set(dprequest.AuthHeaderKey, testServiceAuthToken)
