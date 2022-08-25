@@ -111,7 +111,7 @@ func TestGenerateAuditEvent(t *testing.T) {
 		}
 
 		Convey("A request with query paramters generates a valid audit event, with the expected values", func() {
-			req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", nil)
+			req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", http.NoBody)
 			So(err, ShouldBeNil)
 			e := middleware.GenerateAuditEvent(req)
 			So(*e, ShouldResemble, event.Audit{
@@ -488,7 +488,7 @@ func TestAuditHandlerJWTFlorenceToken(t *testing.T) {
 			return testTimeOutbound
 		}
 
-		req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", nil)
+		req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", http.NoBody)
 		So(err, ShouldBeNil)
 		req.Header.Set(dprequest.FlorenceHeaderKey, testJWTFlorenceToken)
 		req.Header.Set(dprequest.AuthHeaderKey, testServiceAuthToken)
@@ -538,7 +538,7 @@ func TestAuditHandlerJWTFlorenceToken(t *testing.T) {
 func TestAuditIgnoreSkip(t *testing.T) {
 
 	Convey("Given an incoming request to an ignored path", t, func(c C) {
-		req, err := http.NewRequest(http.MethodGet, "/ping", nil)
+		req, err := http.NewRequest(http.MethodGet, "/ping", http.NoBody)
 		So(err, ShouldBeNil)
 		w := httptest.NewRecorder()
 
@@ -560,7 +560,7 @@ func TestAuditIgnoreSkip(t *testing.T) {
 	})
 
 	Convey("Given an incoming request to a path for which identity check needs to be skipped", t, func(c C) {
-		req, err := http.NewRequest(http.MethodGet, "/login", nil)
+		req, err := http.NewRequest(http.MethodGet, "/login", http.NoBody)
 		So(err, ShouldBeNil)
 		w := httptest.NewRecorder()
 
@@ -607,7 +607,7 @@ func TestSkipZebedeeAudit(t *testing.T) {
 		auditHandler := auditMiddleware(testHandler(http.StatusOK, testBody, c))
 
 		Convey("When the handler receives a Zebedee request", func(c C) {
-			req, err := http.NewRequest(http.MethodGet, "/data", nil)
+			req, err := http.NewRequest(http.MethodGet, "/data", http.NoBody)
 			So(err, ShouldBeNil)
 			w := httptest.NewRecorder()
 
@@ -647,7 +647,7 @@ func TestSkipZebedeeAudit(t *testing.T) {
 		auditHandler := auditMiddleware(testHandler(http.StatusOK, testBody, c))
 
 		Convey("When the handler receives a request for a known route (not zebedee)", func(c C) {
-			req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", nil)
+			req, err := http.NewRequest(http.MethodGet, "/v1/datasets?q1=v1&q2=v2", http.NoBody)
 			req.Header.Set(dprequest.FlorenceHeaderKey, testFlorenceToken)
 			req.Header.Set(dprequest.AuthHeaderKey, testServiceAuthToken)
 			So(err, ShouldBeNil)
