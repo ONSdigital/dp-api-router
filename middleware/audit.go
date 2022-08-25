@@ -15,7 +15,6 @@ import (
 	"github.com/ONSdigital/dp-api-clients-go/v2/headers"
 	"github.com/ONSdigital/dp-api-clients-go/v2/health"
 	clientsidentity "github.com/ONSdigital/dp-api-clients-go/v2/identity"
-	"github.com/ONSdigital/dp-api-router/config"
 	"github.com/ONSdigital/dp-api-router/event"
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	dphttp "github.com/ONSdigital/dp-net/v2/http"
@@ -24,10 +23,6 @@ import (
 )
 
 //go:generate moq -out ./mock/router.go -pkg mock . Router
-
-type Config struct {
-	Config *config.Config
-}
 
 type Router interface {
 	Match(req *http.Request, match *mux.RouteMatch) bool
