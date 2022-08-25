@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"sync"
@@ -98,7 +98,7 @@ func createHTTPClientMock(retCode int, retBody interface{}) *dphttp.ClienterMock
 			body, _ := json.Marshal(retBody)
 			return &http.Response{
 				StatusCode: retCode,
-				Body:       ioutil.NopCloser(bytes.NewReader(body)),
+				Body:       io.NopCloser(bytes.NewReader(body)),
 			}, nil
 		},
 	}
@@ -178,7 +178,7 @@ func TestAuditHandlerHeaders(t *testing.T) {
 
 				Convey("Then status Unauthorised and empty body is returned", func(c C) {
 					c.So(w.Code, ShouldEqual, http.StatusUnauthorized)
-					b, err := ioutil.ReadAll(w.Body)
+					b, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					c.So(b, ShouldResemble, []byte{})
 				})
@@ -203,7 +203,7 @@ func TestAuditHandlerHeaders(t *testing.T) {
 
 				Convey("Then status Unauthorised and empty body is returned", func(c C) {
 					c.So(w.Code, ShouldEqual, http.StatusUnauthorized)
-					b, err := ioutil.ReadAll(w.Body)
+					b, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					c.So(b, ShouldResemble, []byte{})
 				})
@@ -225,7 +225,7 @@ func TestAuditHandlerHeaders(t *testing.T) {
 
 				Convey("Then status OK and expected body is returned", func(c C) {
 					c.So(w.Code, ShouldEqual, http.StatusOK)
-					b, err := ioutil.ReadAll(w.Body)
+					b, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					c.So(b, ShouldResemble, testBody)
 				})
@@ -258,7 +258,7 @@ func TestAuditHandlerHeaders(t *testing.T) {
 
 				Convey("Then status 500 and empty body is returned", func(c C) {
 					c.So(w.Code, ShouldEqual, http.StatusInternalServerError)
-					b, err := ioutil.ReadAll(w.Body)
+					b, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					c.So(b, ShouldResemble, []byte{})
 				})
@@ -280,7 +280,7 @@ func TestAuditHandlerHeaders(t *testing.T) {
 
 				Convey("Then status OK and expected body is returned", func(c C) {
 					c.So(w.Code, ShouldEqual, http.StatusOK)
-					b, err := ioutil.ReadAll(w.Body)
+					b, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					c.So(b, ShouldResemble, testBody)
 				})
@@ -313,7 +313,7 @@ func TestAuditHandlerHeaders(t *testing.T) {
 
 				Convey("Then status 500 and empty body is returned", func(c C) {
 					c.So(w.Code, ShouldEqual, http.StatusInternalServerError)
-					b, err := ioutil.ReadAll(w.Body)
+					b, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					c.So(b, ShouldResemble, []byte{})
 				})
@@ -338,7 +338,7 @@ func TestAuditHandlerHeaders(t *testing.T) {
 
 				Convey("Then status OK and expected body is returned", func(c C) {
 					c.So(w.Code, ShouldEqual, http.StatusOK)
-					b, err := ioutil.ReadAll(w.Body)
+					b, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					c.So(b, ShouldResemble, testBody)
 				})
@@ -397,7 +397,7 @@ func TestAuditHandler(t *testing.T) {
 
 			Convey("Then status Forbidden and expected body is returned", func(c C) {
 				c.So(w.Code, ShouldEqual, http.StatusForbidden)
-				b, err := ioutil.ReadAll(w.Body)
+				b, err := io.ReadAll(w.Body)
 				So(err, ShouldBeNil)
 				c.So(b, ShouldResemble, testBody)
 			})
@@ -430,7 +430,7 @@ func TestAuditHandler(t *testing.T) {
 
 			Convey("Then status 500 and empty body is returned", func(c C) {
 				c.So(w.Code, ShouldEqual, http.StatusInternalServerError)
-				b, err := ioutil.ReadAll(w.Body)
+				b, err := io.ReadAll(w.Body)
 				So(err, ShouldBeNil)
 				c.So(b, ShouldResemble, []byte{})
 			})
@@ -466,7 +466,7 @@ func TestAuditHandler(t *testing.T) {
 
 			Convey("Then status 500 and empty body is returned", func(c C) {
 				c.So(w.Code, ShouldEqual, http.StatusInternalServerError)
-				b, err := ioutil.ReadAll(w.Body)
+				b, err := io.ReadAll(w.Body)
 				So(err, ShouldBeNil)
 				c.So(b, ShouldResemble, []byte{})
 			})
@@ -525,7 +525,7 @@ func TestAuditHandlerJWTFlorenceToken(t *testing.T) {
 			auditEvents := serveAndCaptureAudit(c, w, req, auditHandler, p.Channels().Output, 1)
 			Convey("Then status 500 and empty body is returned", func(c C) {
 				c.So(w.Code, ShouldEqual, http.StatusUnauthorized)
-				b, err := ioutil.ReadAll(w.Body)
+				b, err := io.ReadAll(w.Body)
 				So(err, ShouldBeNil)
 				c.So(b, ShouldResemble, []byte{})
 			})
@@ -554,7 +554,7 @@ func TestAuditIgnoreSkip(t *testing.T) {
 
 			Convey("Then status Forbidden and expected body is returned", func(c C) {
 				c.So(w.Code, ShouldEqual, http.StatusForbidden)
-				b, err := ioutil.ReadAll(w.Body)
+				b, err := io.ReadAll(w.Body)
 				So(err, ShouldBeNil)
 				c.So(b, ShouldResemble, testBody)
 			})
@@ -576,7 +576,7 @@ func TestAuditIgnoreSkip(t *testing.T) {
 
 			Convey("Then status Forbidden and expected body is returned", func(c C) {
 				c.So(w.Code, ShouldEqual, http.StatusForbidden)
-				b, err := ioutil.ReadAll(w.Body)
+				b, err := io.ReadAll(w.Body)
 				So(err, ShouldBeNil)
 				c.So(b, ShouldResemble, testBody)
 			})
@@ -618,7 +618,7 @@ func TestSkipZebedeeAudit(t *testing.T) {
 
 			Convey("Then status OK and expected body is returned", func(c C) {
 				c.So(w.Code, ShouldEqual, http.StatusOK)
-				b, err := ioutil.ReadAll(w.Body)
+				b, err := io.ReadAll(w.Body)
 				So(err, ShouldBeNil)
 				c.So(b, ShouldResemble, testBody)
 			})
@@ -660,7 +660,7 @@ func TestSkipZebedeeAudit(t *testing.T) {
 
 			Convey("Then status OK and expected body is returned", func(c C) {
 				c.So(w.Code, ShouldEqual, http.StatusOK)
-				b, err := ioutil.ReadAll(w.Body)
+				b, err := io.ReadAll(w.Body)
 				So(err, ShouldBeNil)
 				c.So(b, ShouldResemble, testBody)
 			})
