@@ -243,6 +243,7 @@ func retrieveIdentity(w http.ResponseWriter, req *http.Request, idClient *client
 			handleError(ctx, w, req, http.StatusInternalServerError, "error getting parsing token from request", err, nil)
 			return ctx, http.StatusInternalServerError, err
 		}
+
 		if entityData != nil {
 			ctx = context.WithValue(ctx, dprequest.UserIdentityKey, entityData.UserID)
 			return ctx, http.StatusOK, nil
