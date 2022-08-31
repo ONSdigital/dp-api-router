@@ -19,7 +19,6 @@ This service is responsible for serving a JSON-LD `@context` field on configured
 | ENABLE_PRIVATE_ENDPOINTS                   | true                     | If private endpoints should be routed                                                      |
 | ENABLE_V1_BETA_RESTRICTION                 | false                    |                                                                                            |
 | ENABLE_SESSIONS_API                        | false                    |                                                                                            |
-| ENABLE_TOPIC_API                           | false                    |                                                                                            |
 | ENABLE_ARTICLES_API                        | false                    | Flag to enable routing to the articles API                                                 |
 | ENABLE_RELEASE_CALENDAR_API                | false                    | Flag to enable routing to the release calendar API                                         |
 | ENABLE_INTERACTIVES_API                    | false                    | Flag to enable routing to the interactives API                                             |
