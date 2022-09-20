@@ -136,9 +136,7 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 	}
 
 	topic := proxy.NewAPIProxy(ctx, cfg.TopicAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.ContextURL, cfg.EnableV1BetaRestriction)
-	if cfg.EnableTopicAPI {
-		addTransitionalHandler(router, topic, "/topics")
-	}
+	addTransitionalHandler(router, topic, "/topics")
 	addTransitionalHandler(router, topic, "/navigation")
 
 	codeList := proxy.NewAPIProxy(ctx, cfg.CodelistAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)

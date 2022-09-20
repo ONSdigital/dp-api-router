@@ -80,6 +80,7 @@ func TestRouterPublicAPIs(t *testing.T) {
 			"/images":           imageAPIURL,
 			"/population-types": populationTypesAPIURL,
 			"/navigation":       topicAPIURL,
+			"/topics":           topicAPIURL,
 		}
 
 		cfg.ArticlesAPIVersions = []string{"a", "b"}
@@ -381,32 +382,22 @@ func TestRouterPublicAPIs(t *testing.T) {
 		})
 
 		Convey("Given a topic service path", func() {
-			Convey("When the feature flag is disabled", func() {
-				cfg.EnableTopicAPI = false
+			topicsPath := "http://localhost:23200/v1/topics"
 
-				Convey("Then a request to the topic navigation endpoint is proxied to topicsAPIURL", func() {
-					w := createRouterTest(cfg, "http://localhost:23200/v1/navigation")
-					So(w.Code, ShouldEqual, http.StatusOK)
-					verifyProxied("/navigation", topicAPIURL)
-				})
+			Convey("Then a request to the topics endpoint is proxied to the topicsAPIURL", func() {
+				w := createRouterTest(cfg, topicsPath)
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/topics", topicAPIURL)
+			})
+		})
 
-				Convey("And a request to the topics endpoint is not proxied to the topicsAPIURL", func() {
-					w := createRouterTest(cfg, "http://localhost:23200/v1/topics")
-					So(w.Code, ShouldEqual, http.StatusNotFound)
-				})
+		Convey("Given a navigation path", func() {
+			navigationPath := "http://localhost:23200/v1/navigation"
 
-				Convey("And when the feature flag is enabled", func() {
-					cfg.EnableTopicAPI = true
-
-					expectedPublicURLs["/topics"] = topicAPIURL
-					resetProxyMocksWithExpectations(expectedPublicURLs)
-
-					Convey("Then a request to the topics endpoint is proxied to the topicsAPIURL", func() {
-						w := createRouterTest(cfg, "http://localhost:23200/v1/topics")
-						So(w.Code, ShouldEqual, http.StatusOK)
-						verifyProxied("/topics", topicAPIURL)
-					})
-				})
+			Convey("Then a request to the navigation endpoint is proxied to topicsAPIURL", func() {
+				w := createRouterTest(cfg, navigationPath)
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/navigation", topicAPIURL)
 			})
 		})
 
