@@ -189,6 +189,21 @@ func TestAuditHandlerHeaders(t *testing.T) {
 					})
 				})
 			})
+
+			Convey("And a failing audit handler without downstream", func(c C) {
+				p, a := createFailingAuditHandler()
+				auditHandler := a(nil)
+
+				// execute request and don't expect audit events
+				serveAndCaptureAudit(c, w, req, auditHandler, p.Channels().Output, 0)
+
+				Convey("Then status Unauthorised and empty body is returned", func(c C) {
+					c.So(w.Code, ShouldEqual, http.StatusUnauthorized)
+					b, err := io.ReadAll(w.Body)
+					So(err, ShouldBeNil)
+					c.So(b, ShouldResemble, []byte{})
+				})
+			})
 		})
 
 		Convey("An incoming request with no auth headers but no identy needed", func(c C) {
@@ -217,21 +232,6 @@ func TestAuditHandlerHeaders(t *testing.T) {
 						Method:     http.MethodPut,
 						QueryParam: "",
 					})
-				})
-			})
-
-			Convey("And a failing audit handler without downstream", func(c C) {
-				p, a := createFailingAuditHandler()
-				auditHandler := a(nil)
-
-				// execute request and don't expect audit events
-				serveAndCaptureAudit(c, w, req, auditHandler, p.Channels().Output, 0)
-
-				Convey("Then status Unauthorised and empty body is returned", func(c C) {
-					c.So(w.Code, ShouldEqual, http.StatusUnauthorized)
-					b, err := io.ReadAll(w.Body)
-					So(err, ShouldBeNil)
-					c.So(b, ShouldResemble, []byte{})
 				})
 			})
 		})
