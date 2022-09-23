@@ -34,7 +34,6 @@ var pathsToIgnore = []string{
 	"/ping",
 	"/clickEventLog",
 	"/health",
-	"/v1/tokens",
 }
 
 // paths that will skip retrieveIdentity, and will be audited without identity
@@ -42,8 +41,9 @@ var pathsSkipIdentity = []string{
 	"/login",
 	"/password",
 	"/hierarchies",
-	"/v1/tokens",
-	"/v1/users/self/password",
+	"/tokens",
+	"/password-reset",
+	"/users/self/password",
 }
 
 // Now is a time.Now wrapper specifically for testing purposes, and should not me unlambda'd - despite what golangci-lint says

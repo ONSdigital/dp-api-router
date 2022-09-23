@@ -6,13 +6,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 
 	"github.com/ONSdigital/dp-api-router/middleware/mock"
 	"github.com/gorilla/mux"
@@ -185,6 +186,36 @@ func TestAuditHandlerHeaders(t *testing.T) {
 						Path:       "/v1/datasets",
 						Method:     http.MethodGet,
 						QueryParam: "q1=v1&q2=v2",
+					})
+				})
+			})
+		})
+
+		Convey("An incoming request with no auth headers but no identy needed", func(c C) {
+			req, err := http.NewRequest(http.MethodPut, "/v1/users/self/password", http.NoBody)
+			So(err, ShouldBeNil)
+			w := httptest.NewRecorder()
+
+			Convey("And a valid audit handler with successful downstream", func(c C) {
+				p, a := createValidAuditHandler()
+				auditHandler := a(testHandler(http.StatusOK, testBody, c))
+
+				// execute request and wait for 2 audit events
+				auditEvents := serveAndCaptureAudit(c, w, req, auditHandler, p.Channels().Output, 2)
+
+				Convey("Then status OK and expected body is returned", func(c C) {
+					c.So(w.Code, ShouldEqual, http.StatusOK)
+					b, err := io.ReadAll(w.Body)
+					So(err, ShouldBeNil)
+					c.So(b, ShouldResemble, testBody)
+				})
+
+				Convey("The expected audit events are sent before and after proxying the call", func() {
+					c.So(auditEvents[0], ShouldResemble, event.Audit{
+						CreatedAt:  testTimeMillisInbound,
+						Path:       "/v1/users/self/password",
+						Method:     http.MethodPut,
+						QueryParam: "",
 					})
 				})
 			})
