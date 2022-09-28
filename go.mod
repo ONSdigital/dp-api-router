@@ -11,7 +11,7 @@ replace (
 
 require (
 	github.com/ONSdigital/dp-api-clients-go/v2 v2.162.0
-	github.com/ONSdigital/dp-authorisation/v2 v2.25.0
+	github.com/ONSdigital/dp-authorisation/v2 v2.25.1
 	github.com/ONSdigital/dp-healthcheck v1.3.0
 	github.com/ONSdigital/dp-kafka/v2 v2.5.0
 	github.com/ONSdigital/dp-kafka/v3 v3.3.2
