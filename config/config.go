@@ -19,6 +19,7 @@ type Config struct {
 	ZebedeeURL                           string        `envconfig:"ZEBEDEE_URL"`
 	HierarchyAPIURL                      string        `envconfig:"HIERARCHY_API_URL"`
 	FilterAPIURL                         string        `envconfig:"FILTER_API_URL"`
+	FilterFlexAPIURL                     string        `envconfig:"FILTER_FLEX_API_URL"`
 	DatasetAPIURL                        string        `envconfig:"DATASET_API_URL"`
 	ObservationAPIURL                    string        `envconfig:"OBSERVATION_API_URL"`
 	CodelistAPIURL                       string        `envconfig:"CODE_LIST_API_URL"`
@@ -101,6 +102,7 @@ func Get() (*Config, error) {
 		ZebedeeURL:                           "http://localhost:8082",
 		HierarchyAPIURL:                      "http://localhost:22600",
 		FilterAPIURL:                         "http://localhost:22100",
+		FilterFlexAPIURL:                     "http://localhost:27100",
 		DatasetAPIURL:                        "http://localhost:22000",
 		ObservationAPIURL:                    "http://localhost:24500",
 		CodelistAPIURL:                       "http://localhost:22400",

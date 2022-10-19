@@ -53,6 +53,7 @@ func TestRouterPublicAPIs(t *testing.T) {
 		zebedeeURL, _ := url.Parse(cfg.ZebedeeURL)
 		hierarchyAPIURL, _ := url.Parse(cfg.HierarchyAPIURL)
 		filterAPIURL, _ := url.Parse(cfg.FilterAPIURL)
+		filterFlexAPIURL, _ := url.Parse(cfg.FilterFlexAPIURL)
 		datasetAPIURL, _ := url.Parse(cfg.DatasetAPIURL)
 		observationAPIURL, _ := url.Parse(cfg.ObservationAPIURL)
 		codelistAPIURL, _ := url.Parse(cfg.CodelistAPIURL)
@@ -72,6 +73,7 @@ func TestRouterPublicAPIs(t *testing.T) {
 			"/code-lists": codelistAPIURL,
 			"/datasets":   datasetAPIURL,
 			"/datasets/{dataset_id}/editions/{edition}/versions/{version}/observations": observationAPIURL,
+			"/datasets/{dataset_id}/editions/{edition}/versions/{version}/json":         filterFlexAPIURL,
 			"/filters":          filterAPIURL,
 			"/filter-outputs":   filterAPIURL,
 			"/hierarchies":      hierarchyAPIURL,

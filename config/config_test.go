@@ -25,6 +25,7 @@ func TestGetReturnsDefaultValues(t *testing.T) {
 			ZebedeeURL:                           "http://localhost:8082",
 			HierarchyAPIURL:                      "http://localhost:22600",
 			FilterAPIURL:                         "http://localhost:22100",
+			FilterFlexAPIURL:                     "http://localhost:27100",
 			DatasetAPIURL:                        "http://localhost:22000",
 			ObservationAPIURL:                    "http://localhost:24500",
 			CodelistAPIURL:                       "http://localhost:22400",
