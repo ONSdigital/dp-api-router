@@ -233,16 +233,16 @@ func retrieveIdentity(w http.ResponseWriter, req *http.Request, idClient *client
 			token = strings.TrimPrefix(florenceToken, bearerPrefix)
 		}
 
-		authorisationMiddleware, err := authorisation.NewFeatureFlaggedMiddleware(ctx, &auth, nil)
-		if err != nil {
-			handleError(ctx, w, req, http.StatusInternalServerError, "error getting jwtRSAPublicKeys from request", err, nil)
-			return ctx, http.StatusInternalServerError, err
+		authorisationMiddleware, authErr := authorisation.NewFeatureFlaggedMiddleware(ctx, &auth, nil)
+		if authErr != nil {
+			handleError(ctx, w, req, http.StatusInternalServerError, "error getting jwtRSAPublicKeys from request", authErr, nil)
+			return ctx, http.StatusInternalServerError, authErr
 		}
 
-		entityData, err := authorisationMiddleware.Parse(token)
-		if err != nil {
-			handleError(ctx, w, req, http.StatusInternalServerError, "error getting parsing token from request", err, nil)
-			return ctx, http.StatusInternalServerError, err
+		entityData, parseErr := authorisationMiddleware.Parse(token)
+		if parseErr != nil {
+			handleError(ctx, w, req, http.StatusInternalServerError, "error getting parsing token from request", parseErr, nil)
+			return ctx, http.StatusInternalServerError, parseErr
 		}
 
 		if entityData != nil {
