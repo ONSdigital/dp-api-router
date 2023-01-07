@@ -42,4 +42,4 @@ generate:
 
 .PHONY: test-component
 test-component:
-	exit
+	exit 0
