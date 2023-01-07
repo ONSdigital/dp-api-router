@@ -1,6 +1,6 @@
 module github.com/ONSdigital/dp-api-router
 
-go 1.18
+go 1.19
 
 replace (
 	// solves CVE-2021-3121
@@ -10,14 +10,14 @@ replace (
 )
 
 require (
-	github.com/ONSdigital/dp-api-clients-go/v2 v2.162.0
+	github.com/ONSdigital/dp-api-clients-go/v2 v2.187.0
 	github.com/ONSdigital/dp-authorisation/v2 v2.25.1
-	github.com/ONSdigital/dp-healthcheck v1.3.0
+	github.com/ONSdigital/dp-healthcheck v1.5.0
 	github.com/ONSdigital/dp-kafka/v2 v2.5.0
 	github.com/ONSdigital/dp-kafka/v3 v3.3.2
-	github.com/ONSdigital/dp-net/v2 v2.4.0
+	github.com/ONSdigital/dp-net/v2 v2.6.0
 	github.com/ONSdigital/go-ns v0.0.0-20210916104633-ac1c1c52327e
-	github.com/ONSdigital/log.go/v2 v2.2.0
+	github.com/ONSdigital/log.go/v2 v2.3.0
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/justinas/alice v1.2.0
@@ -62,5 +62,4 @@ require (
 	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa // indirect
 	golang.org/x/net v0.0.0-20220812174116-3211cb980234 // indirect
 	golang.org/x/sys v0.0.0-20220811171246-fbc7d0a398ab // indirect
-	golang.org/x/text v0.3.8 // indirect
 )
