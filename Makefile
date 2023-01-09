@@ -39,3 +39,7 @@ debug:
 .PHONY: generate
 generate:
 	go generate -v ./...
+
+.PHONY: test-component
+test-component:
+	exit 0
