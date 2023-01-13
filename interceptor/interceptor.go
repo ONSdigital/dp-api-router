@@ -32,9 +32,10 @@ func NewRoundTripper(domain, contextURL string, rt http.RoundTripper) *Transport
 }
 
 const (
-	links      = "links"
-	dimensions = "dimensions"
-	downloads  = "downloads"
+	links        = "links"
+	datasetLinks = "dataset_links"
+	dimensions   = "dimensions"
+	downloads    = "downloads"
 
 	href = "href"
 
@@ -276,6 +277,13 @@ func (t *Transport) checkMap(document map[string]interface{}) (map[string]interf
 
 	if docLinks, ok := document[links].(map[string]interface{}); ok {
 		document[links], err = updateMap(docLinks, re.ReplaceAllString(t.domain, "${1}api.${2}${3}"))
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if docLinks, ok := document[datasetLinks].(map[string]interface{}); ok {
+		document[datasetLinks], err = updateMap(docLinks, re.ReplaceAllString(t.domain, "${1}api.${2}${3}"))
 		if err != nil {
 			return nil, err
 		}
