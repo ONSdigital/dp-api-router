@@ -61,6 +61,7 @@ func TestRouterPublicAPIs(t *testing.T) {
 		dimensionSearchAPIURL, _ := url.Parse(cfg.DimensionSearchAPIURL)
 		imageAPIURL, _ := url.Parse(cfg.ImageAPIURL)
 		articlesAPIURL, _ := url.Parse(cfg.ArticlesAPIURL)
+		feedbackAPIURL, _ := url.Parse(cfg.FeedbackAPIURL)
 		releaseCalendarAPIURL, _ := url.Parse(cfg.ReleaseCalendarAPIURL)
 		populationTypesAPIURL, _ := url.Parse(cfg.PopulationTypesAPIURL)
 		interactivesAPIURL, _ := url.Parse(cfg.InteractivesAPIURL)
@@ -88,6 +89,10 @@ func TestRouterPublicAPIs(t *testing.T) {
 		cfg.ArticlesAPIVersions = []string{"a", "b"}
 		for _, version := range cfg.ArticlesAPIVersions {
 			expectedPublicURLs["/"+version+"/articles"] = articlesAPIURL
+		}
+		cfg.FeedbackAPIVersions = []string{"aB", "bE"}
+		for _, version := range cfg.FeedbackAPIVersions {
+			expectedPublicURLs["/"+version+"/feedback"] = feedbackAPIURL
 		}
 		cfg.ReleaseCalendarAPIVersions = []string{"vX", "vY"}
 		for _, version := range cfg.ReleaseCalendarAPIVersions {
@@ -272,6 +277,47 @@ func TestRouterPublicAPIs(t *testing.T) {
 			Convey("And the feature flag is disabled", func() {
 				cfg.EnableArticlesAPI = false
 				for _, version := range cfg.ArticlesAPIVersions {
+					Convey("When we make a GET request using the mapped version "+version, func() {
+						// deliberately not configured v1 to get around legacy handle stripping it
+						w := createRouterTest(cfg, fmt.Sprintf(urlPattern, version))
+						Convey("Then it falls through to the default zebedee handler", func() {
+							So(w.Code, ShouldEqual, http.StatusOK)
+							verifyProxied(fmt.Sprintf(path, version), zebedeeURL)
+						})
+					})
+				}
+			})
+		})
+
+		Convey("Given an URL to an feedback subpath", func() {
+			host := "http://localhost:23200"
+			path := "/%s/feedback/subpath"
+			urlPattern := host + path
+
+			Convey("And the feature flag is enabled", func() {
+				cfg.EnableFeedbackAPI = true
+				for _, version := range cfg.FeedbackAPIVersions {
+					Convey("When we make a GET request using the mapped version "+version, func() {
+						w := createRouterTest(cfg, fmt.Sprintf(urlPattern, version))
+						Convey("Then the request is proxied to the feedback API", func() {
+							So(w.Code, ShouldEqual, http.StatusOK)
+							verifyProxied(fmt.Sprintf(path, version), feedbackAPIURL)
+						})
+					})
+				}
+
+				Convey("When we make a GET request using an unmapped version", func() {
+					version := "v9"
+					createRouterTest(cfg, fmt.Sprintf(urlPattern, version))
+					Convey("Then the request falls through to the default zebedee handler", func() {
+						verifyProxied(fmt.Sprintf(path, version), zebedeeURL)
+					})
+				})
+			})
+
+			Convey("And the feature flag is disabled", func() {
+				cfg.EnableFeedbackAPI = false
+				for _, version := range cfg.FeedbackAPIVersions {
 					Convey("When we make a GET request using the mapped version "+version, func() {
 						// deliberately not configured v1 to get around legacy handle stripping it
 						w := createRouterTest(cfg, fmt.Sprintf(urlPattern, version))
