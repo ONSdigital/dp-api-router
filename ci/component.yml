@@ -1,0 +1,14 @@
+---
+
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: golang
+    tag: 1.19.2
+
+inputs:
+  - name: dp-api-router
+run:
+  path: dp-api-router/ci/scripts/component.sh

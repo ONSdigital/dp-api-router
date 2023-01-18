@@ -111,6 +111,24 @@ func TestUnitInterceptor(t *testing.T) {
 		So(string(b), ShouldEqual, `{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}`+"\n")
 	})
 
+	Convey("test interceptor correctly updates a href in dataset_links subdoc", t, func() {
+		testJSON := `{"dataset_links":{"self":{"href":"/datasets/12345"}}}`
+		transp := dummyRT{testJSON}
+
+		t := NewRoundTripper(testDomain, "", transp)
+
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
+		So(err, ShouldBeNil)
+
+		b, err := io.ReadAll(resp.Body)
+		So(err, ShouldBeNil)
+
+		err = resp.Body.Close()
+		So(err, ShouldBeNil)
+		So(len(b), ShouldEqual, 84)
+		So(string(b), ShouldEqual, `{"dataset_links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}`+"\n")
+	})
+
 	Convey("test interceptor correctly inserts context", t, func() {
 		testJSON := `{"links":{"self":{"href":"/datasets/12345"}}}`
 		transp := dummyRT{testJSON}
