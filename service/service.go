@@ -160,6 +160,10 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 		releaseCalendar := proxy.NewAPIProxy(ctx, cfg.ReleaseCalendarAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 		addVersionedHandlers(router, releaseCalendar, cfg.ReleaseCalendarAPIVersions, "/releases")
 	}
+	if cfg.EnableFeedbackAPI {
+		feedback := proxy.NewAPIProxy(ctx, cfg.FeedbackAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+		addVersionedHandlers(router, feedback, cfg.FeedbackAPIVersions, "/feedback")
+	}
 
 	addTransitionalHandler(router, filterFlex, "/datasets/{dataset_id}/editions/{edition}/versions/{version}/json")
 
