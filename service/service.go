@@ -148,10 +148,6 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 	dimensionSearch := proxy.NewAPIProxy(ctx, cfg.DimensionSearchAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 	image := proxy.NewAPIProxy(ctx, cfg.ImageAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 
-	if cfg.EnableArticlesAPI {
-		articles := proxy.NewAPIProxy(ctx, cfg.ArticlesAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
-		addVersionedHandlers(router, articles, cfg.ArticlesAPIVersions, "/articles")
-	}
 	if cfg.EnableAreasAPI {
 		areas := proxy.NewAPIProxy(ctx, cfg.AreasAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 		addVersionedHandlers(router, areas, cfg.AreasAPIVersions, "/areas")

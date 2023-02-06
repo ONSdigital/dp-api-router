@@ -248,47 +248,6 @@ func TestRouterPublicAPIs(t *testing.T) {
 			verifyProxied("/images/subpath", imageAPIURL)
 		})
 
-		Convey("Given an URL to an articles subpath", func() {
-			host := "http://localhost:23200"
-			path := "/%s/articles/subpath"
-			urlPattern := host + path
-
-			Convey("And the feature flag is enabled", func() {
-				cfg.EnableArticlesAPI = true
-				for _, version := range cfg.ArticlesAPIVersions {
-					Convey("When we make a GET request using the mapped version "+version, func() {
-						w := createRouterTest(cfg, fmt.Sprintf(urlPattern, version))
-						Convey("Then the request is proxied to the articles API", func() {
-							So(w.Code, ShouldEqual, http.StatusOK)
-							verifyProxied(fmt.Sprintf(path, version), articlesAPIURL)
-						})
-					})
-				}
-
-				Convey("When we make a GET request using an unmapped version", func() {
-					version := "v9"
-					createRouterTest(cfg, fmt.Sprintf(urlPattern, version))
-					Convey("Then the request falls through to the default zebedee handler", func() {
-						verifyProxied(fmt.Sprintf(path, version), zebedeeURL)
-					})
-				})
-			})
-
-			Convey("And the feature flag is disabled", func() {
-				cfg.EnableArticlesAPI = false
-				for _, version := range cfg.ArticlesAPIVersions {
-					Convey("When we make a GET request using the mapped version "+version, func() {
-						// deliberately not configured v1 to get around legacy handle stripping it
-						w := createRouterTest(cfg, fmt.Sprintf(urlPattern, version))
-						Convey("Then it falls through to the default zebedee handler", func() {
-							So(w.Code, ShouldEqual, http.StatusOK)
-							verifyProxied(fmt.Sprintf(path, version), zebedeeURL)
-						})
-					})
-				}
-			})
-		})
-
 		Convey("Given an URL to an feedback subpath", func() {
 			host := "http://localhost:23200"
 			path := "/%s/feedback/subpath"
