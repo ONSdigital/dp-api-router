@@ -60,7 +60,6 @@ func TestRouterPublicAPIs(t *testing.T) {
 		searchAPIURL, _ := url.Parse(cfg.SearchAPIURL)
 		dimensionSearchAPIURL, _ := url.Parse(cfg.DimensionSearchAPIURL)
 		imageAPIURL, _ := url.Parse(cfg.ImageAPIURL)
-		articlesAPIURL, _ := url.Parse(cfg.ArticlesAPIURL)
 		feedbackAPIURL, _ := url.Parse(cfg.FeedbackAPIURL)
 		releaseCalendarAPIURL, _ := url.Parse(cfg.ReleaseCalendarAPIURL)
 		populationTypesAPIURL, _ := url.Parse(cfg.PopulationTypesAPIURL)
