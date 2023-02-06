@@ -85,10 +85,6 @@ func TestRouterPublicAPIs(t *testing.T) {
 			"/topics":           topicAPIURL,
 		}
 
-		cfg.ArticlesAPIVersions = []string{"a", "b"}
-		for _, version := range cfg.ArticlesAPIVersions {
-			expectedPublicURLs["/"+version+"/articles"] = articlesAPIURL
-		}
 		cfg.FeedbackAPIVersions = []string{"aB", "bE"}
 		for _, version := range cfg.FeedbackAPIVersions {
 			expectedPublicURLs["/"+version+"/feedback"] = feedbackAPIURL

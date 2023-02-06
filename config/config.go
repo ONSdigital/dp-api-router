@@ -57,7 +57,6 @@ type Config struct {
 	SessionsAPIURL                       string        `envconfig:"SESSIONS_API_URL"`
 	EnableSessionsAPI                    bool          `envconfig:"ENABLE_SESSIONS_API"`
 	TopicAPIURL                          string        `envconfig:"TOPIC_API_URL"`
-	ArticlesAPIVersions                  []string      `envconfig:"ARTICLES_API_VERSIONS"`
 	EnableFeedbackAPI                    bool          `envconfig:"ENABLE_FEEDBACK_API"`
 	FeedbackAPIURL                       string        `envconfig:"FEEDBACK_API_URL"`
 	FeedbackAPIVersions                  []string      `envconfig:"FEEDBACK_API_VERSIONS"`
@@ -138,7 +137,6 @@ func Get() (*Config, error) {
 		AreasAPIURL:                          "http://localhost:25500",
 		EnableAreasAPI:                       false,
 		AreasAPIVersions:                     []string{"v1"},
-		ArticlesAPIVersions:                  []string{"v1"},
 		FeedbackAPIURL:                       "http://localhost:28600",
 		EnableFeedbackAPI:                    false,
 		FeedbackAPIVersions:                  []string{"v1"},
