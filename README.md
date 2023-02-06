@@ -19,7 +19,6 @@ This service is responsible for serving a JSON-LD `@context` field on configured
 | ENABLE_PRIVATE_ENDPOINTS                   | true                     | If private endpoints should be routed                                                      |
 | ENABLE_V1_BETA_RESTRICTION                 | false                    |                                                                                            |
 | ENABLE_SESSIONS_API                        | false                    |                                                                                            |
-| ENABLE_ARTICLES_API                        | false                    | Flag to enable routing to the articles API                                                 |
 | ENABLE_RELEASE_CALENDAR_API                | false                    | Flag to enable routing to the release calendar API                                         |
 | ENABLE_INTERACTIVES_API                    | false                    | Flag to enable routing to the interactives API                                             |
 | ENABLE_MAPS_API                            | false                    | Flag to enable routing to the maps API                                                     |
@@ -28,7 +27,6 @@ This service is responsible for serving a JSON-LD `@context` field on configured
 | ENABLE_ZEBEDEE_AUDIT                       | false                    |                                                                                            |
 | CONTEXT_URL                                | ""                       | A URL to the JSON-LD context file describing the APIs                                      |
 | API_POC_URL                                | "http://localhost:3000"  | A URL to the poc api                                                                       |
-| ARTICLES_API_URL                           | "http://localhost:27000" | A URL to the articles api                                                                  |
 | IMPORT_API_URL                             | "http://localhost:21800" | A URL to the import api                                                                    |
 | DATASET_API_URL                            | "http://localhost:22000" | A URL to the dataset api                                                                   |
 | FILTER_API_URL                             | "http://localhost:22100" | A URL to the filter api                                                                    |
