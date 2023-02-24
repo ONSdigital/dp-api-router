@@ -74,6 +74,7 @@ func TestRouterPublicAPIs(t *testing.T) {
 			"/datasets":   datasetAPIURL,
 			"/datasets/{dataset_id}/editions/{edition}/versions/{version}/observations": observationAPIURL,
 			"/datasets/{dataset_id}/editions/{edition}/versions/{version}/json":         filterFlexAPIURL,
+			"/custom/filters":   filterFlexAPIURL,
 			"/filters":          filterAPIURL,
 			"/filter-outputs":   filterAPIURL,
 			"/hierarchies":      hierarchyAPIURL,
