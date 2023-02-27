@@ -8,6 +8,10 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+var (
+	dummyHandler = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {})
+)
+
 func TestBetaHandler(t *testing.T) {
 	Convey("beta handler should wrap another handler", t, func() {
 		wrapped := BetaAPIHandler(true, dummyHandler)

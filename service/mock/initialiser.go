@@ -17,22 +17,22 @@ var _ service.Initialiser = &InitialiserMock{}
 
 // InitialiserMock is a mock implementation of service.Initialiser.
 //
-// 	func TestSomethingThatUsesInitialiser(t *testing.T) {
+//	func TestSomethingThatUsesInitialiser(t *testing.T) {
 //
-// 		// make and configure a mocked service.Initialiser
-// 		mockedInitialiser := &InitialiserMock{
-// 			DoGetHealthCheckFunc: func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
-// 				panic("mock out the DoGetHealthCheck method")
-// 			},
-// 			DoGetKafkaProducerFunc: func(ctx context.Context, cfg *config.Config, topic string) (kafka.IProducer, error) {
-// 				panic("mock out the DoGetKafkaProducer method")
-// 			},
-// 		}
+//		// make and configure a mocked service.Initialiser
+//		mockedInitialiser := &InitialiserMock{
+//			DoGetHealthCheckFunc: func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
+//				panic("mock out the DoGetHealthCheck method")
+//			},
+//			DoGetKafkaProducerFunc: func(ctx context.Context, cfg *config.Config, topic string) (kafka.IProducer, error) {
+//				panic("mock out the DoGetKafkaProducer method")
+//			},
+//		}
 //
-// 		// use mockedInitialiser in code that requires service.Initialiser
-// 		// and then make assertions.
+//		// use mockedInitialiser in code that requires service.Initialiser
+//		// and then make assertions.
 //
-// 	}
+//	}
 type InitialiserMock struct {
 	// DoGetHealthCheckFunc mocks the DoGetHealthCheck method.
 	DoGetHealthCheckFunc func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error)
@@ -91,7 +91,8 @@ func (mock *InitialiserMock) DoGetHealthCheck(cfg *config.Config, buildTime stri
 
 // DoGetHealthCheckCalls gets all the calls that were made to DoGetHealthCheck.
 // Check the length with:
-//     len(mockedInitialiser.DoGetHealthCheckCalls())
+//
+//	len(mockedInitialiser.DoGetHealthCheckCalls())
 func (mock *InitialiserMock) DoGetHealthCheckCalls() []struct {
 	Cfg       *config.Config
 	BuildTime string
@@ -132,7 +133,8 @@ func (mock *InitialiserMock) DoGetKafkaProducer(ctx context.Context, cfg *config
 
 // DoGetKafkaProducerCalls gets all the calls that were made to DoGetKafkaProducer.
 // Check the length with:
-//     len(mockedInitialiser.DoGetKafkaProducerCalls())
+//
+//	len(mockedInitialiser.DoGetKafkaProducerCalls())
 func (mock *InitialiserMock) DoGetKafkaProducerCalls() []struct {
 	Ctx   context.Context
 	Cfg   *config.Config

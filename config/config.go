@@ -1,6 +1,7 @@
 package config
 
 import (
+	"net/http"
 	"time"
 
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
@@ -42,6 +43,8 @@ type Config struct {
 	EnvironmentHost                      string        `envconfig:"ENV_HOST"`
 	APIPocURL                            string        `envconfig:"API_POC_URL"`
 	GracefulShutdown                     time.Duration `envconfig:"SHUTDOWN_TIMEOUT"`
+	AllowedMethods                       []string      `envconfig:"ALLOWED_METHODS"`
+	AllowedHeaders                       []string      `envconfig:"ALLOWED_HEADERS"`
 	AllowedOrigins                       []string      `envconfig:"ALLOWED_ORIGINS"`
 	HealthCheckInterval                  time.Duration `envconfig:"HEALTHCHECK_INTERVAL"`
 	HealthCheckCriticalTimeout           time.Duration `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`
@@ -128,7 +131,9 @@ func Get() (*Config, error) {
 		HealthCheckCriticalTimeout:           90 * time.Second,
 		Brokers:                              []string{"localhost:9092", "localhost:9093", "localhost:9094"},
 		KafkaVersion:                         "1.0.2",
-		AllowedOrigins:                       []string{"http://localhost:8081"},
+		AllowedHeaders:                       []string{"Accept", "Accept-Language", "Content-Language", "Origin", "X-Requested-With", "Content-Type", "Authorization"},
+		AllowedOrigins:                       []string{"http://localhost:20000", "http://localhost:8081"},
+		AllowedMethods:                       []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodHead, http.MethodOptions},
 		KafkaMaxBytes:                        2000000,
 		AuditTopic:                           "audit",
 		SessionsAPIURL:                       "http://localhost:24400",

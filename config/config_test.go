@@ -1,6 +1,7 @@
 package config
 
 import (
+	"net/http"
 	"testing"
 	"time"
 
@@ -52,7 +53,9 @@ func TestGetReturnsDefaultValues(t *testing.T) {
 			Brokers:                              []string{"localhost:9092", "localhost:9093", "localhost:9094"},
 			KafkaVersion:                         "1.0.2",
 			KafkaMaxBytes:                        2000000,
-			AllowedOrigins:                       []string{"http://localhost:8081"},
+			AllowedHeaders:                       []string{"Accept", "Accept-Language", "Content-Language", "Origin", "X-Requested-With", "Content-Type", "Authorization"},
+			AllowedOrigins:                       []string{"http://localhost:20000", "http://localhost:8081"},
+			AllowedMethods:                       []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodHead, http.MethodOptions},
 			AuditTopic:                           "audit",
 			SessionsAPIURL:                       "http://localhost:24400",
 			EnableSessionsAPI:                    false,

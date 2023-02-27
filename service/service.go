@@ -111,15 +111,11 @@ func (svc *Service) CreateMiddleware(cfg *config.Config, router *mux.Router) ali
 		))
 	}
 
-	if cfg.EnablePrivateEndpoints {
-		// CORS - only allow specified origins in publishing
-		m = m.Append(middleware.SetAllowOriginHeader(cfg.AllowedOrigins))
-	} else {
-		// CORS - allow all origin domains, but only allow certain methods in web
-		methodsOk := handlers.AllowedMethods([]string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete})
-		m = m.Append(handlers.CORS(methodsOk))
-		m = m.Append(middleware.SetAllowOriginHeader([]string{"*"}))
-	}
+	methodsOk := handlers.AllowedMethods(cfg.AllowedMethods)
+	headersOk := handlers.AllowedHeaders(cfg.AllowedHeaders)
+	originsOk := handlers.AllowedOrigins(cfg.AllowedOrigins)
+
+	m = m.Append(handlers.CORS(originsOk, headersOk, methodsOk))
 
 	return m
 }
