@@ -158,6 +158,7 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 	}
 
 	addTransitionalHandler(router, filterFlex, "/datasets/{dataset_id}/editions/{edition}/versions/{version}/json")
+	addTransitionalHandler(router, filterFlex, "/custom/filters")
 
 	addTransitionalHandler(router, codeList, "/code-lists")
 	addTransitionalHandler(router, dataset, "/datasets")
