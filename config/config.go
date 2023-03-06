@@ -79,6 +79,7 @@ type Config struct {
 	AreasAPIVersions                     []string      `envconfig:"AREAS_API_VERSIONS"`
 	EnableCantabularMetadataExtractorAPI bool          `envconfig:"ENABLE_CANTABULAR_METADATA_EXTRACTOR_API"`
 	CantabularMetadataExtractorAPIURL    string        `envconfig:"CANTABULAR_METADATA_API_URL"`
+	ZebedeeClientTimeout                 time.Duration `envconfig:"ZEBEDEE_CLIENT_TIMEOUT"`
 	Auth                                 authorisation.Config
 }
 
@@ -156,6 +157,7 @@ func Get() (*Config, error) {
 		GeodataAPIVersions:                   []string{"v1"},
 		EnableCantabularMetadataExtractorAPI: false,
 		CantabularMetadataExtractorAPIURL:    "http://localhost:28300",
+		ZebedeeClientTimeout:                 30 * time.Second,
 	}
 
 	return cfg, envconfig.Process("", cfg)
