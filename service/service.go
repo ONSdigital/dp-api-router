@@ -45,7 +45,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	}
 
 	// Create Zebedee client
-	svc.ZebedeeClient = health.NewClient("Zebedee", cfg.ZebedeeURL)
+	svc.ZebedeeClient = health.NewClientWithClienter("Zebedee", cfg.ZebedeeURL, dphttp.ClientWithTimeout(dphttp.NewClient(), cfg.ZebedeeClientTimeout))
 
 	// Get Kafka Audit Producer (only if audit is enabled)
 	if cfg.EnableAudit {

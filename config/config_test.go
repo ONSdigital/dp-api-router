@@ -82,6 +82,7 @@ func TestGetReturnsDefaultValues(t *testing.T) {
 			AreasAPIVersions:                     []string{"v1"},
 			EnableCantabularMetadataExtractorAPI: false,
 			CantabularMetadataExtractorAPIURL:    "http://localhost:28300",
+			ZebedeeClientTimeout:                 30 * time.Second,
 		})
 	})
 }
