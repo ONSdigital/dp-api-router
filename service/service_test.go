@@ -72,8 +72,9 @@ func TestRouterPublicAPIs(t *testing.T) {
 		expectedPublicURLs := map[string]*url.URL{
 			"/code-lists": codelistAPIURL,
 			"/datasets":   datasetAPIURL,
-			"/datasets/{dataset_id}/editions/{edition}/versions/{version}/observations": observationAPIURL,
-			"/datasets/{dataset_id}/editions/{edition}/versions/{version}/json":         filterFlexAPIURL,
+			"/datasets/{dataset_id}/editions/{edition}/versions/{version}/observations":        observationAPIURL,
+			"/datasets/{dataset_id}/editions/{edition}/versions/{version}/json":                filterFlexAPIURL,
+			"/datasets/{dataset_id}/editions/{edition}/versions/{version}/census-observations": filterFlexAPIURL,
 			"/custom/filters":   filterFlexAPIURL,
 			"/filters":          filterAPIURL,
 			"/filter-outputs":   filterAPIURL,
@@ -176,6 +177,12 @@ func TestRouterPublicAPIs(t *testing.T) {
 				So(w.Code, ShouldEqual, http.StatusOK)
 				verifyProxied("/datasets/cpih012/editions/123/versions/321/observations", datasetAPIURL)
 			})
+		})
+
+		Convey("A request to a dataset edition version census observation endpoint succeeds and is proxied to filterFlexAPIURL", func() {
+			w := createRouterTest(cfg, "http://localhost:23200/v1/datasets/RM111/editions/123/versions/321/census-observations")
+			So(w.Code, ShouldEqual, http.StatusOK)
+			verifyProxied("/datasets/RM111/editions/123/versions/321/census-observations", filterFlexAPIURL)
 		})
 
 		Convey("A request to a filters is proxied to filterAPIURL", func() {
