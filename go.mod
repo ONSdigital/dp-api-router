@@ -2,6 +2,9 @@ module github.com/ONSdigital/dp-api-router
 
 go 1.20
 
+//to avoid  [CVE-2022-29153] CWE-918: Server-Side Request Forgery (SSRF) 
+exclude github.com/hashicorp/consul/api v1.1.0
+
 replace (
 	// solves CVE-2021-3121
 	github.com/prometheus/common => github.com/prometheus/common v0.34.0
