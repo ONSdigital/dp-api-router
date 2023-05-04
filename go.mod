@@ -11,7 +11,7 @@ replace (
 
 require (
 	github.com/ONSdigital/dp-api-clients-go/v2 v2.252.1
-	github.com/ONSdigital/dp-authorisation/v2 v2.25.1
+	github.com/ONSdigital/dp-authorisation/v2 v2.30.0
 	github.com/ONSdigital/dp-healthcheck v1.6.1
 	github.com/ONSdigital/dp-kafka/v2 v2.8.0
 	github.com/ONSdigital/dp-kafka/v3 v3.10.0
@@ -27,9 +27,7 @@ require (
 )
 
 require (
-	github.com/ONSdigital/dp-api-clients-go v1.43.0 // indirect
-	github.com/ONSdigital/dp-net v1.5.0 // indirect
-	github.com/ONSdigital/dp-rchttp v1.0.0 // indirect
+	github.com/ONSdigital/dp-permissions-api v0.22.0 // indirect
 	github.com/Shopify/sarama v1.38.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/eapache/go-resiliency v1.3.0 // indirect
@@ -38,7 +36,7 @@ require (
 	github.com/fatih/color v1.15.0 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
 	github.com/go-avro/avro v0.0.0-20171219232920-444163702c11 // indirect
-	github.com/golang-jwt/jwt/v4 v4.4.2 // indirect
+	github.com/golang-jwt/jwt/v4 v4.5.0 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
