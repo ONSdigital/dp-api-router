@@ -83,6 +83,9 @@ type Config struct {
 	EnableCantabularMetadataExtractorAPI bool          `envconfig:"ENABLE_CANTABULAR_METADATA_EXTRACTOR_API"`
 	CantabularMetadataExtractorAPIURL    string        `envconfig:"CANTABULAR_METADATA_API_URL"`
 	ZebedeeClientTimeout                 time.Duration `envconfig:"ZEBEDEE_CLIENT_TIMEOUT"`
+	EnableNLPSearchAPIs                  bool          `envconfig:"ENABLE_NLP_SEARCH_APIS"`
+	SearchScrubberAPIURL                 string        `envconfig:"SEARCH_SCRUBBER_API_URL"`
+	SearchScrubberAPIVersions            []string      `envconfig:"SEARCH_SCRUBBER_API_VERSIONS"`
 	Auth                                 authorisation.Config
 }
 
@@ -163,6 +166,9 @@ func Get() (*Config, error) {
 		EnableCantabularMetadataExtractorAPI: false,
 		CantabularMetadataExtractorAPIURL:    "http://localhost:28300",
 		ZebedeeClientTimeout:                 30 * time.Second,
+		EnableNLPSearchAPIs:                  true,
+		SearchScrubberAPIURL:                 "http://localhost:28700",
+		SearchScrubberAPIVersions:            []string{"v1"},
 	}
 
 	return cfg, envconfig.Process("", cfg)
