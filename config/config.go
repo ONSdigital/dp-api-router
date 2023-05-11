@@ -166,7 +166,7 @@ func Get() (*Config, error) {
 		EnableCantabularMetadataExtractorAPI: false,
 		CantabularMetadataExtractorAPIURL:    "http://localhost:28300",
 		ZebedeeClientTimeout:                 30 * time.Second,
-		EnableNLPSearchAPIs:                  true,
+		EnableNLPSearchAPIs:                  false,
 		SearchScrubberAPIURL:                 "http://localhost:28700",
 		SearchScrubberAPIVersions:            []string{"v1"},
 	}
