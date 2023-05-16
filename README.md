@@ -25,6 +25,7 @@ This service is responsible for serving a JSON-LD `@context` field on configured
 | ENABLE_AREAS_API                           | false                    | Flag to enable routing to the areas API                                                    |
 | ENABLE_CANTABULAR_METADATA_EXTRACTOR_API   | false                    | Flag to enable routing to the cantabular metadata extractor API                            |
 | ENABLE_ZEBEDEE_AUDIT                       | false                    |                                                                                            |
+| ENABLE_NLP_SEARCH_APIS                     | false                    | Flag to enable routing to the NLP search APIs                                              |
 | CONTEXT_URL                                | ""                       | A URL to the JSON-LD context file describing the APIs                                      |
 | API_POC_URL                                | "http://localhost:3000"  | A URL to the poc api                                                                       |
 | IMPORT_API_URL                             | "http://localhost:21800" | A URL to the import api                                                                    |
@@ -56,6 +57,8 @@ This service is responsible for serving a JSON-LD `@context` field on configured
 | AREAS_API_URL                              | "http://localhost:25500" | A URL to the areas API                                                                     |
 | AREAS_API_VERSIONS                         | "v1"                     | A comma-delimited string list: versions supported by the areas API                         |
 | CANTABULAR_METADATA_EXTRACTOR_API_URL      | "http://localhost:28300" | A URL to the Cantabular metadata extractor API                                             |
+| SEARCH_SCRUBBER_API_URL                    | "http://localhost:28700" | A URL to the Cantabular metadata extractor API                                             |
+| SEARCH_SCRUBBER_API_VERSIONS               | "v1"                     | A comma delimted string with a list of versions supported by search scrubber api           |
 | KAFKA_ADDR                                 | localhost:9092           | The list of kafka hosts                                                                    |
 | KAFKA_MAX_BYTES                            | 2000000                  | The maximum bytes that can be sent in an event to kafka topic                              |
 | KAFKA_VERSION                              | "1.0.2"                  | The kafka version that this service expects to connect to                                  |

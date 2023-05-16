@@ -195,6 +195,12 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 		addTransitionalHandler(router, downloadService, "/downloads-new")
 	}
 
+	if cfg.EnableNLPSearchAPIs {
+		searchScrubberAPIProxy := proxy.NewAPIProxy(ctx, cfg.SearchScrubberAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+
+		addVersionedHandlers(router, searchScrubberAPIProxy, cfg.SearchScrubberAPIVersions, "/scrubber")
+	}
+
 	// Private APIs
 	if cfg.EnablePrivateEndpoints {
 		recipe := proxy.NewAPIProxy(ctx, cfg.RecipeAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
