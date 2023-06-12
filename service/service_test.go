@@ -47,9 +47,6 @@ func TestRouterPublicAPIs(t *testing.T) {
 	Convey("Given an api router and proxies with all public endpoints available", t, func() {
 		cfg, _ := config.Get()
 
-		// This is temporary and needs to be removed when it is ready for SearchAPIURL to point to dp-search-query
-		cfg.SearchAPIURL = "http://justForTests:1234"
-
 		zebedeeURL, _ := url.Parse(cfg.ZebedeeURL)
 		hierarchyAPIURL, _ := url.Parse(cfg.HierarchyAPIURL)
 		filterAPIURL, _ := url.Parse(cfg.FilterAPIURL)
