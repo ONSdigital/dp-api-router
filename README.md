@@ -59,6 +59,10 @@ This service is responsible for serving a JSON-LD `@context` field on configured
 | CANTABULAR_METADATA_EXTRACTOR_API_URL      | "http://localhost:28300" | A URL to the Cantabular metadata extractor API                                             |
 | SEARCH_SCRUBBER_API_URL                    | "http://localhost:28700" | A URL to the Cantabular metadata extractor API                                             |
 | SEARCH_SCRUBBER_API_VERSIONS               | "v1"                     | A comma delimted string with a list of versions supported by search scrubber api           |
+| CATEGORY_API_URL                    | "http://localhost:28800" | A URL to the NLP Category API                                             |
+| CATEGORY_API_VERSIONS               | "v1"                     | A comma delimted string with a list of versions supported by search scrubber api           |
+| BERLIN_API_URL                    | "http://localhost:28900" | A URL to the NLP Berlin API                                             |
+| BERLIN_API_VERSIONS               | "v1"                     | A comma delimted string with a list of versions supported by search scrubber api           |
 | KAFKA_ADDR                                 | localhost:9092           | The list of kafka hosts                                                                    |
 | KAFKA_MAX_BYTES                            | 2000000                  | The maximum bytes that can be sent in an event to kafka topic                              |
 | KAFKA_VERSION                              | "1.0.2"                  | The kafka version that this service expects to connect to                                  |

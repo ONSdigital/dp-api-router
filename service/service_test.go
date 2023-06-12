@@ -68,6 +68,9 @@ func TestRouterPublicAPIs(t *testing.T) {
 		geodataAPIURL, _ := url.Parse(cfg.GeodataAPIURL)
 		topicAPIURL, _ := url.Parse(cfg.TopicAPIURL)
 		areasAPIURL, _ := url.Parse(cfg.AreasAPIURL)
+		scrubberAPIURL, _ := url.Parse(cfg.SearchScrubberAPIURL)
+		categoryAPIURL, _ := url.Parse(cfg.CategoryAPIURL)
+		berlinAPIURL, _ := url.Parse(cfg.BerlinAPIURL)
 
 		expectedPublicURLs := map[string]*url.URL{
 			"/code-lists": codelistAPIURL,
@@ -108,6 +111,15 @@ func TestRouterPublicAPIs(t *testing.T) {
 		}
 		for _, version := range cfg.AreasAPIVersions {
 			expectedPublicURLs["/"+version+"/areas"] = areasAPIURL
+		}
+		for _, version := range cfg.SearchScrubberAPIVersions {
+			expectedPublicURLs["/"+version+"/scrubber"] = scrubberAPIURL
+		}
+		for _, version := range cfg.BerlinAPIVersions {
+			expectedPublicURLs["/"+version+"/berlin"] = berlinAPIURL
+		}
+		for _, version := range cfg.CategoryAPIVersions {
+			expectedPublicURLs["/"+version+"/categories"] = categoryAPIURL
 		}
 		resetProxyMocksWithExpectations(expectedPublicURLs)
 
@@ -557,6 +569,20 @@ func TestRouterPublicAPIs(t *testing.T) {
 				})
 			})
 		})
+
+		Convey("When the enable NLP APIs flag is enabled", func() {
+			cfg.EnableNLPSearchAPIs = true
+			assertVersionedProxyCalledForPath(cfg, cfg.SearchScrubberAPIVersions, "/scrubber", scrubberAPIURL)
+			assertVersionedProxyCalledForPath(cfg, cfg.CategoryAPIVersions, "/categories", categoryAPIURL)
+			assertVersionedProxyCalledForPath(cfg, cfg.BerlinAPIVersions, "/berlin", berlinAPIURL)
+		})
+
+		Convey("When the enable NLP APIs flag is disabled", func() {
+			cfg.EnableNLPSearchAPIs = false
+			assertVersionedFallThroughToZebedee(cfg, cfg.SearchScrubberAPIVersions, "/scrubber", zebedeeURL)
+			assertVersionedFallThroughToZebedee(cfg, cfg.CategoryAPIVersions, "/categories", zebedeeURL)
+			assertVersionedFallThroughToZebedee(cfg, cfg.BerlinAPIVersions, "/berlin", zebedeeURL)
+		})
 	})
 }
 
@@ -853,6 +879,38 @@ func TestRouterLegacyAPIs(t *testing.T) {
 			verifyProxied("/search", apiPocURL)
 		})
 	})
+}
+
+// assertVersionedProxyCalledForPath takes versions and a path a verifies that the proxy is called for each version
+func assertVersionedProxyCalledForPath(cfg *config.Config, versions []string, path string, proxyURL *url.URL) {
+	for _, version := range versions {
+		Convey("Then the "+version+" request is proxied to "+proxyURL.String(), func() {
+			versionedPath := "/" + version + path
+			fmt.Println(versionedPath)
+
+			w := createRouterTest(cfg, "http://localhost:23200"+versionedPath)
+			So(w.Code, ShouldEqual, http.StatusOK)
+			verifyProxied(versionedPath, proxyURL)
+		})
+	}
+}
+
+// assertVersionedFallThroughToZebedee ensures that if a path is not enabled it falls through to Zebedee without version if v1
+// or with version if not
+func assertVersionedFallThroughToZebedee(cfg *config.Config, versions []string, path string, zebedeeURL *url.URL) {
+	for _, version := range versions {
+		versionedPath := "/" + version + path
+		_ = createRouterTest(cfg, "http://localhost:23200"+versionedPath)
+		if version == "v1" {
+			Convey("Then the v1 request for "+path+" is proxied to zebedee handler without the version", func() {
+				verifyProxied(path, zebedeeURL)
+			})
+		} else {
+			Convey("Then the "+versionedPath+" request is proxied to zebedee handler", func() {
+				verifyProxied(versionedPath, zebedeeURL)
+			})
+		}
+	}
 }
 
 func assertOnlyThisURLIsCalled(expectedURL *url.URL) {

@@ -86,6 +86,10 @@ func TestGetReturnsDefaultValues(t *testing.T) {
 			EnableNLPSearchAPIs:                  false,
 			SearchScrubberAPIURL:                 "http://localhost:28700",
 			SearchScrubberAPIVersions:            []string{"v1"},
+			CategoryAPIURL:                       "http://localhost:28800",
+			CategoryAPIVersions:                  []string{"v1"},
+			BerlinAPIURL:                         "http://localhost:28900",
+			BerlinAPIVersions:                    []string{"v1"},
 		})
 	})
 }

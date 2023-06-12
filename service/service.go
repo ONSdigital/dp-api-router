@@ -197,8 +197,12 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 
 	if cfg.EnableNLPSearchAPIs {
 		searchScrubberAPIProxy := proxy.NewAPIProxy(ctx, cfg.SearchScrubberAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+		categoryAPIProxy := proxy.NewAPIProxy(ctx, cfg.CategoryAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+		berlinAPIProxy := proxy.NewAPIProxy(ctx, cfg.BerlinAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 
 		addVersionedHandlers(router, searchScrubberAPIProxy, cfg.SearchScrubberAPIVersions, "/scrubber")
+		addVersionedHandlers(router, categoryAPIProxy, cfg.CategoryAPIVersions, "/categories")
+		addVersionedHandlers(router, berlinAPIProxy, cfg.BerlinAPIVersions, "/berlin")
 	}
 
 	// Private APIs

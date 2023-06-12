@@ -86,6 +86,10 @@ type Config struct {
 	EnableNLPSearchAPIs                  bool          `envconfig:"ENABLE_NLP_SEARCH_APIS"`
 	SearchScrubberAPIURL                 string        `envconfig:"SEARCH_SCRUBBER_API_URL"`
 	SearchScrubberAPIVersions            []string      `envconfig:"SEARCH_SCRUBBER_API_VERSIONS"`
+	CategoryAPIURL                       string        `envconfig:"CATEGORY_API_URL"`
+	CategoryAPIVersions                  []string      `envconfig:"CATEGORY_API_VERSIONS"`
+	BerlinAPIURL                         string        `envconfig:"BERLIN_API_URL"`
+	BerlinAPIVersions                    []string      `envconfig:"BERLIN_API_VERSIONS"`
 	Auth                                 authorisation.Config
 }
 
@@ -169,6 +173,10 @@ func Get() (*Config, error) {
 		EnableNLPSearchAPIs:                  false,
 		SearchScrubberAPIURL:                 "http://localhost:28700",
 		SearchScrubberAPIVersions:            []string{"v1"},
+		CategoryAPIURL:                       "http://localhost:28800",
+		CategoryAPIVersions:                  []string{"v1"},
+		BerlinAPIURL:                         "http://localhost:28900",
+		BerlinAPIVersions:                    []string{"v1"},
 	}
 
 	return cfg, envconfig.Process("", cfg)
