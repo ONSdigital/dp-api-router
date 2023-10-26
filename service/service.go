@@ -174,10 +174,6 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 		populationTypesAPI := proxy.NewAPIProxy(ctx, cfg.PopulationTypesAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 		addTransitionalHandler(router, populationTypesAPI, "/population-types")
 	}
-	if cfg.EnableInteractivesAPI {
-		interactives := proxy.NewAPIProxy(ctx, cfg.InteractivesAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.ContextURL, cfg.EnableV1BetaRestriction)
-		addVersionedHandlers(router, interactives, cfg.InteractivesAPIVersions, "/interactives")
-	}
 	if cfg.EnableMapsAPI {
 		mapsProxy := proxy.NewAPIProxy(ctx, cfg.MapsAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 		addVersionedHandlers(router, mapsProxy, cfg.MapsAPIVersions, "/maps")

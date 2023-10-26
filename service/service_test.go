@@ -60,7 +60,6 @@ func TestRouterPublicAPIs(t *testing.T) {
 		feedbackAPIURL, _ := url.Parse(cfg.FeedbackAPIURL)
 		releaseCalendarAPIURL, _ := url.Parse(cfg.ReleaseCalendarAPIURL)
 		populationTypesAPIURL, _ := url.Parse(cfg.PopulationTypesAPIURL)
-		interactivesAPIURL, _ := url.Parse(cfg.InteractivesAPIURL)
 		mapsAPIURL, _ := url.Parse(cfg.MapsAPIURL)
 		geodataAPIURL, _ := url.Parse(cfg.GeodataAPIURL)
 		topicAPIURL, _ := url.Parse(cfg.TopicAPIURL)
@@ -94,10 +93,6 @@ func TestRouterPublicAPIs(t *testing.T) {
 		cfg.ReleaseCalendarAPIVersions = []string{"vX", "vY"}
 		for _, version := range cfg.ReleaseCalendarAPIVersions {
 			expectedPublicURLs["/"+version+"/releases"] = releaseCalendarAPIURL
-		}
-		cfg.InteractivesAPIVersions = []string{"vX", "vAnother"}
-		for _, version := range cfg.InteractivesAPIVersions {
-			expectedPublicURLs["/"+version+"/interactives"] = interactivesAPIURL
 		}
 		cfg.MapsAPIVersions = []string{"vX", "vY"}
 		for _, version := range cfg.MapsAPIVersions {
@@ -363,39 +358,6 @@ func TestRouterPublicAPIs(t *testing.T) {
 						So(w.Code, ShouldEqual, http.StatusOK)
 						verifyProxied("/population-types", zebedeeURL)
 					})
-				})
-			})
-		})
-
-		Convey("A request to an interactives subpath", func() {
-			Convey("When the feature flag is enabled", func() {
-				cfg.EnableInteractivesAPI = true
-
-				Convey("Then the request is proxied to the interactives API for a mapped URL", func() {
-					for _, version := range cfg.InteractivesAPIVersions {
-						w := createRouterTest(cfg, "http://localhost:23200/"+version+"/interactives/subpath")
-						So(w.Code, ShouldEqual, http.StatusOK)
-						verifyProxied("/"+version+"/interactives/subpath", interactivesAPIURL)
-					}
-				})
-
-				Convey("Then the request falls through to the default zebedee handler for an unhandled version", func() {
-					version := "vSomeOtherVersion"
-					w := createRouterTest(cfg, "http://localhost:23200/"+version+"/interactives/subpath")
-					So(w.Code, ShouldEqual, http.StatusNotFound)
-					verifyProxied("/"+version+"/interactives/subpath", zebedeeURL)
-				})
-			})
-
-			Convey("With the feature flag disabled", func() {
-				cfg.EnableInteractivesAPI = false
-				Convey("Then the request falls through for all interactives versions to the default zebedee handler", func() {
-					for _, version := range cfg.InteractivesAPIVersions {
-						// deliberately not configured v1 to get around legacy handle stripping it
-						w := createRouterTest(cfg, "http://localhost:23200/"+version+"/interactives/subpath")
-						So(w.Code, ShouldEqual, http.StatusOK)
-						verifyProxied("/"+version+"/interactives/subpath", zebedeeURL)
-					}
 				})
 			})
 		})
