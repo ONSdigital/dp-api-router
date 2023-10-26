@@ -20,7 +20,6 @@ This service is responsible for serving a JSON-LD `@context` field on configured
 | ENABLE_V1_BETA_RESTRICTION               | false                    |                                                                                    |
 | ENABLE_SESSIONS_API                      | false                    |                                                                                    |
 | ENABLE_RELEASE_CALENDAR_API              | false                    | Flag to enable routing to the release calendar API                                 |
-| ENABLE_INTERACTIVES_API                  | false                    | Flag to enable routing to the interactives API                                     |
 | ENABLE_MAPS_API                          | false                    | Flag to enable routing to the maps API                                             |
 | ENABLE_AREAS_API                         | false                    | Flag to enable routing to the areas API                                            |
 | ENABLE_CANTABULAR_METADATA_EXTRACTOR_API | false                    | Flag to enable routing to the cantabular metadata extractor API                    |
@@ -47,9 +46,7 @@ This service is responsible for serving a JSON-LD `@context` field on configured
 | PERMISSIONS_API_URL:                     | "http://localhost:25400" | A URL to the permissions api                                                       |
 | PERMISSIONS_API_VERSIONS                 | "v1"                     | A comma delimted string with a list of versions supported by permissions api       |
 | RELEASE_CALENDAR_API_URL                 | "http://localhost:27800" | A URL to the release calendar api                                                  |
-| INTERACTIVES_API_URL                     | "http://localhost:27500" | A URL to the interactives api                                                      |
 | ZEBEDEE_URL                              | "http://localhost:8082"  | A URL to the zebedee service api                                                   |
-| INTERACTIVES_API_VERSIONS                | "v1"                     | A comma delimted string with a list of versions supported by interactives api      |
 | MAPS_API_URL:                            | "http://localhost:27900" | A URL to the maps api                                                              |
 | MAPS_API_VERSIONS:                       | "v1"                     | A comma delimted string with a list of versions supported by maps api              |
 | GEODATA_API_URL                          | "http://localhost:28200" | A URL to the geodata api                                                           |
