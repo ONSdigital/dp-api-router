@@ -68,9 +68,6 @@ func TestGetReturnsDefaultValues(t *testing.T) {
 			ReleaseCalendarAPIURL:                "http://localhost:27800",
 			EnableReleaseCalendarAPI:             false,
 			ReleaseCalendarAPIVersions:           []string{"v1"},
-			InteractivesAPIURL:                   "http://localhost:27500",
-			EnableInteractivesAPI:                false,
-			InteractivesAPIVersions:              []string{"v1"},
 			EnableMapsAPI:                        false,
 			MapsAPIURL:                           "http://localhost:27900",
 			MapsAPIVersions:                      []string{"v1"},
@@ -86,6 +83,10 @@ func TestGetReturnsDefaultValues(t *testing.T) {
 			EnableNLPSearchAPIs:                  false,
 			SearchScrubberAPIURL:                 "http://localhost:28700",
 			SearchScrubberAPIVersions:            []string{"v1"},
+			CategoryAPIURL:                       "http://localhost:28800",
+			CategoryAPIVersions:                  []string{"v1"},
+			BerlinAPIURL:                         "http://localhost:28900",
+			BerlinAPIVersions:                    []string{"v1"},
 		})
 	})
 }

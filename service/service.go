@@ -174,10 +174,6 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 		populationTypesAPI := proxy.NewAPIProxy(ctx, cfg.PopulationTypesAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 		addTransitionalHandler(router, populationTypesAPI, "/population-types")
 	}
-	if cfg.EnableInteractivesAPI {
-		interactives := proxy.NewAPIProxy(ctx, cfg.InteractivesAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.ContextURL, cfg.EnableV1BetaRestriction)
-		addVersionedHandlers(router, interactives, cfg.InteractivesAPIVersions, "/interactives")
-	}
 	if cfg.EnableMapsAPI {
 		mapsProxy := proxy.NewAPIProxy(ctx, cfg.MapsAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 		addVersionedHandlers(router, mapsProxy, cfg.MapsAPIVersions, "/maps")
@@ -197,8 +193,12 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 
 	if cfg.EnableNLPSearchAPIs {
 		searchScrubberAPIProxy := proxy.NewAPIProxy(ctx, cfg.SearchScrubberAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+		categoryAPIProxy := proxy.NewAPIProxy(ctx, cfg.CategoryAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
+		berlinAPIProxy := proxy.NewAPIProxy(ctx, cfg.BerlinAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 
 		addVersionedHandlers(router, searchScrubberAPIProxy, cfg.SearchScrubberAPIVersions, "/scrubber")
+		addVersionedHandlers(router, categoryAPIProxy, cfg.CategoryAPIVersions, "/categories")
+		addVersionedHandlers(router, berlinAPIProxy, cfg.BerlinAPIVersions, "/berlin")
 	}
 
 	// Private APIs

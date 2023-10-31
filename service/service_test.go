@@ -47,9 +47,6 @@ func TestRouterPublicAPIs(t *testing.T) {
 	Convey("Given an api router and proxies with all public endpoints available", t, func() {
 		cfg, _ := config.Get()
 
-		// This is temporary and needs to be removed when it is ready for SearchAPIURL to point to dp-search-query
-		cfg.SearchAPIURL = "http://justForTests:1234"
-
 		zebedeeURL, _ := url.Parse(cfg.ZebedeeURL)
 		hierarchyAPIURL, _ := url.Parse(cfg.HierarchyAPIURL)
 		filterAPIURL, _ := url.Parse(cfg.FilterAPIURL)
@@ -63,11 +60,13 @@ func TestRouterPublicAPIs(t *testing.T) {
 		feedbackAPIURL, _ := url.Parse(cfg.FeedbackAPIURL)
 		releaseCalendarAPIURL, _ := url.Parse(cfg.ReleaseCalendarAPIURL)
 		populationTypesAPIURL, _ := url.Parse(cfg.PopulationTypesAPIURL)
-		interactivesAPIURL, _ := url.Parse(cfg.InteractivesAPIURL)
 		mapsAPIURL, _ := url.Parse(cfg.MapsAPIURL)
 		geodataAPIURL, _ := url.Parse(cfg.GeodataAPIURL)
 		topicAPIURL, _ := url.Parse(cfg.TopicAPIURL)
 		areasAPIURL, _ := url.Parse(cfg.AreasAPIURL)
+		scrubberAPIURL, _ := url.Parse(cfg.SearchScrubberAPIURL)
+		categoryAPIURL, _ := url.Parse(cfg.CategoryAPIURL)
+		berlinAPIURL, _ := url.Parse(cfg.BerlinAPIURL)
 
 		expectedPublicURLs := map[string]*url.URL{
 			"/code-lists": codelistAPIURL,
@@ -95,10 +94,6 @@ func TestRouterPublicAPIs(t *testing.T) {
 		for _, version := range cfg.ReleaseCalendarAPIVersions {
 			expectedPublicURLs["/"+version+"/releases"] = releaseCalendarAPIURL
 		}
-		cfg.InteractivesAPIVersions = []string{"vX", "vAnother"}
-		for _, version := range cfg.InteractivesAPIVersions {
-			expectedPublicURLs["/"+version+"/interactives"] = interactivesAPIURL
-		}
 		cfg.MapsAPIVersions = []string{"vX", "vY"}
 		for _, version := range cfg.MapsAPIVersions {
 			expectedPublicURLs["/"+version+"/maps"] = mapsAPIURL
@@ -108,6 +103,15 @@ func TestRouterPublicAPIs(t *testing.T) {
 		}
 		for _, version := range cfg.AreasAPIVersions {
 			expectedPublicURLs["/"+version+"/areas"] = areasAPIURL
+		}
+		for _, version := range cfg.SearchScrubberAPIVersions {
+			expectedPublicURLs["/"+version+"/scrubber"] = scrubberAPIURL
+		}
+		for _, version := range cfg.BerlinAPIVersions {
+			expectedPublicURLs["/"+version+"/berlin"] = berlinAPIURL
+		}
+		for _, version := range cfg.CategoryAPIVersions {
+			expectedPublicURLs["/"+version+"/categories"] = categoryAPIURL
 		}
 		resetProxyMocksWithExpectations(expectedPublicURLs)
 
@@ -358,39 +362,6 @@ func TestRouterPublicAPIs(t *testing.T) {
 			})
 		})
 
-		Convey("A request to an interactives subpath", func() {
-			Convey("When the feature flag is enabled", func() {
-				cfg.EnableInteractivesAPI = true
-
-				Convey("Then the request is proxied to the interactives API for a mapped URL", func() {
-					for _, version := range cfg.InteractivesAPIVersions {
-						w := createRouterTest(cfg, "http://localhost:23200/"+version+"/interactives/subpath")
-						So(w.Code, ShouldEqual, http.StatusOK)
-						verifyProxied("/"+version+"/interactives/subpath", interactivesAPIURL)
-					}
-				})
-
-				Convey("Then the request falls through to the default zebedee handler for an unhandled version", func() {
-					version := "vSomeOtherVersion"
-					w := createRouterTest(cfg, "http://localhost:23200/"+version+"/interactives/subpath")
-					So(w.Code, ShouldEqual, http.StatusNotFound)
-					verifyProxied("/"+version+"/interactives/subpath", zebedeeURL)
-				})
-			})
-
-			Convey("With the feature flag disabled", func() {
-				cfg.EnableInteractivesAPI = false
-				Convey("Then the request falls through for all interactives versions to the default zebedee handler", func() {
-					for _, version := range cfg.InteractivesAPIVersions {
-						// deliberately not configured v1 to get around legacy handle stripping it
-						w := createRouterTest(cfg, "http://localhost:23200/"+version+"/interactives/subpath")
-						So(w.Code, ShouldEqual, http.StatusOK)
-						verifyProxied("/"+version+"/interactives/subpath", zebedeeURL)
-					}
-				})
-			})
-		})
-
 		Convey("Given a topic service path", func() {
 			topicsPath := "http://localhost:23200/v1/topics"
 
@@ -556,6 +527,20 @@ func TestRouterPublicAPIs(t *testing.T) {
 					}
 				})
 			})
+		})
+
+		Convey("When the enable NLP APIs flag is enabled", func() {
+			cfg.EnableNLPSearchAPIs = true
+			assertVersionedProxyCalledForPath(cfg, cfg.SearchScrubberAPIVersions, "/scrubber", scrubberAPIURL)
+			assertVersionedProxyCalledForPath(cfg, cfg.CategoryAPIVersions, "/categories", categoryAPIURL)
+			assertVersionedProxyCalledForPath(cfg, cfg.BerlinAPIVersions, "/berlin", berlinAPIURL)
+		})
+
+		Convey("When the enable NLP APIs flag is disabled", func() {
+			cfg.EnableNLPSearchAPIs = false
+			assertVersionedFallThroughToZebedee(cfg, cfg.SearchScrubberAPIVersions, "/scrubber", zebedeeURL)
+			assertVersionedFallThroughToZebedee(cfg, cfg.CategoryAPIVersions, "/categories", zebedeeURL)
+			assertVersionedFallThroughToZebedee(cfg, cfg.BerlinAPIVersions, "/berlin", zebedeeURL)
 		})
 	})
 }
@@ -853,6 +838,38 @@ func TestRouterLegacyAPIs(t *testing.T) {
 			verifyProxied("/search", apiPocURL)
 		})
 	})
+}
+
+// assertVersionedProxyCalledForPath takes versions and a path a verifies that the proxy is called for each version
+func assertVersionedProxyCalledForPath(cfg *config.Config, versions []string, path string, proxyURL *url.URL) {
+	for _, version := range versions {
+		Convey("Then the "+version+" request is proxied to "+proxyURL.String(), func() {
+			versionedPath := "/" + version + path
+			fmt.Println(versionedPath)
+
+			w := createRouterTest(cfg, "http://localhost:23200"+versionedPath)
+			So(w.Code, ShouldEqual, http.StatusOK)
+			verifyProxied(versionedPath, proxyURL)
+		})
+	}
+}
+
+// assertVersionedFallThroughToZebedee ensures that if a path is not enabled it falls through to Zebedee without version if v1
+// or with version if not
+func assertVersionedFallThroughToZebedee(cfg *config.Config, versions []string, path string, zebedeeURL *url.URL) {
+	for _, version := range versions {
+		versionedPath := "/" + version + path
+		_ = createRouterTest(cfg, "http://localhost:23200"+versionedPath)
+		if version == "v1" {
+			Convey("Then the v1 request for "+path+" is proxied to zebedee handler without the version", func() {
+				verifyProxied(path, zebedeeURL)
+			})
+		} else {
+			Convey("Then the "+versionedPath+" request is proxied to zebedee handler", func() {
+				verifyProxied(versionedPath, zebedeeURL)
+			})
+		}
+	}
 }
 
 func assertOnlyThisURLIsCalled(expectedURL *url.URL) {
