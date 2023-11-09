@@ -251,11 +251,21 @@ func retrieveIdentity(w http.ResponseWriter, req *http.Request, idClient *client
 		}
 	}
 
+	log.Info(ctx, "********FLORENCE********", log.Data{
+		"*********FLORENCE*********": florenceToken,
+	})
+
 	serviceAuthToken, err := getServiceAuthToken(ctx, req)
 	if err != nil {
 		handleError(ctx, w, req, http.StatusInternalServerError, "error getting service access token from request", err, nil)
 		return ctx, http.StatusInternalServerError, err
 	}
+
+	log.Info(ctx, "********SERVICEAUTH********", log.Data{
+		"*********SERVICEAUTH*********": serviceAuthToken,
+	})
+
+	// THE FLORENCE TOKEN WE USE IN THE REQUEST IS NOT COMPATIBLE WITH USER REQUESTS IN THE CHECKREQUEST FUNCTION (AND THE FUNCTIONS IT CALLS - ) BELOW
 
 	// CheckRequest performs the call to Zebedee GET /identity and stores the values in context
 	ctx, statusCode, authFailure, err := idClient.CheckRequest(req, florenceToken, serviceAuthToken)
@@ -282,12 +292,17 @@ func handleError(ctx context.Context, w http.ResponseWriter, r *http.Request, st
 
 func getFlorenceToken(ctx context.Context, req *http.Request) (string, error) {
 	var florenceToken string
+	bearerPrefix := "Bearer "
+
 	token, err := headers.GetUserAuthToken(req)
 	if err == nil {
 		florenceToken = token
 	} else if headers.IsErrNotFound(err) {
 		log.Info(ctx, "florence access token header not found attempting to find access token cookie")
 		florenceToken, err = getFlorenceTokenFromCookie(ctx, req)
+	}
+	if strings.HasPrefix(florenceToken, bearerPrefix) {
+		florenceToken = strings.TrimPrefix(florenceToken, bearerPrefix)
 	}
 
 	return florenceToken, err
@@ -310,8 +325,23 @@ func getFlorenceTokenFromCookie(ctx context.Context, req *http.Request) (string,
 
 func getServiceAuthToken(ctx context.Context, req *http.Request) (string, error) {
 	var authToken string
+	var token string
+	var err error
 
-	token, err := headers.GetServiceAuthToken(req)
+	if token = req.Header.Get("X-Florence-Token"); token != "" {
+		if strings.HasPrefix(token, "Bearer ") {
+			token = strings.TrimPrefix(token, "Bearer ")
+		}
+		req.Header.Set("Authorization", token)
+	}
+
+	req.Header.Del("X-Florence-Token")
+
+	log.Info(ctx, "********REQ********", log.Data{
+		"*********REQ*********": req.Header,
+	})
+
+	token, err = headers.GetServiceAuthToken(req)
 	if err == nil {
 		authToken = token
 	} else if headers.IsErrNotFound(err) {
