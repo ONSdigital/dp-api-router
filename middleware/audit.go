@@ -337,10 +337,6 @@ func getServiceAuthToken(ctx context.Context, req *http.Request) (string, error)
 
 	req.Header.Del("X-Florence-Token")
 
-	log.Info(ctx, "********REQ********", log.Data{
-		"*********REQ*********": req.Header,
-	})
-
 	token, err = headers.GetServiceAuthToken(req)
 	if err == nil {
 		authToken = token
