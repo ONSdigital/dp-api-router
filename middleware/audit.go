@@ -292,7 +292,7 @@ func handleError(ctx context.Context, w http.ResponseWriter, r *http.Request, st
 
 func getFlorenceToken(ctx context.Context, req *http.Request) (string, error) {
 	var florenceToken string
-	bearerPrefix := "Bearer "
+	// bearerPrefix := "Bearer "
 
 	token, err := headers.GetUserAuthToken(req)
 	if err == nil {
@@ -301,9 +301,9 @@ func getFlorenceToken(ctx context.Context, req *http.Request) (string, error) {
 		log.Info(ctx, "florence access token header not found attempting to find access token cookie")
 		florenceToken, err = getFlorenceTokenFromCookie(ctx, req)
 	}
-	if strings.HasPrefix(florenceToken, bearerPrefix) {
-		florenceToken = strings.TrimPrefix(florenceToken, bearerPrefix)
-	}
+	// if strings.HasPrefix(florenceToken, bearerPrefix) {
+	// 	florenceToken = strings.TrimPrefix(florenceToken, bearerPrefix)
+	// }
 
 	return florenceToken, err
 }
@@ -329,9 +329,9 @@ func getServiceAuthToken(ctx context.Context, req *http.Request) (string, error)
 	var err error
 
 	if token = req.Header.Get("X-Florence-Token"); token != "" {
-		if strings.HasPrefix(token, "Bearer ") {
-			token = strings.TrimPrefix(token, "Bearer ")
-		}
+		// if strings.HasPrefix(token, "Bearer ") {
+		// 	token = strings.TrimPrefix(token, "Bearer ")
+		// }
 		req.Header.Set("Authorization", token)
 	}
 
