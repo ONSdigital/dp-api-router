@@ -328,15 +328,6 @@ func getServiceAuthToken(ctx context.Context, req *http.Request) (string, error)
 	var token string
 	var err error
 
-	if token = req.Header.Get("X-Florence-Token"); token != "" {
-		// if strings.HasPrefix(token, "Bearer ") {
-		// 	token = strings.TrimPrefix(token, "Bearer ")
-		// }
-		req.Header.Set("Authorization", token)
-	}
-
-	req.Header.Del("X-Florence-Token")
-
 	token, err = headers.GetServiceAuthToken(req)
 	if err == nil {
 		authToken = token
