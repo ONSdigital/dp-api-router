@@ -6,6 +6,8 @@ go 1.21
 exclude github.com/hashicorp/consul/api v1.1.0
 
 replace (
+	// Sarama's ownership was transferred from Shopify to IBM
+	github.com/Shopify/sarama => github.com/IBM/sarama v1.40.0
 	// solves CVE-2021-3121
 	github.com/prometheus/common => github.com/prometheus/common v0.34.0
 	// solves sonatype-2020-0584 CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') github.com/yuin/goldmark - Cross-Site Scripting (XSS)
@@ -33,7 +35,7 @@ require (
 
 require (
 	github.com/ONSdigital/dp-permissions-api v0.22.0 // indirect
-	github.com/Shopify/sarama v1.38.1 // indirect
+	github.com/Shopify/sarama v1.42.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/eapache/go-resiliency v1.4.0 // indirect
 	github.com/eapache/go-xerial-snappy v0.0.0-20230731223053-c322873962e3 // indirect
@@ -61,7 +63,9 @@ require (
 	github.com/pierrec/lz4/v4 v4.1.18 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/smarty/assertions v1.15.1 // indirect
+	github.com/stretchr/testify v1.8.4 // indirect
 	golang.org/x/crypto v0.15.0 // indirect
 	golang.org/x/net v0.18.0 // indirect
+	golang.org/x/sync v0.4.0 // indirect
 	golang.org/x/sys v0.14.0 // indirect
 )
