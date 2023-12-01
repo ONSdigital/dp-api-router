@@ -19,6 +19,7 @@ import (
 	kafka "github.com/ONSdigital/dp-kafka/v3"
 	dphttp "github.com/ONSdigital/dp-net/v2/http"
 	"github.com/ONSdigital/log.go/v2/log"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gorilla/mux/otelmux"
 )
 
 // Service contains all the configs, server and clients to run the API Router
@@ -69,6 +70,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	// Create router and http server
 	r := CreateRouter(ctx, cfg)
 	m := svc.CreateMiddleware(cfg, r)
+	r.Use(otelmux.Middleware(cfg.OTServiceName))
 	svc.Server = dphttp.NewServer(cfg.BindAddr, m.Then(r))
 
 	svc.Server.DefaultShutdownTimeout = cfg.GracefulShutdown
