@@ -20,6 +20,7 @@ import (
 	dphttp "github.com/ONSdigital/dp-net/v2/http"
 	"github.com/ONSdigital/log.go/v2/log"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gorilla/mux/otelmux"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 // Service contains all the configs, server and clients to run the API Router
@@ -69,7 +70,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 
 	// Create router and http server
 	r := CreateRouter(ctx, cfg)
-	otelhandler = otelhttp.NewHandler(r,"/")
+	otelhandler := otelhttp.NewHandler(r, "/")
 	m := svc.CreateMiddleware(cfg, r)
 	r.Use(otelmux.Middleware(cfg.OTServiceName))
 	svc.Server = dphttp.NewServer(cfg.BindAddr, m.Then(otelhandler))
