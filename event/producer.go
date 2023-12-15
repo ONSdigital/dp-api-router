@@ -1,6 +1,9 @@
 package event
 
 import (
+	"context"
+
+	kafka "github.com/ONSdigital/dp-kafka/v4"
 	"github.com/pkg/errors"
 )
 
@@ -8,7 +11,7 @@ import (
 
 // AvroProducer of output events.
 type AvroProducer struct {
-	out        chan []byte
+	out        chan kafka.BytesMessage
 	marshaller Marshaller
 }
 
@@ -18,7 +21,7 @@ type Marshaller interface {
 }
 
 // NewAvroProducer returns a new instance of AvroProducer.
-func NewAvroProducer(outputChannel chan []byte, marshaller Marshaller) *AvroProducer {
+func NewAvroProducer(outputChannel chan kafka.BytesMessage, marshaller Marshaller) *AvroProducer {
 	return &AvroProducer{
 		out:        outputChannel,
 		marshaller: marshaller,
@@ -26,12 +29,12 @@ func NewAvroProducer(outputChannel chan []byte, marshaller Marshaller) *AvroProd
 }
 
 // Audit produces a new Audit event.
-func (producer *AvroProducer) Audit(event *Audit) error {
+func (producer *AvroProducer) Audit(ctx context.Context, event *Audit) error {
 	bytes, err := producer.Marshal(event)
 	if err != nil {
 		return err
 	}
-	producer.Send(bytes)
+	producer.Send(ctx, bytes)
 	return nil
 }
 
@@ -44,6 +47,6 @@ func (producer *AvroProducer) Marshal(event *Audit) ([]byte, error) {
 }
 
 // Send sends the byte array to the output channel
-func (producer *AvroProducer) Send(bytes []byte) {
-	producer.out <- bytes
+func (producer *AvroProducer) Send(ctx context.Context, bytes []byte) {
+	producer.out <- kafka.BytesMessage{Value: bytes, Context: ctx}
 }
