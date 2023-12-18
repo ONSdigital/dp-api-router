@@ -176,7 +176,7 @@ func Get() (*Config, error) {
 		BerlinAPIVersions:                    []string{"v1"},
 		OTExporterOTLPEndpoint:               "localhost:4317",
 		OTServiceName:                        "dp-api-router",
-		OTBatchTimeout:                       time.Second*5,
+		OTBatchTimeout:                       time.Second * 5,
 	}
 
 	return cfg, envconfig.Process("", cfg)

@@ -89,6 +89,7 @@ func TestGetReturnsDefaultValues(t *testing.T) {
 			BerlinAPIVersions:                    []string{"v1"},
 			OTExporterOTLPEndpoint:               "localhost:4317",
 			OTServiceName:                        "dp-api-router",
+			OTBatchTimeout:                       5 * time.Second,
 		})
 	})
 }

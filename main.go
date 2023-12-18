@@ -11,7 +11,6 @@ import (
 	dpotelgo "github.com/ONSdigital/dp-otel-go"
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/pkg/errors"
-
 )
 
 const serviceName = "dp-api-router"
