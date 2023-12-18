@@ -11,6 +11,7 @@ import (
 	dpotelgo "github.com/ONSdigital/dp-otel-go"
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/pkg/errors"
+
 )
 
 const serviceName = "dp-api-router"
@@ -48,10 +49,11 @@ func run(ctx context.Context) error {
 		return errors.Wrap(err, "unable to retrieve service configuration")
 	}
 
-	// Set up OpenTelemetry
+	// // Set up OpenTelemetry
 	otelConfig := dpotelgo.Config{
 		OtelServiceName:          cfg.OTServiceName,
 		OtelExporterOtlpEndpoint: cfg.OTExporterOTLPEndpoint,
+		OtelBatchTimeout:         cfg.OTBatchTimeout,
 	}
 
 	otelShutdown, oErr := dpotelgo.SetupOTelSDK(ctx, otelConfig)
