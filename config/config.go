@@ -89,7 +89,7 @@ type Config struct {
 	BerlinAPIVersions                    []string      `envconfig:"BERLIN_API_VERSIONS"`
 	OTExporterOTLPEndpoint               string        `envconfig:"OTEL_EXPORTER_OTLP_ENDPOINT"`
 	OTServiceName                        string        `envconfig:"OTEL_SERVICE_NAME"`
-	OTBatchTimeout 						 time.Duration `envconfig:"OTEL_BATCH_TIMEOUT"`
+	OTBatchTimeout                       time.Duration `envconfig:"OTEL_BATCH_TIMEOUT"`
 	Auth                                 authorisation.Config
 }
 
@@ -176,7 +176,7 @@ func Get() (*Config, error) {
 		BerlinAPIVersions:                    []string{"v1"},
 		OTExporterOTLPEndpoint:               "localhost:4317",
 		OTServiceName:                        "dp-api-router",
-		OTBatchTimeout:						  time.Second*5,
+		OTBatchTimeout:                       time.Second*5,
 	}
 
 	return cfg, envconfig.Process("", cfg)
