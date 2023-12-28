@@ -53,7 +53,7 @@ func NewAPIProxyWithOptions(ctx context.Context, target, version, envHost, conte
 		os.Exit(1)
 	}
 
-	var transport http.RoundTripper = nil
+	var transport http.RoundTripper
 	if options.Interceptor {
 		transport = interceptor.NewRoundTripper(envHost+"/"+version, contextURL, http.DefaultTransport)
 	}
