@@ -21,22 +21,44 @@ type APIProxy struct {
 	enableBetaRestriction bool
 }
 
-// NewSingleHostReverseProxy is a function that creates a new httputil ReverseProxy, and its transport
+// NewSingleHostReverseProxy is a function that creates a new httputil ReverseProxy, with default transport
 var NewSingleHostReverseProxy = func(target *url.URL, version, envHost, contextURL string) IReverseProxy {
+	return NewSingleHostReverseProxyWithTransport(target, version, envHost, contextURL, nil)
+}
+
+// NewSingleHostReverseProxyWithTransport is a function that creates a new httputil ReverseProxy, with the supplied transport
+var NewSingleHostReverseProxyWithTransport = func(target *url.URL, version, envHost, contextURL string, transport http.RoundTripper) IReverseProxy {
 	pxy := httputil.NewSingleHostReverseProxy(target)
-	pxy.Transport = interceptor.NewRoundTripper(envHost+"/"+version, contextURL, http.DefaultTransport)
+	if transport != nil {
+		pxy.Transport = transport
+	}
 	return pxy
+}
+
+// Options is a struct that allows optional parameters to be supplied when initialising an API proxy
+type Options struct {
+	Interceptor bool
 }
 
 // NewAPIProxy creates a new APIProxy with a new ReverseProxy for the provided target
 func NewAPIProxy(ctx context.Context, target, version, envHost, contextURL string, enableBetaRestriction bool) *APIProxy {
+	return NewAPIProxyWithOptions(ctx, target, version, envHost, contextURL, enableBetaRestriction, Options{})
+}
+
+// NewAPIProxyWithOptions creates a new APIProxy with a new ReverseProxy for the provided target that accepts optional parameters
+func NewAPIProxyWithOptions(ctx context.Context, target, version, envHost, contextURL string, enableBetaRestriction bool, options Options) *APIProxy {
 	targetURL, err := url.Parse(target)
 	if err != nil {
 		log.Fatal(ctx, "failed to create url", err, log.Data{"url": target})
 		os.Exit(1)
 	}
 
-	pxy := NewSingleHostReverseProxy(targetURL, version, envHost, contextURL)
+	var transport http.RoundTripper = nil
+	if options.Interceptor {
+		transport = interceptor.NewRoundTripper(envHost+"/"+version, contextURL, http.DefaultTransport)
+	}
+
+	pxy := NewSingleHostReverseProxyWithTransport(targetURL, version, envHost, contextURL, transport)
 	return &APIProxy{
 		target:                targetURL,
 		proxy:                 pxy,
