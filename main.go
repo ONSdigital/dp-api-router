@@ -48,10 +48,11 @@ func run(ctx context.Context) error {
 		return errors.Wrap(err, "unable to retrieve service configuration")
 	}
 
-	// Set up OpenTelemetry
+	// // Set up OpenTelemetry
 	otelConfig := dpotelgo.Config{
 		OtelServiceName:          cfg.OTServiceName,
 		OtelExporterOtlpEndpoint: cfg.OTExporterOTLPEndpoint,
+		OtelBatchTimeout:         cfg.OTBatchTimeout,
 	}
 
 	otelShutdown, oErr := dpotelgo.SetupOTelSDK(ctx, otelConfig)
