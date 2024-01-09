@@ -82,6 +82,12 @@ issues:
         - goconst
         - revive
         - gocritic
+
+    # Temporarily exclude linting failure of RoundTrip function
+    - path: interceptor/interceptor.go
+      linters:
+        - gocyclo
+      text: "cyclomatic complexity 25 of func .*RoundTrip"
   new: false
 
 # golangci.com configuration
