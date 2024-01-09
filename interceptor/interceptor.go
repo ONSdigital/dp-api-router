@@ -53,7 +53,6 @@ var debugHeaders = os.Getenv("ROUTER_DEBUG_KEY") != "" // Temporary var to be re
 // RoundTrip intercepts the response body and post processes to add the correct environment
 // host to links
 func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error) {
-
 	// Temporary debug code to dump out http headers for router refactoring work
 	// This entire section is skipped when not enabled so should not impact prod if accidentally deployed
 	// Can be removed if in doubt along with global var `debugHeaders`
