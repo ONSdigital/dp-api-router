@@ -66,14 +66,18 @@ func testHandler(statusCode int, body []byte, c C) http.Handler {
 func createValidAuditHandler() (kafka.IProducer, func(h http.Handler) http.Handler) {
 	cliMock := createHTTPClientMock(http.StatusOK, testIdentityResponse)
 	config := &kafka.ProducerConfig{
-		BrokerAddrs:     []string{"localhost:9092"},
+		BrokerAddrs:     []string{"localhost:9092", "localhost:9093"},
         Topic:           "test-topic",
 	}
-	p, _ := kafkatest.NewProducer(context.Background(), config, kafkatest.DefaultProducerConfig)
-	auditProducer := event.NewAvroProducer(p.p.Channels().Output, schema.AuditEvent)
+	p, err := kafkatest.NewProducer(context.Background(), config, kafkatest.DefaultProducerConfig)
+	if err != nil {
+		fmt.Printf("HELLO!!! ")
+		fmt.Printf("%+v\n", err)
+	}
+	auditProducer := event.NewAvroProducer(p.Mock.Channels().Output, schema.AuditEvent)
 	enableZebedeeAudit := true
 	auth := authorisation.Config{}
-	return p.p, middleware.AuditHandler(auditProducer, cliMock, testZebedeeURL, testVersionPrefix, enableZebedeeAudit, nil, auth)
+	return p.Mock, middleware.AuditHandler(auditProducer, cliMock, testZebedeeURL, testVersionPrefix, enableZebedeeAudit, nil, auth)
 }
 
 // utility function to create a producer and an audit handler that fails to marshal and send events
@@ -85,14 +89,14 @@ func createFailingAuditHandler() (kafka.IProducer, func(h http.Handler) http.Han
 		},
 	}
 	config := &kafka.ProducerConfig{
-		BrokerAddrs:     []string{"localhost:9092"},
+		BrokerAddrs:     []string{"localhost:9092", "localhost:9093"},
         Topic:           "test-topic",
 	}
 	p, _ := kafkatest.NewProducer(context.Background(), config, kafkatest.DefaultProducerConfig)
-	auditProducer := event.NewAvroProducer(p.p.Channels().Output, failingMarshaller)
+	auditProducer := event.NewAvroProducer(p.Mock.Channels().Output, failingMarshaller)
 	enableZebedeeAudit := true
 	auth := authorisation.Config{}
-	return p.p, middleware.AuditHandler(auditProducer, cliMock, testZebedeeURL, testVersionPrefix, enableZebedeeAudit, nil, auth)
+	return p.Mock, middleware.AuditHandler(auditProducer, cliMock, testZebedeeURL, testVersionPrefix, enableZebedeeAudit, nil, auth)
 }
 
 // utility function to generate Clienter mocks
@@ -492,13 +496,13 @@ func TestAuditHandler(t *testing.T) {
 				Topic:           "test-topic",
 			}
 			p, _ := kafkatest.NewProducer(context.Background(), config, kafkatest.DefaultProducerConfig)
-			a := event.NewAvroProducer(p.p.Channels().Output, failingMarshaller)
+			a := event.NewAvroProducer(p.Mock.Channels().Output, failingMarshaller)
 			enableZebedeeAudit := true
 			auth := authorisation.Config{}
 			auditHandler := middleware.AuditHandler(a, cliMock, testZebedeeURL, testVersionPrefix, enableZebedeeAudit, nil, auth)(testHandler(http.StatusForbidden, testBody, c))
 
 			// execute request and expect only 1 audit event
-			auditEvents := serveAndCaptureAudit(c, w, req, auditHandler, p.p.Channels().Output, 1)
+			auditEvents := serveAndCaptureAudit(c, w, req, auditHandler, p.Mock.Channels().Output, 1)
 
 			Convey("Then status 500 and empty body is returned", func(c C) {
 				c.So(w.Code, ShouldEqual, http.StatusInternalServerError)
@@ -554,13 +558,13 @@ func TestAuditHandlerJWTFlorenceToken(t *testing.T) {
 				Topic:           "test-topic",
 			}
 			p, _ := kafkatest.NewProducer(context.Background(), config, kafkatest.DefaultProducerConfig)
-			a := event.NewAvroProducer(p.p.Channels().Output, failingMarshaller)
+			a := event.NewAvroProducer(p.Mock.Channels().Output, failingMarshaller)
 			enableZebedeeAudit := true
 			auth := authorisation.Config{}
 			auditHandler := middleware.AuditHandler(a, cliMock, testZebedeeURL, testVersionPrefix, enableZebedeeAudit, nil, auth)(testHandler(http.StatusForbidden, testBody, c))
 
 			// execute request and expect only 1 audit event
-			auditEvents := serveAndCaptureAudit(c, w, req, auditHandler, p.p.Channels().Output, 1)
+			auditEvents := serveAndCaptureAudit(c, w, req, auditHandler, p.Mock.Channels().Output, 1)
 			Convey("Then status 500 and empty body is returned", func(c C) {
 				c.So(w.Code, ShouldEqual, http.StatusInternalServerError)
 				b, err := io.ReadAll(w.Body)
@@ -632,7 +636,7 @@ func TestSkipZebedeeAudit(t *testing.T) {
 			Topic:           "test-topic",
 		}
 		p, _ := kafkatest.NewProducer(context.Background(), config, kafkatest.DefaultProducerConfig)
-		auditProducer := event.NewAvroProducer(p.p.Channels().Output, schema.AuditEvent)
+		auditProducer := event.NewAvroProducer(p.Mock.Channels().Output, schema.AuditEvent)
 		enableZebedeeAudit := false
 		auth := authorisation.Config{}
 		routerMock := &mock.RouterMock{
@@ -650,7 +654,7 @@ func TestSkipZebedeeAudit(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			// execute request and don't wait for audit events
-			serveAndCaptureAudit(c, w, req, auditHandler, p.p.Channels().Output, 0)
+			serveAndCaptureAudit(c, w, req, auditHandler, p.Mock.Channels().Output, 0)
 
 			Convey("Then status OK and expected body is returned", func(c C) {
 				c.So(w.Code, ShouldEqual, http.StatusOK)
@@ -677,7 +681,7 @@ func TestSkipZebedeeAudit(t *testing.T) {
 			Topic:           "test-topic",
 		}
 		p, _ := kafkatest.NewProducer(context.Background(), config, kafkatest.DefaultProducerConfig)
-		auditProducer := event.NewAvroProducer(p.p.Channels().Output, schema.AuditEvent)
+		auditProducer := event.NewAvroProducer(p.Mock.Channels().Output, schema.AuditEvent)
 		enableZebedeeAudit := false
 		auth := authorisation.Config{}
 		routerMock := &mock.RouterMock{
@@ -696,7 +700,7 @@ func TestSkipZebedeeAudit(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			// execute request and wait for audit event
-			auditEvents := serveAndCaptureAudit(c, w, req, auditHandler, p.p.Channels().Output, 2)
+			auditEvents := serveAndCaptureAudit(c, w, req, auditHandler, p.Mock.Channels().Output, 2)
 
 			Convey("Then status OK and expected body is returned", func(c C) {
 				c.So(w.Code, ShouldEqual, http.StatusOK)
