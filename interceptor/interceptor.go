@@ -8,7 +8,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"os"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -48,38 +47,9 @@ var (
 	re = regexp.MustCompile(`^(.+://)(.+)(/v\d)$`)
 )
 
-var debugHeaders = os.Getenv("ROUTER_DEBUG_KEY") != "" // Temporary var to be removed when unused (default: false)
-
 // RoundTrip intercepts the response body and post processes to add the correct environment
 // host to links
 func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error) {
-	// Temporary debug code to dump out http headers for router refactoring work
-	// This entire section is skipped when not enabled so should not impact prod if accidentally deployed
-	// Can be removed if in doubt along with global var `debugHeaders`
-	if debugHeaders {
-		// Only output headers for requests supplying the valid debugging key
-		q := req.URL.Query()
-		clientKey, ok := q["debug_key"]
-		if ok && clientKey[0] == os.Getenv("ROUTER_DEBUG_KEY") {
-			// We don't want to log all headers in case they have sensitive data (eg. auth tokens)
-			okHeadersMap := map[string]bool{}
-			if okHeadersList := os.Getenv("ROUTER_DEBUG_HEADERS"); okHeadersList != "" {
-				for _, h := range strings.Split(okHeadersList, ",") {
-					okHeadersMap[h] = true
-				}
-			}
-			headerDump := map[string][]string{}
-			for k, v := range req.Header {
-				if okHeadersMap[k] {
-					headerDump[k] = v
-				} else {
-					headerDump[k] = []string{"**redacted**"}
-				}
-			}
-			log.Info(req.Context(), "debugging http headers", log.Data{"headers": headerDump})
-		}
-	}
-
 	// Make the request to the server
 	resp, err = t.RoundTripper.RoundTrip(req)
 	if err != nil {
