@@ -14,13 +14,12 @@ import (
 	"time"
 
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
-
-	"github.com/ONSdigital/dp-api-router/middleware/mock"
 	"github.com/gorilla/mux"
 
 	"github.com/ONSdigital/dp-api-router/event"
 	eventmock "github.com/ONSdigital/dp-api-router/event/mock"
 	"github.com/ONSdigital/dp-api-router/middleware"
+	"github.com/ONSdigital/dp-api-router/middleware/mock"
 	"github.com/ONSdigital/dp-api-router/schema"
 
 	kafka "github.com/ONSdigital/dp-kafka/v4"
@@ -66,14 +65,10 @@ func testHandler(statusCode int, body []byte, c C) http.Handler {
 func createValidAuditHandler() (kafka.IProducer, func(h http.Handler) http.Handler) {
 	cliMock := createHTTPClientMock(http.StatusOK, testIdentityResponse)
 	config := &kafka.ProducerConfig{
-		BrokerAddrs:     []string{"localhost:9092", "localhost:9093"},
-        Topic:           "test-topic",
+		BrokerAddrs: []string{"localhost:9092", "localhost:9093"},
+		Topic:       "test-topic",
 	}
-	p, err := kafkatest.NewProducer(context.Background(), config, kafkatest.DefaultProducerConfig)
-	if err != nil {
-		fmt.Printf("HELLO!!! ")
-		fmt.Printf("%+v\n", err)
-	}
+	p, _ := kafkatest.NewProducer(context.Background(), config, kafkatest.DefaultProducerConfig)
 	auditProducer := event.NewAvroProducer(p.Mock.Channels().Output, schema.AuditEvent)
 	enableZebedeeAudit := true
 	auth := authorisation.Config{}
@@ -89,8 +84,8 @@ func createFailingAuditHandler() (kafka.IProducer, func(h http.Handler) http.Han
 		},
 	}
 	config := &kafka.ProducerConfig{
-		BrokerAddrs:     []string{"localhost:9092", "localhost:9093"},
-        Topic:           "test-topic",
+		BrokerAddrs: []string{"localhost:9092", "localhost:9093"},
+		Topic:       "test-topic",
 	}
 	p, _ := kafkatest.NewProducer(context.Background(), config, kafkatest.DefaultProducerConfig)
 	auditProducer := event.NewAvroProducer(p.Mock.Channels().Output, failingMarshaller)
@@ -492,8 +487,8 @@ func TestAuditHandler(t *testing.T) {
 				},
 			}
 			config := &kafka.ProducerConfig{
-				BrokerAddrs:     []string{"localhost:9092"},
-				Topic:           "test-topic",
+				BrokerAddrs: []string{"localhost:9092", "localhost:9093"},
+				Topic:       "test-topic",
 			}
 			p, _ := kafkatest.NewProducer(context.Background(), config, kafkatest.DefaultProducerConfig)
 			a := event.NewAvroProducer(p.Mock.Channels().Output, failingMarshaller)
@@ -554,8 +549,8 @@ func TestAuditHandlerJWTFlorenceToken(t *testing.T) {
 				},
 			}
 			config := &kafka.ProducerConfig{
-				BrokerAddrs:     []string{"localhost:9092"},
-				Topic:           "test-topic",
+				BrokerAddrs: []string{"localhost:9092", "localhost:9093"},
+				Topic:       "test-topic",
 			}
 			p, _ := kafkatest.NewProducer(context.Background(), config, kafkatest.DefaultProducerConfig)
 			a := event.NewAvroProducer(p.Mock.Channels().Output, failingMarshaller)
@@ -632,8 +627,8 @@ func TestSkipZebedeeAudit(t *testing.T) {
 	Convey("Given an audit handler configured to not audit zebedee requests", t, func(c C) {
 		cliMock := createHTTPClientMock(http.StatusOK, testIdentityResponse)
 		config := &kafka.ProducerConfig{
-			BrokerAddrs:     []string{"localhost:9092"},
-			Topic:           "test-topic",
+			BrokerAddrs: []string{"localhost:9092", "localhost:9093"},
+			Topic:       "test-topic",
 		}
 		p, _ := kafkatest.NewProducer(context.Background(), config, kafkatest.DefaultProducerConfig)
 		auditProducer := event.NewAvroProducer(p.Mock.Channels().Output, schema.AuditEvent)
@@ -677,8 +672,8 @@ func TestSkipZebedeeAudit(t *testing.T) {
 
 		cliMock := createHTTPClientMock(http.StatusOK, testIdentityResponse)
 		config := &kafka.ProducerConfig{
-			BrokerAddrs:     []string{"localhost:9092"},
-			Topic:           "test-topic",
+			BrokerAddrs: []string{"localhost:9092", "localhost:9093"},
+			Topic:       "test-topic",
 		}
 		p, _ := kafkatest.NewProducer(context.Background(), config, kafkatest.DefaultProducerConfig)
 		auditProducer := event.NewAvroProducer(p.Mock.Channels().Output, schema.AuditEvent)
