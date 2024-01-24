@@ -320,7 +320,7 @@ func BenchmarkTest3(b *testing.B) {
 				fmt.Printf("ReadAll: %v\n", err)
 				panic(err)
 			}
-			if string(body) != `[{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}},{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}]`+"\n" {
+			if string(body) != `[{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}},{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}]` {
 				panic(fmt.Errorf("wrong result: %d: %v\n", c, string(body)))
 			}
 
@@ -334,7 +334,7 @@ func BenchmarkTest3(b *testing.B) {
 				fmt.Printf("ReadAll: %v\n", err)
 				panic(err)
 			}
-			if string(b2) != `{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/1234"}}}`+"\n" {
+			if string(b2) != `{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/1234"}}}` {
 				panic(fmt.Errorf("wrong result 2: %d: %v\n", c, string(b2)))
 			}
 		}
