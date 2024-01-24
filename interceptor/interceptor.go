@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/ONSdigital/log.go/v2/log"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 // Transport implements the http RoundTripper method and allows the
@@ -28,7 +29,7 @@ var _ http.RoundTripper = &Transport{}
 
 // NewRoundTripper creates a Transport instance with configured domain
 func NewRoundTripper(domain, contextURL string, rt http.RoundTripper) *Transport {
-	return &Transport{domain, contextURL, rt}
+	return &Transport{domain, contextURL, otelhttp.NewTransport(rt)}
 }
 
 const (
