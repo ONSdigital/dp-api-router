@@ -3,12 +3,11 @@ package interceptor
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
-	"reflect"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -19,16 +18,16 @@ import (
 // Transport implements the http RoundTripper method and allows the
 // response body to be post processed
 type Transport struct {
-	domain     string
-	contextURL string
+	domain      string
+	contextURL  string
+	apiURL      string
+	downloadURL string
 	http.RoundTripper
 }
 
-var _ http.RoundTripper = &Transport{}
-
-// NewRoundTripper creates a Transport instance with configured domain
-func NewRoundTripper(domain, contextURL string, rt http.RoundTripper) *Transport {
-	return &Transport{domain, contextURL, rt}
+// keyVal used as a helper to encode strings for output as JSON
+type keyVal struct {
+	K string
 }
 
 const (
@@ -36,16 +35,24 @@ const (
 	datasetLinks = "dataset_links"
 	dimensions   = "dimensions"
 	downloads    = "downloads"
+	href         = "href"
 
-	href = "href"
-
-	// NOTE: Don't go changing 'maxBodyLengthToLog' value too much from '20' as it's used to generate boundary test cases.
+	// NOTE: Don't change 'maxBodyLengthToLog' value too much from '20' as it's used to generate boundary test cases.
 	maxBodyLengthToLog = 20 // only log a small part of the body to help any problem diagnosis, as the full body length could be many Megabytes
 )
 
 var (
-	re = regexp.MustCompile(`^(.+://)(.+)(/v\d)$`)
+	re                          = regexp.MustCompile(`^(.+://)(.+)(/v\d)$`)
+	reIsChars                   = regexp.MustCompile(`^[- a-zA-Z/0-9_?=+!@$%&*()\[\]{}|':;?/<>.,]*$`)
+	_         http.RoundTripper = &Transport{}
 )
+
+// NewRoundTripper creates a Transport instance with configured domain
+func NewRoundTripper(domain, contextURL string, rt http.RoundTripper) *Transport {
+	apiURL := re.ReplaceAllString(domain, "${1}api.${2}${3}")
+	downloadURL := re.ReplaceAllString(domain, "${1}download.${2}")
+	return &Transport{domain, contextURL, apiURL, downloadURL, rt}
+}
 
 // RoundTrip intercepts the response body and post processes to add the correct environment
 // host to links
@@ -104,43 +111,181 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 		return resp, nil
 	}
 
-	// get the rest of the stream, which should be of reasonable size
-	b, err := io.ReadAll(NewMultiReadCloser(bytes.NewReader(readdata), resp.Body))
-	if err != nil {
-		return nil, err
-	}
-	err = resp.Body.Close()
-	if err != nil {
-		return nil, err
+	updatedBody := ""
+	depthType := []string{}
+	hasLen := []int64{}
+	path := []string{}
+	depth := -1
+	mReader := NewMultiReadCloser(bytes.NewReader(readdata), resp.Body)
+	jsDecoder := json.NewDecoder(mReader)
+	jsDecoder.UseNumber()
+
+	outputNextTokenFunc := func(s string, isOpening, isClosing bool) {
+		hasMore := jsDecoder.More()
+		depType := "-"
+		if depth >= 0 {
+			depType = depthType[depth]
+		}
+		fmt.Fprintf(os.Stderr, "Debug: depth is %2d len{t=%d %d=l} lens=%v typ%s %5v s=%15q upd: %s\n", depth, len(depthType), len(hasLen), hasLen, depType, hasMore, s, updatedBody)
+		appendChars := ","
+		if !hasMore || isOpening {
+			appendChars = ""
+		}
+		if isClosing {
+			if depth < 0 {
+				path = []string{}
+			} else {
+				path = path[0 : depth+1]
+			}
+			fmt.Fprintf(os.Stderr, "Debug: path }]     %2d %2d %+v\n", depth, len(path), path)
+		} else if isOpening {
+			if depth-1 < len(path) {
+				path = append(path, ".")
+			}
+			if depType == `[` {
+				path[depth] = "[]"
+			} else {
+				// is `{` opener
+				if depth == 0 && len(t.contextURL) > 0 {
+					appendChars = `"@context":"` + t.contextURL + `"`
+					if hasMore {
+						appendChars += ","
+					}
+				}
+			}
+			fmt.Fprintf(os.Stderr, "Debug: path {[     %2d %2d %+v\n", depth, len(path), path)
+		} else if hasMore && depType == `{` && hasLen[depth]%2 == 0 {
+			appendChars = ":"
+			path[depth] = s
+			fmt.Fprintf(os.Stderr, "Debug: path        %2d %2d %+v\n", depth, len(path), path)
+		}
+		updatedBody += appendChars
 	}
 
-	updatedB, err := t.update(b)
-	if err != nil {
-		bodyLength := len(b)
-		limitedBodyLength := bodyLength
-		if limitedBodyLength > maxBodyLengthToLog {
-			limitedBodyLength = maxBodyLengthToLog
+	skipNextToken := false
+	for {
+		token, err := jsDecoder.Token()
+		if err == io.EOF {
+			break
 		}
-		rawQuery := ""
-		if resp.Request != nil && resp.Request.URL != nil {
-			rawQuery = resp.Request.URL.RawQuery
+		if err != nil {
+			resp.Body = NewMultiReadCloser(bytes.NewReader([]byte(readdata)), mReader)
+			return resp, nil
 		}
-		log.Error(req.Context(), "could not update response body with correct links", err, log.Data{
-			"body":             string(b[0:limitedBodyLength]),
-			"content_type":     contentType,                         // needed to further identify content types that need to be rejected similarly to 'gzip' above
-			"body_length":      bodyLength,                          // as above
-			"content_encoding": resp.Header.Get("Content-Encoding"), // as above
-			"raw_query":        rawQuery,                            // as above
-		})
-		// return original body
-		resp.Body = io.NopCloser(bytes.NewReader(b))
-		return resp, nil
+		switch tk := token.(type) {
+		case json.Delim:
+			tokenStr := tk.String()
+			if tokenStr == `{` || tokenStr == `[` {
+				depth++
+				hasLen = append(hasLen, 0)
+				depthType = append(depthType, tokenStr)
+				updatedBody += tk.String()
+				outputNextTokenFunc(tokenStr, true, false)
+			} else if tokenStr == `}` || tokenStr == `]` {
+				depth--
+				if depth >= 0 {
+					hasLen = hasLen[0 : depth+1]
+					hasLen[depth]++
+					depthType = depthType[0 : depth+1]
+				} else if depth < 0 {
+					hasLen = []int64{}
+					depthType = []string{}
+				}
+				updatedBody += tk.String()
+				outputNextTokenFunc(tokenStr, false, true)
+			} else {
+				return nil, fmt.Errorf("delim: bad type `%T` for `%v` at depth %d", token, token, depth)
+			}
+		case string:
+			skipThisKey := false
+			if depthType[depth] == "{" {
+				if hasLen[depth]%2 == 0 { // key
+					if depth == 0 && tk == "@context" && len(t.contextURL) > 0 {
+						skipThisKey = true
+						skipNextToken = true
+					}
+				} else if len(path) >= 3 && path[len(path)-1] == href {
+					// we have the value for an object and it is an href with at least two (more) ancestors
+					if path[len(path)-3] == links ||
+						(len(path) >= 4 && path[len(path)-4] == links && path[len(path)-2] == "[]") {
+
+						tk, err = reLink(tk, t.apiURL)
+						if err != nil {
+							return nil, err
+						}
+					}
+					if path[len(path)-3] == datasetLinks {
+						tk, err = reLink(tk, t.apiURL)
+						if err != nil {
+							return nil, err
+						}
+					}
+					if path[len(path)-3] == downloads {
+						tk, err = reLink(tk, t.downloadURL)
+						if err != nil {
+							return nil, err
+						}
+					}
+					if path[len(path)-3] == dimensions ||
+						(len(path) >= 4 && path[len(path)-4] == dimensions && path[len(path)-2] != "[]") {
+
+						// Dataset api versions endpoint treats dimensions as an array
+						tk, err = reLink(tk, t.apiURL)
+						if err != nil {
+							return nil, err
+						}
+					}
+				}
+			}
+
+			if skipThisKey {
+				// nought
+			} else if skipNextToken {
+				skipNextToken = false
+				if !jsDecoder.More() && updatedBody[len(updatedBody)-1] == ',' {
+					updatedBody = updatedBody[0 : len(updatedBody)-1]
+				}
+			} else {
+				if len(tk) > 1024 || !reIsChars.Match([]byte(tk)) {
+					// encode tk
+					var encodedTk []byte
+					encodedTk, err = json.Marshal(keyVal{K: tk})
+					if err != nil {
+						return nil, err
+					}
+					updatedBody += string(encodedTk[5 : len(encodedTk)-1])
+				} else {
+					updatedBody += `"` + tk + `"`
+				}
+				outputNextTokenFunc(tk, false, false)
+				hasLen[depth]++
+			}
+		case json.Number:
+			numStr := tk.String()
+			updatedBody += numStr
+			outputNextTokenFunc(numStr, false, false)
+			hasLen[depth]++
+		case bool:
+			valStr := "true"
+			if !tk {
+				valStr = "false"
+			}
+			updatedBody += valStr
+			outputNextTokenFunc(valStr, false, false)
+			hasLen[depth]++
+		case nil:
+			updatedBody += `null`
+			outputNextTokenFunc("null", false, false)
+			hasLen[depth]++
+		default:
+			return nil, fmt.Errorf("other: bad type `%T` for `%v` at depth %d", token, token, depth)
+		}
 	}
 
 	// return updated body
-	resp.Body = io.NopCloser(bytes.NewReader(updatedB))
-	resp.ContentLength = int64(len(updatedB))
-	resp.Header.Set("Content-Length", strconv.Itoa(len(updatedB)))
+	resp.Body = io.NopCloser(strings.NewReader(updatedBody))
+	resp.ContentLength = int64(len(updatedBody))
+	resp.Header.Set("Content-Length", strconv.Itoa(len(updatedBody)))
 
 	return resp, nil
 }
@@ -173,192 +318,7 @@ func (r *multiReadCloser) Close() (err error) {
 	return err
 }
 
-func (t *Transport) update(b []byte) ([]byte, error) {
-	var (
-		err      error
-		resource interface{}
-	)
-
-	err = json.Unmarshal(b, &resource)
-	if err != nil {
-		return nil, err
-	}
-
-	resourceType := reflect.TypeOf(resource)
-	if resourceType == nil {
-		return nil, errors.New("nil resource type")
-	}
-
-	switch resourceType.Kind() {
-	case reflect.Map: // starts with {
-		// Assert type onto document
-		return t.updateMap(resource.(map[string]interface{}))
-	case reflect.Slice: // starts with [
-		// Assert type onto documents
-		return t.updateSlice(resource.([]interface{}))
-	default:
-		return nil, errors.New("unknown resource type")
-	}
-}
-
-func (t *Transport) updateMap(document map[string]interface{}) ([]byte, error) {
-	var err error
-
-	document, err = t.checkMap(document)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(t.contextURL) > 0 {
-		document["@context"] = t.contextURL
-	}
-	var updatedB []byte
-	buf := bytes.NewBuffer(updatedB)
-
-	enc := json.NewEncoder(buf)
-	enc.SetEscapeHTML(false)
-
-	err = enc.Encode(document)
-
-	return buf.Bytes(), err
-}
-
-func (t *Transport) updateSlice(documents []interface{}) ([]byte, error) {
-	var (
-		err error
-	)
-	documentList := make([]map[string]interface{}, len(documents), len(documents))
-
-	for i := range documents {
-		document := documents[i].(map[string]interface{})
-		document, err = t.checkMap(document)
-		if err != nil {
-			return nil, err
-		}
-		documentList[i] = document
-	}
-
-	var updatedB []byte
-	buf := bytes.NewBuffer(updatedB)
-
-	enc := json.NewEncoder(buf)
-	enc.SetEscapeHTML(false)
-
-	err = enc.Encode(documentList)
-
-	return buf.Bytes(), err
-}
-
-func (t *Transport) checkMap(document map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-
-	if docLinks, ok := document[links].(map[string]interface{}); ok {
-		document[links], err = updateMap(docLinks, re.ReplaceAllString(t.domain, "${1}api.${2}${3}"))
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if docLinks, ok := document[datasetLinks].(map[string]interface{}); ok {
-		document[datasetLinks], err = updateMap(docLinks, re.ReplaceAllString(t.domain, "${1}api.${2}${3}"))
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if docDownloads, ok := document[downloads].(map[string]interface{}); ok {
-		document[downloads], err = updateMap(docDownloads, re.ReplaceAllString(t.domain, "${1}download.${2}"))
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	// Dataset api versions endpoint treats dimensions as an array
-	if docDimensions, ok := document[dimensions].([]interface{}); ok {
-		document[dimensions], err = updateArray(docDimensions, re.ReplaceAllString(t.domain, "${1}api.${2}${3}"))
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	// Dataset api observations endpoint treats dimensions as a nested list
-	if docDimensions, ok := document[dimensions].(map[string]interface{}); ok {
-		document[dimensions], err = updateMap(docDimensions, re.ReplaceAllString(t.domain, "${1}api.${2}${3}"))
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	for k, v := range document {
-		if subDocument, ok := v.(map[string]interface{}); ok {
-			document[k], err = t.checkMap(subDocument)
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		if items, ok := v.([]interface{}); ok {
-			for i, subVal := range items {
-				if subValMap, ok := subVal.(map[string]interface{}); ok {
-					items[i], err = t.checkMap(subValMap)
-					if err != nil {
-						return nil, err
-					}
-				}
-			}
-			document[k] = items
-		}
-	}
-
-	return document, nil
-}
-
-func updateMap(docMap map[string]interface{}, domain string) (map[string]interface{}, error) {
-	var err error
-
-	for k, v := range docMap {
-		if val, ok := v.(map[string]interface{}); ok {
-			if field, ok := val[href].(string); ok {
-				val[href], err = getLink(field, domain)
-				if err != nil {
-					return nil, err
-				}
-			} else {
-				val, err = updateMap(val, domain)
-				if err != nil {
-					return nil, err
-				}
-			}
-			docMap[k] = val
-		}
-		if val, ok := v.([]interface{}); ok {
-			docMap[k], err = updateArray(val, domain)
-			if err != nil {
-				return nil, err
-			}
-		}
-	}
-	return docMap, nil
-}
-
-func updateArray(docArray []interface{}, domain string) ([]interface{}, error) {
-	var err error
-
-	for i, v := range docArray {
-		if val, ok := v.(map[string]interface{}); ok {
-			if field, ok := val[href].(string); ok {
-				val[href], err = getLink(field, domain)
-				if err != nil {
-					return nil, err
-				}
-			}
-			docArray[i] = val
-		}
-	}
-	return docArray, nil
-}
-
-func getLink(field, domain string) (string, error) {
+func reLink(field, domain string) (string, error) {
 	// if the URL is already correct, return it
 	if strings.HasPrefix(field, domain) {
 		return field, nil
