@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -126,7 +125,6 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 		if depth >= 0 {
 			depType = depthType[depth]
 		}
-		fmt.Fprintf(os.Stderr, "Debug: depth is %2d len{t=%d %d=l} lens=%v typ%s %5v s=%15q upd: %s\n", depth, len(depthType), len(hasLen), hasLen, depType, hasMore, s, updatedBody)
 		appendChars := ","
 		if !hasMore || isOpening {
 			appendChars = ""
@@ -137,7 +135,6 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 			} else {
 				path = path[0 : depth+1]
 			}
-			fmt.Fprintf(os.Stderr, "Debug: path }]     %2d %2d %+v\n", depth, len(path), path)
 		} else if isOpening {
 			if depth-1 < len(path) {
 				path = append(path, ".")
@@ -153,11 +150,9 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 					}
 				}
 			}
-			fmt.Fprintf(os.Stderr, "Debug: path {[     %2d %2d %+v\n", depth, len(path), path)
 		} else if hasMore && depType == `{` && hasLen[depth]%2 == 0 {
 			appendChars = ":"
 			path[depth] = s
-			fmt.Fprintf(os.Stderr, "Debug: path        %2d %2d %+v\n", depth, len(path), path)
 		}
 		updatedBody += appendChars
 	}
