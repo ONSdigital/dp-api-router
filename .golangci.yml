@@ -41,17 +41,12 @@ linters-settings:
       - ifElseChain
       - octalLiteral
       - hugeParam
-  funlen:
-  # lines: 100
-  # statements: 100
 
 linters:
   # please, do not use `enable-all`: it's deprecated and will be removed soon.
   # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
   disable-all: true
   enable:
-    - deadcode
-    - depguard
     - dogsled
     - errcheck
     - gochecknoinits
@@ -66,10 +61,10 @@ linters:
     - ineffassign
     - nakedret
     - unconvert
-    - varcheck
     - whitespace
     - gocognit
     - prealloc
+    - unused
 
 issues:
   exclude-rules:
