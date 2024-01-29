@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/ONSdigital/log.go/v2/log"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 // Transport implements the http RoundTripper method and allows the
@@ -50,7 +51,7 @@ var (
 func NewRoundTripper(domain, contextURL string, rt http.RoundTripper) *Transport {
 	apiURL := re.ReplaceAllString(domain, "${1}api.${2}${3}")
 	downloadURL := re.ReplaceAllString(domain, "${1}download.${2}")
-	return &Transport{domain, contextURL, apiURL, downloadURL, rt}
+	return &Transport{domain, contextURL, apiURL, downloadURL, otelhttp.NewTransport(rt)}
 }
 
 // RoundTrip intercepts the response body and post processes to add the correct environment
