@@ -64,6 +64,9 @@ func (e *Init) DoGetKafkaProducer(ctx context.Context, cfg *config.Config, topic
 		Topic:           topic,
 		BrokerAddrs:     cfg.Brokers,
 	}
+	if cfg.KafkaMinHealthyBrokers > 0 {
+		pConfig.MinBrokersHealthy = &cfg.KafkaMinHealthyBrokers
+	}
 	if cfg.KafkaSecProtocol == "TLS" {
 		pConfig.SecurityConfig = kafka.GetSecurityConfig(cfg.KafkaSecCACerts, cfg.KafkaSecClientCert, cfg.KafkaSecClientKey, cfg.KafkaSecSkipVerify)
 	}
