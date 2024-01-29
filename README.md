@@ -68,6 +68,7 @@ This service is responsible for serving a JSON-LD `@context` field on configured
 | KAFKA_SEC_CLIENT_CERT                    | _unset_                  | PEM [2] for the client certificate (optional, used for client auth) [1]            |
 | KAFKA_SEC_CA_CERTS                       | _unset_                  | PEM [2] of CA cert chain if using private CA for the server cert [1]               |
 | KAFKA_SEC_SKIP_VERIFY                    | false                    | ignore server certificate issues if set to `true` [1]                              |
+| KAFKA_MIN_HEALTHY_BROKERS                | 0                        | The minimum number of healthy brokers, else app stays unhealthy [3]                |
 | AUDIT_TOPIC                              | audit                    | The kafka topic name for audit events                                              |
 | HEALTHCHECK_INTERVAL                     | 30s                      | The period of time between health checks                                           |
 | HEALTHCHECK_CRITICAL_TIMEOUT             | 90s                      | The period of time after which failing checks will result in critical global check |
@@ -82,3 +83,5 @@ Notes:
 2. PEM values are identified as those starting with `-----BEGIN`
    and can use `\n` (sic) instead of newlines (they will be converted to newlines before use).
    Any other value will be treated as a path to the given PEM file.
+
+3. the default is `0` which means "use library default" - recommended to change this _only in development_ (e.g. when running only one broker)

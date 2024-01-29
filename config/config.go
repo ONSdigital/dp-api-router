@@ -56,6 +56,7 @@ type Config struct {
 	KafkaSecClientKey                    string        `envconfig:"KAFKA_SEC_CLIENT_KEY" json:"-"`
 	KafkaSecSkipVerify                   bool          `envconfig:"KAFKA_SEC_SKIP_VERIFY"`
 	KafkaMaxBytes                        int           `envconfig:"KAFKA_MAX_BYTES"`
+	KafkaMinHealthyBrokers               int           `envconfig:"KAFKA_MIN_HEALTHY_BROKERS"`
 	AuditTopic                           string        `envconfig:"AUDIT_TOPIC"`
 	SessionsAPIURL                       string        `envconfig:"SESSIONS_API_URL"`
 	EnableSessionsAPI                    bool          `envconfig:"ENABLE_SESSIONS_API"`
@@ -143,6 +144,7 @@ func Get() (*Config, error) {
 		AllowedOrigins:                       []string{"http://localhost:20000", "http://localhost:8081"},
 		AllowedMethods:                       []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodHead, http.MethodOptions},
 		KafkaMaxBytes:                        2000000,
+		KafkaMinHealthyBrokers:               0,
 		AuditTopic:                           "audit",
 		SessionsAPIURL:                       "http://localhost:24400",
 		EnableSessionsAPI:                    false,
