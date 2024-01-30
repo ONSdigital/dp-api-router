@@ -46,7 +46,6 @@ var VersionedHealthCheckFilter = func(version string, hcHandler func(w http.Resp
 func PathFilter(allowedMap map[string]Allowed) func(h http.Handler) http.Handler {
 	return func(nextHandler http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-
 			if allowed, ok := allowedMap[req.URL.Path]; ok && allowed.isMethodAllowed(req.Method) {
 				allowed.Handler(w, req)
 				return

@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
+	goerrors "errors"
 	"os"
 	"os/signal"
 
 	"github.com/ONSdigital/dp-api-router/config"
 	"github.com/ONSdigital/dp-api-router/service"
+	dpotelgo "github.com/ONSdigital/dp-otel-go"
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/pkg/errors"
 )
@@ -46,6 +48,22 @@ func run(ctx context.Context) error {
 		return errors.Wrap(err, "unable to retrieve service configuration")
 	}
 
+	// // Set up OpenTelemetry
+	otelConfig := dpotelgo.Config{
+		OtelServiceName:          cfg.OTServiceName,
+		OtelExporterOtlpEndpoint: cfg.OTExporterOTLPEndpoint,
+		OtelBatchTimeout:         cfg.OTBatchTimeout,
+	}
+
+	otelShutdown, oErr := dpotelgo.SetupOTelSDK(ctx, otelConfig)
+	if oErr != nil {
+		log.Error(ctx, "error setting up OpenTelemetry - hint: ensure OTEL_EXPORTER_OTLP_ENDPOINT is set", oErr)
+	}
+	// Handle shutdown properly so nothing leaks.
+	defer func() {
+		err = goerrors.Join(err, otelShutdown(context.Background()))
+	}()
+
 	// Run the service
 	svc, err := service.Run(ctx, cfg, svcList, BuildTime, GitCommit, Version, svcErrors)
 	if err != nil {
@@ -54,8 +72,8 @@ func run(ctx context.Context) error {
 
 	// blocks until an os interrupt or a fatal error occurs
 	select {
-	case err := <-svcErrors:
-		return errors.Wrap(err, "service error received")
+	case svcErr := <-svcErrors:
+		return errors.Wrap(svcErr, "service error received")
 	case sig := <-signals:
 		ctx := context.Background()
 		log.Info(ctx, "os signal received", log.Data{"signal": sig})

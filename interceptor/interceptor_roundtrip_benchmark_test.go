@@ -2,7 +2,7 @@ package interceptor
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"sync/atomic"
 	"testing"
@@ -78,15 +78,12 @@ func BenchmarkTest1(b *testing.B) {
 	fmt.Println("Benchmarking: 'roundTrip', using code from unit test that is known to work")
 
 	fmt.Println("test interceptor correctly updates a href in links subdocs within an array")
-	//	testJSON := `[{"links":{"self":{"href":"/datasets/12345"}}}, {"links":{"self":{"href":"/datasets/12345"}}}]`
 	transp := dummyRT{testJSON}
 
 	t := NewRoundTripper(testDomain, "", transp)
 
 	b.ReportAllocs()
-
 	for i := 0; i < b.N; i++ {
-
 		/*resp, err := */
 		t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 	}
@@ -226,9 +223,7 @@ func BenchmarkTest2(b *testing.B) {
 	t := NewRoundTripper(testDomain, "", transp)
 
 	b.ReportAllocs()
-
 	for i := 0; i < b.N; i++ {
-
 		/*resp, err := */
 		t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 	}
@@ -302,7 +297,6 @@ func BenchmarkTest3(b *testing.B) {
 	fmt.Println("Benchmarking: 'roundTrip', using code from unit test that is known to work")
 
 	fmt.Println("demonstrate sync.Pool failure when running parallel or OK without sync.Pool")
-	//	testJSON := `[{"links":{"self":{"href":"/datasets/12345"}}}, {"links":{"self":{"href":"/datasets/12345"}}}]`
 	transp := dummyRT{testJSON}
 	t := NewRoundTripper(testDomain, "", transp)
 
@@ -321,7 +315,7 @@ func BenchmarkTest3(b *testing.B) {
 				fmt.Printf("RoundTrip Error: %v\n", err)
 				panic(err)
 			}
-			body, err := ioutil.ReadAll(resp.Body)
+			body, err := io.ReadAll(resp.Body)
 			if err != nil {
 				fmt.Printf("ReadAll: %v\n", err)
 				panic(err)
@@ -335,7 +329,7 @@ func BenchmarkTest3(b *testing.B) {
 				fmt.Printf("RoundTrip Error: %v\n", err)
 				panic(err)
 			}
-			b2, err := ioutil.ReadAll(resp2.Body)
+			b2, err := io.ReadAll(resp2.Body)
 			if err != nil {
 				fmt.Printf("ReadAll: %v\n", err)
 				panic(err)

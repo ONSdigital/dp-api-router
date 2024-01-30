@@ -16,9 +16,9 @@ import (
 	"github.com/ONSdigital/dp-api-clients-go/v2/health"
 	clientsidentity "github.com/ONSdigital/dp-api-clients-go/v2/identity"
 	"github.com/ONSdigital/dp-api-router/event"
+	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	dphttp "github.com/ONSdigital/dp-net/v2/http"
 	dprequest "github.com/ONSdigital/dp-net/v2/request"
-
 	"github.com/ONSdigital/log.go/v2/log"
 )
 
@@ -30,15 +30,10 @@ type Router interface {
 
 // paths that will skip auditing (note)
 // identity api paths being added until the auditing has been updated to work with new tokens
-// TODO remove "/v1/tokens", "/v1/users", "/v1/groups", "/v1/password-reset" from this list once authorisation has been integrated into dp-identity-api
 var pathsToIgnore = []string{
 	"/ping",
 	"/clickEventLog",
 	"/health",
-	"/v1/tokens",
-	"/v1/users",
-	"/v1/groups",
-	"/v1/password-reset",
 }
 
 // paths that will skip retrieveIdentity, and will be audited without identity
@@ -46,7 +41,13 @@ var pathsSkipIdentity = []string{
 	"/login",
 	"/password",
 	"/hierarchies",
+	"/tokens",
+	"/password-reset",
+	"/users/self/password",
 }
+
+// Now is a time.Now wrapper specifically for testing purposes, and should not me unlambda'd - despite what golangci-lint says
+var Now = time.Now
 
 func ShallSkipIdentity(versionPrefix, path string) bool {
 	// TODO need to revisit this if we start supporting multiple versions of the APIs.
@@ -76,8 +77,8 @@ func AuditHandler(auditProducer *event.AvroProducer,
 	cli dphttp.Clienter,
 	zebedeeURL, versionPrefix string,
 	enableZebedeeAudit bool,
-	router Router) func(h http.Handler) http.Handler {
-
+	router Router,
+	auth authorisation.Config) func(h http.Handler) http.Handler {
 	// create Identity client that will be used by middleware to check callers identity
 	idClient := clientsidentity.NewWithHealthClient(&health.Client{
 		Client: cli,
@@ -87,7 +88,6 @@ func AuditHandler(auditProducer *event.AvroProducer,
 
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
 			// if path does not need to be audited, ignore it and proceed to next handler
 			if shallIgnore(r.URL.Path) {
 				h.ServeHTTP(w, r)
@@ -109,15 +109,14 @@ func AuditHandler(auditProducer *event.AvroProducer,
 			auditEvent := GenerateAuditEvent(r)
 
 			if !ShallSkipIdentity(versionPrefix, r.URL.Path) {
-
 				// Retrieve Identity from Zebedee, which is stored in context.
 				// if it fails, try to audit with the statusCode before returning
-				ctx, statusCode, err := retrieveIdentity(w, r, idClient)
+				ctx, statusCode, err := retrieveIdentity(w, r, idClient, auth)
 				if err != nil {
 					// error already handled in retrieveIdentity. Try to audit it.
 					auditEvent.StatusCode = int32(statusCode)
-					if err := auditProducer.Audit(auditEvent); err != nil {
-						log.Error(ctx, "inbound audit event could not be sent", err, log.Data{"event": auditEvent})
+					if auditErr := auditProducer.Audit(auditEvent); auditErr != nil {
+						log.Error(ctx, "inbound audit event could not be sent", auditErr, log.Data{"event": auditEvent})
 					}
 					return
 				}
@@ -218,13 +217,38 @@ func GenerateAuditEvent(req *http.Request) *event.Audit {
 }
 
 // retrieveIdentity requests the user and caller identity from Zebedee, using the provided client.
-func retrieveIdentity(w http.ResponseWriter, req *http.Request, idClient *clientsidentity.Client) (ctx context.Context, status int, err error) {
+func retrieveIdentity(w http.ResponseWriter, req *http.Request, idClient *clientsidentity.Client, auth authorisation.Config) (ctx context.Context, status int, err error) {
 	ctx = req.Context()
 
 	florenceToken, err := getFlorenceToken(ctx, req)
 	if err != nil {
 		handleError(ctx, w, req, http.StatusInternalServerError, "error getting florence access token from request", err, nil)
 		return ctx, http.StatusInternalServerError, err
+	}
+
+	if strings.Contains(florenceToken, ".") {
+		token := florenceToken
+		bearerPrefix := "Bearer "
+		if strings.HasPrefix(florenceToken, bearerPrefix) {
+			token = strings.TrimPrefix(florenceToken, bearerPrefix)
+		}
+
+		authorisationMiddleware, authErr := authorisation.NewFeatureFlaggedMiddleware(ctx, &auth, nil)
+		if authErr != nil {
+			handleError(ctx, w, req, http.StatusInternalServerError, "error getting jwtRSAPublicKeys from request", authErr, nil)
+			return ctx, http.StatusInternalServerError, authErr
+		}
+
+		entityData, parseErr := authorisationMiddleware.Parse(token)
+		if parseErr != nil {
+			handleError(ctx, w, req, http.StatusInternalServerError, "error getting parsing token from request", parseErr, nil)
+			return ctx, http.StatusInternalServerError, parseErr
+		}
+
+		if entityData != nil {
+			ctx = context.WithValue(ctx, dprequest.UserIdentityKey, entityData.UserID)
+			return ctx, http.StatusOK, nil
+		}
 	}
 
 	serviceAuthToken, err := getServiceAuthToken(ctx, req)
@@ -243,7 +267,6 @@ func retrieveIdentity(w http.ResponseWriter, req *http.Request, idClient *client
 
 	if authFailure != nil {
 		handleError(ctx, w, req, statusCode, "identity client check request returned an auth error", authFailure, logData)
-		log.Error(ctx, "identity client check request returned an auth error", authFailure, logData)
 		return ctx, statusCode, authFailure
 	}
 
@@ -251,15 +274,14 @@ func retrieveIdentity(w http.ResponseWriter, req *http.Request, idClient *client
 }
 
 // handleError adhering to the DRY principle - clean up for failed identity requests, log the error, drain the request body and write the status code.
-func handleError(ctx context.Context, w http.ResponseWriter, r *http.Request, status int, event string, err error, data log.Data) {
-	log.Error(ctx, event, err, data)
+func handleError(ctx context.Context, w http.ResponseWriter, r *http.Request, status int, eventDetails string, err error, data log.Data) {
+	log.Error(ctx, eventDetails, err, data)
 	dphttp.DrainBody(r)
 	w.WriteHeader(status)
 }
 
 func getFlorenceToken(ctx context.Context, req *http.Request) (string, error) {
 	var florenceToken string
-
 	token, err := headers.GetUserAuthToken(req)
 	if err == nil {
 		florenceToken = token
@@ -298,9 +320,4 @@ func getServiceAuthToken(ctx context.Context, req *http.Request) (string, error)
 	}
 
 	return authToken, err
-}
-
-// Now is a time.Now wrapper specifically for testing purposes, and should not me unlambda'd - despite what golangci-lint says
-var Now = func() time.Time {
-	return time.Now()
 }

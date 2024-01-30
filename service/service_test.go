@@ -26,9 +26,7 @@ var (
 )
 
 func TestNotProxied(t *testing.T) {
-
 	Convey("Given a healthy api router", t, func() {
-
 		cfg, err := config.Get()
 		So(err, ShouldBeNil)
 
@@ -52,35 +50,37 @@ func TestNotProxied(t *testing.T) {
 }
 
 func TestRouterPublicAPIs(t *testing.T) {
-
 	Convey("Given an api router and proxies with all public endpoints available", t, func() {
-
 		cfg, _ := config.Get()
-
-		// This is temporary and needs to be removed when it is ready for SearchAPIURL to point to dp-search-query
-		cfg.SearchAPIURL = "http://justForTests:1234"
 
 		zebedeeURL, _ := url.Parse(cfg.ZebedeeURL)
 		hierarchyAPIURL, _ := url.Parse(cfg.HierarchyAPIURL)
 		filterAPIURL, _ := url.Parse(cfg.FilterAPIURL)
+		filterFlexAPIURL, _ := url.Parse(cfg.FilterFlexAPIURL)
 		datasetAPIURL, _ := url.Parse(cfg.DatasetAPIURL)
 		observationAPIURL, _ := url.Parse(cfg.ObservationAPIURL)
 		codelistAPIURL, _ := url.Parse(cfg.CodelistAPIURL)
 		searchAPIURL, _ := url.Parse(cfg.SearchAPIURL)
 		dimensionSearchAPIURL, _ := url.Parse(cfg.DimensionSearchAPIURL)
 		imageAPIURL, _ := url.Parse(cfg.ImageAPIURL)
-		articlesAPIURL, _ := url.Parse(cfg.ArticlesAPIURL)
+		feedbackAPIURL, _ := url.Parse(cfg.FeedbackAPIURL)
 		releaseCalendarAPIURL, _ := url.Parse(cfg.ReleaseCalendarAPIURL)
 		populationTypesAPIURL, _ := url.Parse(cfg.PopulationTypesAPIURL)
-		interactivesAPIURL, _ := url.Parse(cfg.InteractivesAPIURL)
-		dimensionsAPIURL, _ := url.Parse(cfg.DimensionsAPIURL)
 		mapsAPIURL, _ := url.Parse(cfg.MapsAPIURL)
 		geodataAPIURL, _ := url.Parse(cfg.GeodataAPIURL)
+		topicAPIURL, _ := url.Parse(cfg.TopicAPIURL)
+		areasAPIURL, _ := url.Parse(cfg.AreasAPIURL)
+		scrubberAPIURL, _ := url.Parse(cfg.SearchScrubberAPIURL)
+		categoryAPIURL, _ := url.Parse(cfg.CategoryAPIURL)
+		berlinAPIURL, _ := url.Parse(cfg.BerlinAPIURL)
 
 		expectedPublicURLs := map[string]*url.URL{
 			"/code-lists": codelistAPIURL,
 			"/datasets":   datasetAPIURL,
-			"/datasets/{dataset_id}/editions/{edition}/versions/{version}/observations": observationAPIURL,
+			"/datasets/{dataset_id}/editions/{edition}/versions/{version}/observations":        observationAPIURL,
+			"/datasets/{dataset_id}/editions/{edition}/versions/{version}/json":                filterFlexAPIURL,
+			"/datasets/{dataset_id}/editions/{edition}/versions/{version}/census-observations": filterFlexAPIURL,
+			"/custom/filters":   filterFlexAPIURL,
 			"/filters":          filterAPIURL,
 			"/filter-outputs":   filterAPIURL,
 			"/hierarchies":      hierarchyAPIURL,
@@ -88,20 +88,20 @@ func TestRouterPublicAPIs(t *testing.T) {
 			"/dimension-search": dimensionSearchAPIURL,
 			"/images":           imageAPIURL,
 			"/population-types": populationTypesAPIURL,
-			"/area-types":       dimensionsAPIURL,
-			"/areas":            dimensionsAPIURL,
+			"/navigation":       topicAPIURL,
+			"/topics":           topicAPIURL,
+			"/berlin":           berlinAPIURL,
+			"/scrubber":         scrubberAPIURL,
+			"/categories":       categoryAPIURL,
 		}
-		cfg.ArticlesAPIVersions = []string{"a", "b"}
-		for _, version := range cfg.ArticlesAPIVersions {
-			expectedPublicURLs["/"+version+"/articles"] = articlesAPIURL
+
+		cfg.FeedbackAPIVersions = []string{"aB", "bE"}
+		for _, version := range cfg.FeedbackAPIVersions {
+			expectedPublicURLs["/"+version+"/feedback"] = feedbackAPIURL
 		}
 		cfg.ReleaseCalendarAPIVersions = []string{"vX", "vY"}
 		for _, version := range cfg.ReleaseCalendarAPIVersions {
 			expectedPublicURLs["/"+version+"/releases"] = releaseCalendarAPIURL
-		}
-		cfg.InteractivesAPIVersions = []string{"vX", "vAnother"}
-		for _, version := range cfg.InteractivesAPIVersions {
-			expectedPublicURLs["/"+version+"/interactives"] = interactivesAPIURL
 		}
 		cfg.MapsAPIVersions = []string{"vX", "vY"}
 		for _, version := range cfg.MapsAPIVersions {
@@ -109,6 +109,9 @@ func TestRouterPublicAPIs(t *testing.T) {
 		}
 		for _, version := range cfg.GeodataAPIVersions {
 			expectedPublicURLs["/"+version+"/geodata"] = geodataAPIURL
+		}
+		for _, version := range cfg.AreasAPIVersions {
+			expectedPublicURLs["/"+version+"/areas"] = areasAPIURL
 		}
 
 		resetProxyMocksWithExpectations(expectedPublicURLs)
@@ -187,6 +190,12 @@ func TestRouterPublicAPIs(t *testing.T) {
 			})
 		})
 
+		Convey("A request to a dataset edition version census observation endpoint succeeds and is proxied to filterFlexAPIURL", func() {
+			w := createRouterTest(cfg, "http://localhost:23200/v1/datasets/RM111/editions/123/versions/321/census-observations")
+			So(w.Code, ShouldEqual, http.StatusOK)
+			verifyProxied("/datasets/RM111/editions/123/versions/321/census-observations", filterFlexAPIURL)
+		})
+
 		Convey("A request to a filters is proxied to filterAPIURL", func() {
 			w := createRouterTest(cfg, "http://localhost:23200/v1/filters")
 			So(w.Code, ShouldEqual, http.StatusOK)
@@ -253,19 +262,19 @@ func TestRouterPublicAPIs(t *testing.T) {
 			verifyProxied("/images/subpath", imageAPIURL)
 		})
 
-		Convey("Given an URL to an articles subpath", func() {
+		Convey("Given an URL to an feedback subpath", func() {
 			host := "http://localhost:23200"
-			path := "/%s/articles/subpath"
+			path := "/%s/feedback/subpath"
 			urlPattern := host + path
 
 			Convey("And the feature flag is enabled", func() {
-				cfg.EnableArticlesAPI = true
-				for _, version := range cfg.ArticlesAPIVersions {
+				cfg.EnableFeedbackAPI = true
+				for _, version := range cfg.FeedbackAPIVersions {
 					Convey("When we make a GET request using the mapped version "+version, func() {
 						w := createRouterTest(cfg, fmt.Sprintf(urlPattern, version))
-						Convey("Then the request is proxied to the articles API", func() {
+						Convey("Then the request is proxied to the feedback API", func() {
 							So(w.Code, ShouldEqual, http.StatusOK)
-							verifyProxied(fmt.Sprintf(path, version), articlesAPIURL)
+							verifyProxied(fmt.Sprintf(path, version), feedbackAPIURL)
 						})
 					})
 				}
@@ -280,10 +289,10 @@ func TestRouterPublicAPIs(t *testing.T) {
 			})
 
 			Convey("And the feature flag is disabled", func() {
-				cfg.EnableArticlesAPI = false
-				for _, version := range cfg.ArticlesAPIVersions {
+				cfg.EnableFeedbackAPI = false
+				for _, version := range cfg.FeedbackAPIVersions {
 					Convey("When we make a GET request using the mapped version "+version, func() {
-						//deliberately not configured v1 to get around legacyhandle stripping it
+						// deliberately not configured v1 to get around legacy handle stripping it
 						w := createRouterTest(cfg, fmt.Sprintf(urlPattern, version))
 						Convey("Then it falls through to the default zebedee handler", func() {
 							So(w.Code, ShouldEqual, http.StatusOK)
@@ -325,7 +334,7 @@ func TestRouterPublicAPIs(t *testing.T) {
 				cfg.EnableReleaseCalendarAPI = false
 				Convey("Then all requests falls through to the default zebedee handler", func() {
 					for _, version := range cfg.ReleaseCalendarAPIVersions {
-						//deliberately not configured v1 to get around legacyhandle stripping it
+						// deliberately not configured v1 to get around legacy handle stripping it
 						w := createRouterTest(cfg, fmt.Sprintf(urlPattern, version))
 						So(w.Code, ShouldEqual, http.StatusOK)
 						verifyProxied(fmt.Sprintf(path, version), zebedeeURL)
@@ -335,12 +344,12 @@ func TestRouterPublicAPIs(t *testing.T) {
 		})
 
 		Convey("Given an url to the population types api", func() {
-			url := "http://localhost:23200/v1/population-types"
+			urlStr := "http://localhost:23200/v1/population-types"
 
 			Convey("And the feature flag is enabled", func() {
 				cfg.EnablePopulationTypesAPI = true
 				Convey("When a GET request is made", func() {
-					w := createRouterTest(cfg, url)
+					w := createRouterTest(cfg, urlStr)
 					Convey("Then the population types API should respond", func() {
 						So(w.Code, ShouldEqual, http.StatusOK)
 						verifyProxied("/population-types", populationTypesAPIURL)
@@ -351,7 +360,7 @@ func TestRouterPublicAPIs(t *testing.T) {
 			Convey("And the feature flag is disabled", func() {
 				cfg.EnablePopulationTypesAPI = false
 				Convey("When a GET request is made", func() {
-					w := createRouterTest(cfg, url)
+					w := createRouterTest(cfg, urlStr)
 					Convey("Then the default zebedee handler should respond", func() {
 						So(w.Code, ShouldEqual, http.StatusOK)
 						verifyProxied("/population-types", zebedeeURL)
@@ -360,49 +369,57 @@ func TestRouterPublicAPIs(t *testing.T) {
 			})
 		})
 
-		Convey("A request to an interactives subpath", func() {
-			Convey("When the feature flag is enabled", func() {
-				cfg.EnableInteractivesAPI = true
+		Convey("Given a topic service path", func() {
+			topicsPath := "http://localhost:23200/v1/topics"
 
-				Convey("Then the request is proxied to the interactives API for a mapped URL", func() {
-					for _, version := range cfg.InteractivesAPIVersions {
-						w := createRouterTest(cfg, "http://localhost:23200/"+version+"/interactives/subpath")
-						So(w.Code, ShouldEqual, http.StatusOK)
-						verifyProxied("/"+version+"/interactives/subpath", interactivesAPIURL)
-					}
-				})
-
-				Convey("Then the request falls through to the default zebedee handler for an unhandled version", func() {
-					version := "vSomeOtherVersion"
-					w := createRouterTest(cfg, "http://localhost:23200/"+version+"/interactives/subpath")
-					So(w.Code, ShouldEqual, http.StatusNotFound)
-					verifyProxied("/"+version+"/interactives/subpath", zebedeeURL)
-				})
-			})
-
-			Convey("With the feature flag disabled", func() {
-				cfg.EnableInteractivesAPI = false
-				Convey("Then the request falls through for all interactives versions to the default zebedee handler", func() {
-					for _, version := range cfg.InteractivesAPIVersions {
-						//deliberately not configured v1 to get around legacyhandle stripping it
-						w := createRouterTest(cfg, "http://localhost:23200/"+version+"/interactives/subpath")
-						So(w.Code, ShouldEqual, http.StatusOK)
-						verifyProxied("/"+version+"/interactives/subpath", zebedeeURL)
-					}
-				})
+			Convey("Then a request to the topics endpoint is proxied to the topicsAPIURL", func() {
+				w := createRouterTest(cfg, topicsPath)
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/topics", topicAPIURL)
 			})
 		})
 
-		Convey("A request to the dimensions area-types endpoint is proxied to dimensionsAPIURL", func() {
-			w := createRouterTest(cfg, "http://localhost:23200/v1/area-types")
-			So(w.Code, ShouldEqual, http.StatusOK)
-			verifyProxied("/area-types", dimensionsAPIURL)
+		Convey("Given a navigation path", func() {
+			navigationPath := "http://localhost:23200/v1/navigation"
+
+			Convey("Then a request to the navigation endpoint is proxied to topicsAPIURL", func() {
+				w := createRouterTest(cfg, navigationPath)
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/navigation", topicAPIURL)
+			})
 		})
 
-		Convey("A request to the dimensions areas endpoint is proxied to dimensionsAPIURL", func() {
-			w := createRouterTest(cfg, "http://localhost:23200/v1/areas")
-			So(w.Code, ShouldEqual, http.StatusOK)
-			verifyProxied("/areas", dimensionsAPIURL)
+		Convey("Given an areas endpoint", func() {
+			So(len(cfg.AreasAPIVersions), ShouldBeGreaterThanOrEqualTo, 1)
+
+			Convey("When the areas feature flag is disabled", func() {
+				cfg.EnableAreasAPI = false
+
+				Convey("Then requests to the areas endpoints are proxied to zebedee", func() {
+					for _, version := range cfg.AreasAPIVersions {
+						w := createRouterTest(cfg, "http://localhost:23200/"+version+"/areas")
+						So(w.Code, ShouldEqual, http.StatusNotFound)
+						assertOnlyThisURLIsCalled(zebedeeURL)
+					}
+				})
+			})
+
+			Convey("And when the feature flag is enabled", func() {
+				cfg.EnableAreasAPI = true
+
+				for _, version := range cfg.AreasAPIVersions {
+					expectedPublicURLs["/"+version+"/areas"] = areasAPIURL
+				}
+				resetProxyMocksWithExpectations(expectedPublicURLs)
+
+				Convey("Then a request to the areas endpoint is proxied to the areasAPIURL", func() {
+					for _, version := range cfg.AreasAPIVersions {
+						w := createRouterTest(cfg, "http://localhost:23200/"+version+"/areas")
+						So(w.Code, ShouldEqual, http.StatusOK)
+						verifyProxied("/"+version+"/areas", areasAPIURL)
+					}
+				})
+			})
 		})
 
 		Convey("Given a maps service path", func() {
@@ -445,7 +462,6 @@ func TestRouterPublicAPIs(t *testing.T) {
 					}
 				})
 			})
-
 		})
 
 		Convey("Given a maps service subpath", func() {
@@ -473,12 +489,10 @@ func TestRouterPublicAPIs(t *testing.T) {
 						verifyProxied("/"+version+"/maps/subpath", zebedeeURL)
 					})
 				})
-
 			})
 		})
 
 		Convey("Given an url to the geodata api", func() {
-
 			Convey("And the feature flag is enabled", func() {
 				cfg.EnableGeodataAPI = true
 
@@ -521,13 +535,55 @@ func TestRouterPublicAPIs(t *testing.T) {
 				})
 			})
 		})
+
+		Convey("When the enable NLP APIs flag is enabled", func() {
+			cfg.EnableNLPSearchAPIs = true
+
+			Convey("Then a request to the scrubber endpoint is proxied to the scrubber URLS", func() {
+				w := createRouterTest(cfg, "http://localhost:23200/v1/scrubber")
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/scrubber", scrubberAPIURL)
+			})
+
+			Convey("Then a request to the berlin endpoint is proxied to the berlin URLS", func() {
+				w := createRouterTest(cfg, "http://localhost:23200/v1/berlin")
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/berlin", berlinAPIURL)
+			})
+
+			Convey("Then a request to the category endpoint is proxied to the category URLS", func() {
+				w := createRouterTest(cfg, "http://localhost:23200/v1/categories")
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/categories", categoryAPIURL)
+			})
+		})
+
+		Convey("When the enable NLP APIs flag is disabled", func() {
+			cfg.EnableNLPSearchAPIs = false
+
+			Convey("Then a request to the scrubber endpoint is proxied to the Zebedee", func() {
+				w := createRouterTest(cfg, "http://localhost:23200/v1/scrubber")
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/scrubber", zebedeeURL)
+			})
+
+			Convey("Then a request to the berlin endpoint is proxied to the Zebedee", func() {
+				w := createRouterTest(cfg, "http://localhost:23200/v1/berlin")
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/berlin", zebedeeURL)
+			})
+
+			Convey("Then a request to the category endpoint is proxied to Zebedee", func() {
+				w := createRouterTest(cfg, "http://localhost:23200/v1/categories")
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/categories", zebedeeURL)
+			})
+		})
 	})
 }
 
 func TestRouterPrivateAPIs(t *testing.T) {
-
 	Convey("Given an api router and proxies with all private endpoints available", t, func() {
-
 		cfg, _ := config.Get()
 
 		datasetAPIURL, _ := url.Parse(cfg.DatasetAPIURL)
@@ -536,13 +592,17 @@ func TestRouterPrivateAPIs(t *testing.T) {
 		uploadServiceAPIURL, _ := url.Parse(cfg.UploadServiceAPIURL)
 		identityAPIURL, _ := url.Parse(cfg.IdentityAPIURL)
 		permissionsAPIURL, _ := url.Parse(cfg.PermissionsAPIURL)
+		searchReindexURL, _ := url.Parse(cfg.SearchReindexAPIURL)
 		zebedeeURL, _ := url.Parse(cfg.ZebedeeURL)
+		cantabularMetadataExtractorAPIURL, _ := url.Parse(cfg.CantabularMetadataExtractorAPIURL)
 
 		expectedPrivateURLs := map[string]*url.URL{
-			"/upload":    uploadServiceAPIURL,
-			"/recipes":   recipeAPIURL,
-			"/jobs":      importAPIURL,
-			"/instances": datasetAPIURL,
+			"/upload":              uploadServiceAPIURL,
+			"/recipes":             recipeAPIURL,
+			"/jobs":                importAPIURL,
+			"/instances":           datasetAPIURL,
+			"/search-reindex-jobs": searchReindexURL,
+			"/cantabular-metadata": cantabularMetadataExtractorAPIURL,
 		}
 		for _, version := range cfg.IdentityAPIVersions {
 			expectedPrivateURLs[fmt.Sprintf("/%s/tokens", version)] = identityAPIURL
@@ -554,6 +614,9 @@ func TestRouterPrivateAPIs(t *testing.T) {
 			expectedPrivateURLs[fmt.Sprintf("/%s/policies", version)] = permissionsAPIURL
 			expectedPrivateURLs[fmt.Sprintf("/%s/roles", version)] = permissionsAPIURL
 			expectedPrivateURLs[fmt.Sprintf("/%s/permissions-bundle", version)] = permissionsAPIURL
+		}
+		for _, version := range cfg.SearchReindexAPIVersions {
+			expectedPrivateURLs[fmt.Sprintf("/%s/search-reindex-jobs", version)] = searchReindexURL
 		}
 
 		resetProxyMocksWithExpectations(expectedPrivateURLs)
@@ -586,13 +649,13 @@ func TestRouterPrivateAPIs(t *testing.T) {
 			})
 
 			Convey("A request to a jobs path is proxied to uploadServiceAPIURL", func() {
-				w := createRouterTest(cfg, "http://localhost:25100/v1/upload")
+				w := createRouterTest(cfg, "http://localhost:23200/v1/upload")
 				So(w.Code, ShouldEqual, http.StatusOK)
 				verifyProxied("/upload", uploadServiceAPIURL)
 			})
 
 			Convey("A request to a jobs subpath is proxied to uploadServiceAPIURL", func() {
-				w := createRouterTest(cfg, "http://localhost:25100/v1/upload/subpath")
+				w := createRouterTest(cfg, "http://localhost:23200/v1/upload/subpath")
 				So(w.Code, ShouldEqual, http.StatusOK)
 				verifyProxied("/upload/subpath", uploadServiceAPIURL)
 			})
@@ -688,6 +751,41 @@ func TestRouterPrivateAPIs(t *testing.T) {
 					verifyProxied("/"+version+"/permissions-bundle", permissionsAPIURL)
 				}
 			})
+
+			Convey("A request to a search-reindex-jobs path is proxied to searchReindexURL", func() {
+				for _, version := range cfg.SearchReindexAPIVersions {
+					w := createRouterTest(cfg, "http://localhost:23200/"+version+"/search-reindex-jobs")
+					So(w.Code, ShouldEqual, http.StatusOK)
+					verifyProxied("/"+version+"/search-reindex-jobs", searchReindexURL)
+				}
+			})
+
+			Convey("A request to a search-reindex-jobs subpath is proxied to identityAPIURL", func() {
+				for _, version := range cfg.SearchReindexAPIVersions {
+					w := createRouterTest(cfg, "http://localhost:23200/"+version+"/search-reindex-jobs/subpath")
+					So(w.Code, ShouldEqual, http.StatusOK)
+					verifyProxied("/"+version+"/search-reindex-jobs/subpath", searchReindexURL)
+				}
+			})
+
+			Convey("When the enable cantabular metadata extractor API feature flag is enabled", func() {
+				cfg.EnableCantabularMetadataExtractorAPI = true
+
+				Convey("A request to a cantabular-metadata subpath is proxied to cantabularMetadataExtractorAPIURL", func() {
+					w := createRouterTest(cfg, "http://localhost:23200/v1/cantabular-metadata/subpath")
+					So(w.Code, ShouldEqual, http.StatusOK)
+					verifyProxied("/cantabular-metadata/subpath", cantabularMetadataExtractorAPIURL)
+				})
+			})
+
+			Convey("When the enable cantabular metadata extractor API feature flag is disabled", func() {
+				cfg.EnableCantabularMetadataExtractorAPI = false
+
+				Convey("A request to a cantabular-metadata subpath is not proxied", func() {
+					createRouterTest(cfg, "http://localhost:23200/v1/cantabular-metadata/subpath")
+					assertOnlyThisURLIsCalled(zebedeeURL)
+				})
+			})
 		})
 
 		Convey("and private endpoints disabled by configuration", func() {
@@ -722,14 +820,22 @@ func TestRouterPrivateAPIs(t *testing.T) {
 				createRouterTest(cfg, "http://localhost:23200/v1/permissions-bundle")
 				assertOnlyThisURLIsCalled(zebedeeURL)
 			})
+
+			Convey("A request to a search-reindex-jobs path is not proxied and fails with StatusNotFound", func() {
+				createRouterTest(cfg, "http://localhost:23200/v1/search-reindex-jobs")
+				assertOnlyThisURLIsCalled(zebedeeURL)
+			})
+
+			Convey("A request to a cantabular-metadata subpath is not proxied", func() {
+				createRouterTest(cfg, "http://localhost:23200/v1/cantabular-metadata/subpath")
+				assertOnlyThisURLIsCalled(zebedeeURL)
+			})
 		})
 	})
 }
 
 func TestRouterLegacyAPIs(t *testing.T) {
-
 	Convey("Given an api router and proxies with all legacy endpoints available", t, func() {
-
 		cfg, err := config.Get()
 		So(err, ShouldBeNil)
 
@@ -773,19 +879,17 @@ func TestRouterLegacyAPIs(t *testing.T) {
 
 func assertOnlyThisURLIsCalled(expectedURL *url.URL) {
 	for urlToCheck, pxy := range registeredProxies {
-
 		if urlToCheck == *expectedURL {
 			So(len(pxy.ServeHTTPCalls()), ShouldEqual, 1)
 			continue
 		}
-
 		So(len(pxy.ServeHTTPCalls()), ShouldEqual, 0)
 	}
 }
 
 // createRouterTest calls service CreateRouter httptest request, recorder, and healthcheck mock
-func createRouterTest(cfg *config.Config, url string) *httptest.ResponseRecorder {
-	r := httptest.NewRequest(http.MethodGet, url, nil)
+func createRouterTest(cfg *config.Config, urlStr string) *httptest.ResponseRecorder {
+	r := httptest.NewRequest(http.MethodGet, urlStr, http.NoBody)
 	r.Header.Set(authorizationHeader, testServiceAuthToken)
 	w := httptest.NewRecorder()
 
@@ -813,10 +917,9 @@ func verifyProxied(path string, expectedURL *url.URL) {
 func resetProxyMocksWithExpectations(expectedURLs map[string]*url.URL) {
 	registeredProxies = map[url.URL]*proxyMock.IReverseProxyMock{}
 
-	proxy.NewSingleHostReverseProxy = func(target *url.URL, version, envHost, contextURL string) proxy.IReverseProxy {
+	proxy.NewSingleHostReverseProxyWithTransport = func(target *url.URL, version, envHost, contextURL string, transport http.RoundTripper) proxy.IReverseProxy {
 		pxyMock := &proxyMock.IReverseProxyMock{
 			ServeHTTPFunc: func(rw http.ResponseWriter, req *http.Request) {
-
 				for path := range expectedURLs {
 					if strings.HasPrefix(req.URL.Path, path) {
 						return

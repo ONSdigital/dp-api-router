@@ -8,16 +8,16 @@ import (
 	"github.com/ONSdigital/log.go/v2/log"
 )
 
-// BetaApiHandler will return a 404 where enforceBetaRoutes is true and the request is aimed at a non beta domain
-func BetaApiHandler(enableBetaRestriction bool, h http.Handler) http.Handler {
+const (
+	localhost = "localhost"
+)
 
+// BetaAPIHandler will return a 404 where enforceBetaRoutes is true and the request is aimed at a non beta domain
+func BetaAPIHandler(enableBetaRestriction bool, h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
 		if enableBetaRestriction && !isInternalTraffic(r) && !isBetaDomain(r) {
-
 			log.Warn(r.Context(), "beta endpoint requested via a non beta domain, returning 404",
 				log.Data{"url": r.URL.String()})
-
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
@@ -31,7 +31,6 @@ func isBetaDomain(r *http.Request) bool {
 }
 
 func isInternalTraffic(r *http.Request) bool {
-
 	// exclude the port from the potential IP address
 	host, _, err := net.SplitHostPort(r.Host)
 	if err != nil {
@@ -39,7 +38,7 @@ func isInternalTraffic(r *http.Request) bool {
 		host = r.Host
 	}
 
-	return isValidIP(host) || host == "localhost"
+	return isValidIP(host) || host == localhost
 }
 
 func isValidIP(host string) bool {

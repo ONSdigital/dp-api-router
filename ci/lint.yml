@@ -12,8 +12,8 @@ inputs:
   - name: dp-api-router
     path: dp-api-router
 
-outputs:
-  - name: build
+caches:
+  - path: go/
 
 run:
-  path: dp-api-router/ci/scripts/build.sh
+  path: dp-api-router/ci/scripts/lint.sh

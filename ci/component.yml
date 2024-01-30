@@ -10,10 +10,5 @@ image_resource:
 
 inputs:
   - name: dp-api-router
-    path: dp-api-router
-
-outputs:
-  - name: build
-
 run:
-  path: dp-api-router/ci/scripts/build.sh
+  path: dp-api-router/ci/scripts/component.sh

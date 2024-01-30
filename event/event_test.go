@@ -14,7 +14,6 @@ var (
 )
 
 func TestAuditEvent(t *testing.T) {
-
 	Convey("Given an Audit struct with a valid CreatedAt time, in millisencods since unix time reference", t, func() {
 		auditEvent := event.Audit{
 			CreatedAt: testTimeMillis,
@@ -27,5 +26,4 @@ func TestAuditEvent(t *testing.T) {
 	Convey("A time struct is correctly translated to the number of milliseconds since unix time reference", t, func() {
 		So(event.CreatedAtMillis(testTime), ShouldEqual, testTimeMillis)
 	})
-
 }
