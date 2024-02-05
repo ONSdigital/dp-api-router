@@ -72,8 +72,13 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	r := CreateRouter(ctx, cfg)
 	otelhandler := otelhttp.NewHandler(r, "/")
 	m := svc.CreateMiddleware(cfg, r)
-	r.Use(otelmux.Middleware(cfg.OTServiceName))
-	svc.Server = dphttp.NewServer(cfg.BindAddr, m.Then(otelhandler))
+
+	if cfg.OtelEnabled {
+		r.Use(otelmux.Middleware(cfg.OTServiceName))
+		svc.Server = dphttp.NewServer(cfg.BindAddr, m.Then(otelhandler))
+	} else {
+		svc.Server = dphttp.NewServer(cfg.BindAddr, m.Then(r))
+	}
 
 	svc.Server.DefaultShutdownTimeout = cfg.GracefulShutdown
 	svc.Server.HandleOSSignals = false

@@ -2,6 +2,7 @@ package interceptor
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/ONSdigital/dp-api-router/config"
 	"github.com/ONSdigital/log.go/v2/log"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
@@ -29,7 +31,17 @@ var _ http.RoundTripper = &Transport{}
 
 // NewRoundTripper creates a Transport instance with configured domain
 func NewRoundTripper(domain, contextURL string, rt http.RoundTripper) *Transport {
-	return &Transport{domain, contextURL, otelhttp.NewTransport(rt)}
+	cfg, err := config.Get()
+	if err != nil {
+		log.Error(context.Background(), "Unable to retrieve config'", err)
+	}
+
+	if cfg.OtelEnabled {
+		return &Transport{domain, contextURL, otelhttp.NewTransport(rt)}
+
+	}
+
+	return &Transport{domain, contextURL, rt}
 }
 
 const (
