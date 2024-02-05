@@ -38,7 +38,6 @@ func NewRoundTripper(domain, contextURL string, rt http.RoundTripper) *Transport
 
 	if cfg.OtelEnabled {
 		return &Transport{domain, contextURL, otelhttp.NewTransport(rt)}
-
 	}
 
 	return &Transport{domain, contextURL, rt}
