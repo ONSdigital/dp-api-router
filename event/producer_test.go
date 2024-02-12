@@ -1,11 +1,13 @@
 package event_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/ONSdigital/dp-api-router/event"
 	"github.com/ONSdigital/dp-api-router/event/mock"
 	"github.com/ONSdigital/dp-api-router/schema"
+	kafka "github.com/ONSdigital/dp-kafka/v4"
 	"github.com/pkg/errors"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -26,7 +28,7 @@ var testAuditEvent = &event.Audit{
 func TestAvroProducer(t *testing.T) {
 	Convey("Given a successful message producer mock", t, func() {
 		// channel to capture messages sent.
-		outputChannel := make(chan []byte, 1)
+		outputChannel := make(chan kafka.BytesMessage, 1)
 
 		// bytes to send
 		avroBytes := []byte("hello world")
@@ -41,7 +43,7 @@ func TestAvroProducer(t *testing.T) {
 		Convey("when Audit is called with a nil event", func() {
 			// eventProducer under test
 			eventProducer := event.NewAvroProducer(outputChannel, marshallerMock)
-			err := eventProducer.Audit(nil)
+			err := eventProducer.Audit(context.Background(), nil)
 
 			Convey("then the expected error is returned", func() {
 				So(err.Error(), ShouldEqual, "event required but was nil")
@@ -55,14 +57,14 @@ func TestAvroProducer(t *testing.T) {
 		Convey("When Audit is called on the event producer", func() {
 			// eventProducer under test
 			eventProducer := event.NewAvroProducer(outputChannel, schema.AuditEvent)
-			err := eventProducer.Audit(testAuditEvent)
+			err := eventProducer.Audit(context.Background(), testAuditEvent)
 
 			Convey("The expected event is available on the output channel", func() {
 				So(err, ShouldBeNil)
 
-				messageBytes := <-outputChannel
+				message := <-outputChannel
 				close(outputChannel)
-				sentEvent := unmarshal(messageBytes)
+				sentEvent := unmarshal(message.Value)
 				So(sentEvent, ShouldResemble, testAuditEvent)
 			})
 		})
@@ -80,7 +82,7 @@ func TestAvroProducer(t *testing.T) {
 		eventProducer := event.NewAvroProducer(nil, marshallerMock)
 
 		Convey("When Audit is called on the event producer", func() {
-			err := eventProducer.Audit(testAuditEvent)
+			err := eventProducer.Audit(context.Background(), testAuditEvent)
 
 			Convey("The expected error is returned", func() {
 				So(err, ShouldResemble, errMarshal)

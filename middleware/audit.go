@@ -115,7 +115,7 @@ func AuditHandler(auditProducer *event.AvroProducer,
 				if err != nil {
 					// error already handled in retrieveIdentity. Try to audit it.
 					auditEvent.StatusCode = int32(statusCode)
-					if auditErr := auditProducer.Audit(auditEvent); auditErr != nil {
+					if auditErr := auditProducer.Audit(ctx, auditEvent); auditErr != nil {
 						log.Error(ctx, "inbound audit event could not be sent", auditErr, log.Data{"event": auditEvent})
 					}
 					return
@@ -133,7 +133,7 @@ func AuditHandler(auditProducer *event.AvroProducer,
 				} else {
 					handleError(ctx, w, r, http.StatusUnauthorized, "", err, log.Data{"event": auditEvent})
 					auditEvent.StatusCode = int32(http.StatusUnauthorized)
-					if err := auditProducer.Audit(auditEvent); err != nil {
+					if err := auditProducer.Audit(ctx, auditEvent); err != nil {
 						log.Error(ctx, "inbound audit event could not be sent", err, log.Data{"event": auditEvent})
 					}
 					return
@@ -141,7 +141,7 @@ func AuditHandler(auditProducer *event.AvroProducer,
 			}
 
 			// Acceptable request. Audit it before proxying.
-			if err := auditProducer.Audit(auditEvent); err != nil {
+			if err := auditProducer.Audit(r.Context(), auditEvent); err != nil {
 				handleError(r.Context(), w, r, http.StatusInternalServerError, "inbound audit event could not be sent", err, log.Data{"event": auditEvent})
 				return
 			}
@@ -168,7 +168,7 @@ func AuditHandler(auditProducer *event.AvroProducer,
 			}
 
 			// Finally send the outbound audit message
-			auditProducer.Send(eventBytes)
+			auditProducer.Send(r.Context(), eventBytes)
 		})
 	}
 }
