@@ -140,7 +140,7 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 		addTransitionalHandler(router, observation, "/datasets/{dataset_id}/editions/{edition}/versions/{version}/observations")
 	}
 
-	topic := proxy.NewAPIProxy(ctx, cfg.TopicAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.ContextURL, cfg.EnableV1BetaRestriction)
+	topic := proxy.NewAPIProxyWithOptions(ctx, cfg.TopicAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.ContextURL, cfg.EnableV1BetaRestriction, proxy.Options{Interceptor: true})
 	addTransitionalHandler(router, topic, "/topics")
 	addTransitionalHandler(router, topic, "/navigation")
 
