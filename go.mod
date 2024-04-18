@@ -12,6 +12,7 @@ replace (
 	github.com/yuin/goldmark => github.com/yuin/goldmark v1.4.12
 	// to fix: [CVE-2023-32731]
 	google.golang.org/grpc => google.golang.org/grpc v1.59.0
+	google.golang.org/protobuf v1.31.0 => google.golang.org/protobuf v1.33.0
 )
 
 require (
