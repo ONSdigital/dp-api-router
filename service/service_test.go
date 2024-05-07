@@ -84,6 +84,9 @@ func TestRouterPublicAPIs(t *testing.T) {
 			"/population-types": populationTypesAPIURL,
 			"/navigation":       topicAPIURL,
 			"/topics":           topicAPIURL,
+			"/berlin":           berlinAPIURL,
+			"/scrubber":         scrubberAPIURL,
+			"/categories":       categoryAPIURL,
 		}
 
 		cfg.FeedbackAPIVersions = []string{"aB", "bE"}
@@ -104,15 +107,7 @@ func TestRouterPublicAPIs(t *testing.T) {
 		for _, version := range cfg.AreasAPIVersions {
 			expectedPublicURLs["/"+version+"/areas"] = areasAPIURL
 		}
-		for _, version := range cfg.SearchScrubberAPIVersions {
-			expectedPublicURLs["/"+version+"/scrubber"] = scrubberAPIURL
-		}
-		for _, version := range cfg.BerlinAPIVersions {
-			expectedPublicURLs["/"+version+"/berlin"] = berlinAPIURL
-		}
-		for _, version := range cfg.CategoryAPIVersions {
-			expectedPublicURLs["/"+version+"/categories"] = categoryAPIURL
-		}
+
 		resetProxyMocksWithExpectations(expectedPublicURLs)
 
 		Convey("A request to code-list path succeeds and is proxied to codeListAPIURL", func() {
@@ -531,16 +526,46 @@ func TestRouterPublicAPIs(t *testing.T) {
 
 		Convey("When the enable NLP APIs flag is enabled", func() {
 			cfg.EnableNLPSearchAPIs = true
-			assertVersionedProxyCalledForPath(cfg, cfg.SearchScrubberAPIVersions, "/scrubber", scrubberAPIURL)
-			assertVersionedProxyCalledForPath(cfg, cfg.CategoryAPIVersions, "/categories", categoryAPIURL)
-			assertVersionedProxyCalledForPath(cfg, cfg.BerlinAPIVersions, "/berlin", berlinAPIURL)
+
+			Convey("Then a request to the scrubber endpoint is proxied to the scrubber URLS", func() {
+				w := createRouterTest(cfg, "http://localhost:23200/v1/scrubber")
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/scrubber", scrubberAPIURL)
+			})
+
+			Convey("Then a request to the berlin endpoint is proxied to the berlin URLS", func() {
+				w := createRouterTest(cfg, "http://localhost:23200/v1/berlin")
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/berlin", berlinAPIURL)
+			})
+
+			Convey("Then a request to the category endpoint is proxied to the category URLS", func() {
+				w := createRouterTest(cfg, "http://localhost:23200/v1/categories")
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/categories", categoryAPIURL)
+			})
 		})
 
 		Convey("When the enable NLP APIs flag is disabled", func() {
 			cfg.EnableNLPSearchAPIs = false
-			assertVersionedFallThroughToZebedee(cfg, cfg.SearchScrubberAPIVersions, "/scrubber", zebedeeURL)
-			assertVersionedFallThroughToZebedee(cfg, cfg.CategoryAPIVersions, "/categories", zebedeeURL)
-			assertVersionedFallThroughToZebedee(cfg, cfg.BerlinAPIVersions, "/berlin", zebedeeURL)
+
+			Convey("Then a request to the scrubber endpoint is proxied to the Zebedee", func() {
+				w := createRouterTest(cfg, "http://localhost:23200/v1/scrubber")
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/scrubber", zebedeeURL)
+			})
+
+			Convey("Then a request to the berlin endpoint is proxied to the Zebedee", func() {
+				w := createRouterTest(cfg, "http://localhost:23200/v1/berlin")
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/berlin", zebedeeURL)
+			})
+
+			Convey("Then a request to the category endpoint is proxied to Zebedee", func() {
+				w := createRouterTest(cfg, "http://localhost:23200/v1/categories")
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/categories", zebedeeURL)
+			})
 		})
 	})
 }
@@ -838,38 +863,6 @@ func TestRouterLegacyAPIs(t *testing.T) {
 			verifyProxied("/search", apiPocURL)
 		})
 	})
-}
-
-// assertVersionedProxyCalledForPath takes versions and a path a verifies that the proxy is called for each version
-func assertVersionedProxyCalledForPath(cfg *config.Config, versions []string, path string, proxyURL *url.URL) {
-	for _, version := range versions {
-		Convey("Then the "+version+" request is proxied to "+proxyURL.String(), func() {
-			versionedPath := "/" + version + path
-			fmt.Println(versionedPath)
-
-			w := createRouterTest(cfg, "http://localhost:23200"+versionedPath)
-			So(w.Code, ShouldEqual, http.StatusOK)
-			verifyProxied(versionedPath, proxyURL)
-		})
-	}
-}
-
-// assertVersionedFallThroughToZebedee ensures that if a path is not enabled it falls through to Zebedee without version if v1
-// or with version if not
-func assertVersionedFallThroughToZebedee(cfg *config.Config, versions []string, path string, zebedeeURL *url.URL) {
-	for _, version := range versions {
-		versionedPath := "/" + version + path
-		_ = createRouterTest(cfg, "http://localhost:23200"+versionedPath)
-		if version == "v1" {
-			Convey("Then the v1 request for "+path+" is proxied to zebedee handler without the version", func() {
-				verifyProxied(path, zebedeeURL)
-			})
-		} else {
-			Convey("Then the "+versionedPath+" request is proxied to zebedee handler", func() {
-				verifyProxied(versionedPath, zebedeeURL)
-			})
-		}
-	}
 }
 
 func assertOnlyThisURLIsCalled(expectedURL *url.URL) {

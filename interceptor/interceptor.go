@@ -2,6 +2,7 @@ package interceptor
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -11,24 +12,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/ONSdigital/dp-api-router/config"
 	"github.com/ONSdigital/log.go/v2/log"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
-
-// Transport implements the http RoundTripper method and allows the
-// response body to be post processed
-type Transport struct {
-	domain      string
-	contextURL  string
-	apiURL      string
-	downloadURL string
-	http.RoundTripper
-}
-
-// keyVal used as a helper to encode strings for output as JSON
-type keyVal struct {
-	K string
-}
 
 const (
 	links        = "links"
@@ -40,6 +27,37 @@ const (
 	// NOTE: Don't change 'maxBodyLengthToLog' value too much from '20' as it's used to generate boundary test cases.
 	maxBodyLengthToLog = 20 // only log a small part of the body to help any problem diagnosis, as the full body length could be many Megabytes
 )
+
+// keyVal used as a helper to encode strings for output as JSON
+type keyVal struct {
+	K string
+}
+
+// Transport implements the http RoundTripper method and allows the
+// response body to be post processed
+type Transport struct {
+	domain      string
+	contextURL  string
+	apiURL      string
+	downloadURL string
+	http.RoundTripper
+}
+
+var _ http.RoundTripper = &Transport{}
+
+// NewRoundTripper creates a Transport instance with configured domain
+func NewRoundTripper(domain, contextURL string, rt http.RoundTripper) *Transport {
+	cfg, err := config.Get()
+	if err != nil {
+		log.Error(context.Background(), "Unable to retrieve config'", err)
+	}
+
+	if cfg.OtelEnabled {
+		return &Transport{domain, contextURL, otelhttp.NewTransport(rt)}
+	}
+
+	return &Transport{domain, contextURL, rt}
+}
 
 var (
 	re                          = regexp.MustCompile(`^(.+://)(.+)(/v\d)$`)

@@ -72,8 +72,13 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	r := CreateRouter(ctx, cfg)
 	otelhandler := otelhttp.NewHandler(r, "/")
 	m := svc.CreateMiddleware(cfg, r)
-	r.Use(otelmux.Middleware(cfg.OTServiceName))
-	svc.Server = dphttp.NewServer(cfg.BindAddr, m.Then(otelhandler))
+
+	if cfg.OtelEnabled {
+		r.Use(otelmux.Middleware(cfg.OTServiceName))
+		svc.Server = dphttp.NewServer(cfg.BindAddr, m.Then(otelhandler))
+	} else {
+		svc.Server = dphttp.NewServer(cfg.BindAddr, m.Then(r))
+	}
 
 	svc.Server.DefaultShutdownTimeout = cfg.GracefulShutdown
 	svc.Server.HandleOSSignals = false
@@ -135,7 +140,7 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 		addTransitionalHandler(router, observation, "/datasets/{dataset_id}/editions/{edition}/versions/{version}/observations")
 	}
 
-	topic := proxy.NewAPIProxy(ctx, cfg.TopicAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.ContextURL, cfg.EnableV1BetaRestriction)
+	topic := proxy.NewAPIProxyWithOptions(ctx, cfg.TopicAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.ContextURL, cfg.EnableV1BetaRestriction, proxy.Options{Interceptor: true})
 	addTransitionalHandler(router, topic, "/topics")
 	addTransitionalHandler(router, topic, "/navigation")
 
@@ -201,9 +206,9 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 		categoryAPIProxy := proxy.NewAPIProxy(ctx, cfg.CategoryAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 		berlinAPIProxy := proxy.NewAPIProxy(ctx, cfg.BerlinAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 
-		addVersionedHandlers(router, searchScrubberAPIProxy, cfg.SearchScrubberAPIVersions, "/scrubber")
-		addVersionedHandlers(router, categoryAPIProxy, cfg.CategoryAPIVersions, "/categories")
-		addVersionedHandlers(router, berlinAPIProxy, cfg.BerlinAPIVersions, "/berlin")
+		addTransitionalHandler(router, searchScrubberAPIProxy, "/scrubber")
+		addTransitionalHandler(router, categoryAPIProxy, "/categories")
+		addTransitionalHandler(router, berlinAPIProxy, "/berlin")
 	}
 
 	// Private APIs
