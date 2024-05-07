@@ -43,22 +43,6 @@ type Transport struct {
 	http.RoundTripper
 }
 
-var _ http.RoundTripper = &Transport{}
-
-// NewRoundTripper creates a Transport instance with configured domain
-func NewRoundTripper(domain, contextURL string, rt http.RoundTripper) *Transport {
-	cfg, err := config.Get()
-	if err != nil {
-		log.Error(context.Background(), "Unable to retrieve config'", err)
-	}
-
-	if cfg.OtelEnabled {
-		return &Transport{domain, contextURL, otelhttp.NewTransport(rt)}
-	}
-
-	return &Transport{domain, contextURL, rt}
-}
-
 var (
 	re                          = regexp.MustCompile(`^(.+://)(.+)(/v\d)$`)
 	reIsChars                   = regexp.MustCompile(`^[- a-zA-Z/0-9_?=+!@$%&*()\[\]{}|':;?/<>.,]*$`)
@@ -67,9 +51,19 @@ var (
 
 // NewRoundTripper creates a Transport instance with configured domain
 func NewRoundTripper(domain, contextURL string, rt http.RoundTripper) *Transport {
+	cfg, err := config.Get()
+	if err != nil {
+		log.Error(context.Background(), "Unable to retrieve config'", err)
+	}
+
 	apiURL := re.ReplaceAllString(domain, "${1}api.${2}${3}")
 	downloadURL := re.ReplaceAllString(domain, "${1}download.${2}")
-	return &Transport{domain, contextURL, apiURL, downloadURL, otelhttp.NewTransport(rt)}
+
+	if cfg.OtelEnabled {
+		return &Transport{domain, contextURL, apiURL, downloadURL, otelhttp.NewTransport(rt)}
+	}
+
+	return &Transport{domain, contextURL, apiURL, downloadURL, rt}
 }
 
 // RoundTrip intercepts the response body and post processes to add the correct environment
