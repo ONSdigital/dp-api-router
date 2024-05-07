@@ -72,13 +72,36 @@ Showing nodes accounting for 709.79MB
     3.50MB  0.48% 97.59%    10.50MB  1.44%  github.com/ONSdigital/dp-api-router/interceptor.NewMultiReadCloser (inline)
 */
 
-var testJSON = `[{"links":{"self":{"href":"/datasets/12345"}}}, {"links":{"self":{"href":"/datasets/12345"}}}]`
+const (
+	c               = `,`
+	optionalNewline = "" //"\n"
+
+	testJSON1    = `{"links":{"self":{"href":"/datasets/12345"}}}`
+	testJSONres1 = `{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}`
+
+	testJSON10   = testJSON1 + c + testJSON1 + c + testJSON1 + c + testJSON1 + c + testJSON1 + c + testJSON1 + c + testJSON1 + c + testJSON1 + c + testJSON1 + c + testJSON1
+	testJSON100  = testJSON10 + c + testJSON10 + c + testJSON10 + c + testJSON10 + c + testJSON10 + c + testJSON10 + c + testJSON10 + c + testJSON10 + c + testJSON10 + c + testJSON10
+	testJSON1000 = testJSON100 + c + testJSON100 + c + testJSON100 + c + testJSON100 + c + testJSON100 + c + testJSON100 + c + testJSON100 + c + testJSON100 + c + testJSON100 + c + testJSON100
+
+	testJSONres10   = testJSONres1 + c + testJSONres1 + c + testJSONres1 + c + testJSONres1 + c + testJSONres1 + c + testJSONres1 + c + testJSONres1 + c + testJSONres1 + c + testJSONres1 + c + testJSONres1
+	testJSONres100  = testJSONres10 + c + testJSONres10 + c + testJSONres10 + c + testJSONres10 + c + testJSONres10 + c + testJSONres10 + c + testJSONres10 + c + testJSONres10 + c + testJSONres10 + c + testJSONres10
+	testJSONres1000 = testJSONres100 + c + testJSONres100 + c + testJSONres100 + c + testJSONres100 + c + testJSONres100 + c + testJSONres100 + c + testJSONres100 + c + testJSONres100 + c + testJSONres100 + c + testJSONres100
+
+	testJSON         = `[` + testJSON1 + c + testJSON1 + `]`
+	testJSONres      = `[` + testJSONres1 + c + testJSONres1 + `]` + optionalNewline
+	testJSONlarge    = `[` + testJSON1000 + `]`
+	testJSONresLarge = `[` + testJSONres1000 + `]` + optionalNewline
+
+	testText100   = "0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789"
+	testText1000  = testText100 + testText100 + testText100 + testText100 + testText100 + testText100 + testText100 + testText100 + testText100 + testText100
+	testText10000 = testText1000 + testText1000 + testText1000 + testText1000 + testText1000 + testText1000 + testText1000 + testText1000 + testText1000 + testText1000
+)
 
 func BenchmarkTest1(b *testing.B) {
 	fmt.Println("Benchmarking: 'roundTrip', using code from unit test that is known to work")
 
 	fmt.Println("test interceptor correctly updates a href in links subdocs within an array")
-	transp := dummyRT{testJSON}
+	transp := dummyRT{testJSONlarge}
 
 	t := NewRoundTripper(testDomain, "", transp)
 
@@ -210,15 +233,11 @@ Showing top 30 nodes out of 51
 
 // -=-=-
 
-var testJSON100 = "0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789"
-var testJSON1000 = testJSON100 + testJSON100 + testJSON100 + testJSON100 + testJSON100 + testJSON100 + testJSON100 + testJSON100 + testJSON100 + testJSON100
-var testJSON10000 = testJSON1000 + testJSON1000 + testJSON1000 + testJSON1000 + testJSON1000 + testJSON1000 + testJSON1000 + testJSON1000 + testJSON1000 + testJSON1000
-
 func BenchmarkTest2(b *testing.B) {
 	fmt.Println("Benchmarking: 'roundTrip'")
 
 	fmt.Println("test interceptor correctly does not load in very large object, that might be a json object")
-	transp := dummyRT{testJSON10000}
+	transp := dummyRT{testText10000}
 
 	t := NewRoundTripper(testDomain, "", transp)
 
@@ -279,8 +298,6 @@ Showing top 30 nodes out of 36
 
 // -=-=-
 
-var testJSON2 = `{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/1234"}}}`
-
 // running test3 with:
 //  go test -race -run=interceptor_roundtrip_benchmark_test.go -bench=Test3 -memprofile=mem0.out
 // gives:
@@ -300,7 +317,7 @@ func BenchmarkTest3(b *testing.B) {
 	transp := dummyRT{testJSON}
 	t := NewRoundTripper(testDomain, "", transp)
 
-	transp2 := dummyRT{testJSON2}
+	transp2 := dummyRT{testJSONlarge}
 	t2 := NewRoundTripper(testDomain, "", transp2)
 
 	b.ReportAllocs()
@@ -320,8 +337,8 @@ func BenchmarkTest3(b *testing.B) {
 				fmt.Printf("ReadAll: %v\n", err)
 				panic(err)
 			}
-			if string(body) != `[{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}},{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}]`+"\n" {
-				panic(fmt.Errorf("wrong result: %d: %v\n", c, string(body)))
+			if string(body) != testJSONres {
+				panic(fmt.Errorf("wrong result @%d: <%v>\nexpected <%v>\n", c, string(body), testJSONres))
 			}
 
 			resp2, err := t2.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
@@ -334,8 +351,19 @@ func BenchmarkTest3(b *testing.B) {
 				fmt.Printf("ReadAll: %v\n", err)
 				panic(err)
 			}
-			if string(b2) != `{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/1234"}}}`+"\n" {
-				panic(fmt.Errorf("wrong result 2: %d: %v\n", c, string(b2)))
+			if len(b2) != len(testJSONresLarge) {
+				for i := range testJSONresLarge {
+					if i-1 > len(b2) {
+						break
+					}
+					if b2[i] != testJSONresLarge[i] {
+						fmt.Printf("diff at char %d: got %c expected %c", i, b2[i], testJSONresLarge[i])
+						break
+					}
+				}
+				panic(fmt.Errorf("wrong sized result @%d v2: (%d) <%v>\nexpected (%d): <%v>\n", c, len(b2), string(b2), len(testJSONresLarge), testJSONresLarge))
+			} else if string(b2) != testJSONresLarge {
+				panic(fmt.Errorf("wrong result @%d v2: (%d) <%v>\nexpected (%d): <%v>\n", c, len(b2), string(b2), len(testJSONresLarge), testJSONresLarge))
 			}
 		}
 	}

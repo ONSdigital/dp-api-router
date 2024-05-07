@@ -4,6 +4,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -90,11 +91,11 @@ func TestUnitInterceptor(t *testing.T) {
 
 		err = resp.Body.Close()
 		So(err, ShouldBeNil)
-		So(string(b), ShouldEqual, `{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}`+"\n")
+		So(string(b), ShouldEqual, `{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}`)
 	})
 
 	Convey("test interceptor correctly updates a href in links subdoc", t, func() {
-		testJSON := `{"links":{"self":{"href":"/datasets/12345"}}}`
+		testJSON := `{"links":{"self":{"href":"/datasets/12345","oops":{}},"nonself":{"href":"/datasets/54321"}},"misc":[1,2,3],"ugh":null}`
 		transp := dummyRT{testJSON}
 
 		t := NewRoundTripper(testDomain, "", transp)
@@ -107,8 +108,8 @@ func TestUnitInterceptor(t *testing.T) {
 
 		err = resp.Body.Close()
 		So(err, ShouldBeNil)
-		So(len(b), ShouldEqual, 76)
-		So(string(b), ShouldEqual, `{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}`+"\n")
+		So(len(b), ShouldEqual, 178)
+		So(string(b), ShouldEqual, `{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345","oops":{}},"nonself":{"href":"https://api.beta.ons.gov.uk/v1/datasets/54321"}},"misc":[1,2,3],"ugh":null}`)
 	})
 
 	Convey("test interceptor correctly updates a href in dataset_links subdoc", t, func() {
@@ -125,8 +126,8 @@ func TestUnitInterceptor(t *testing.T) {
 
 		err = resp.Body.Close()
 		So(err, ShouldBeNil)
-		So(len(b), ShouldEqual, 84)
-		So(string(b), ShouldEqual, `{"dataset_links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}`+"\n")
+		So(len(b), ShouldEqual, 83)
+		So(string(b), ShouldEqual, `{"dataset_links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}`)
 	})
 
 	Convey("test interceptor correctly inserts context", t, func() {
@@ -143,8 +144,62 @@ func TestUnitInterceptor(t *testing.T) {
 
 		err = resp.Body.Close()
 		So(err, ShouldBeNil)
-		So(len(b), ShouldEqual, 102)
-		So(string(b), ShouldEqual, `{"@context":"context.json","links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}`+"\n")
+		So(len(b), ShouldEqual, 101)
+		So(string(b), ShouldEqual, `{"@context":"context.json","links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}`)
+	})
+
+	Convey("test interceptor correctly replaces the context", t, func() {
+		testJSON := `{"@context":"old-context.json","links":{"self":{"href":"/datasets/12345"}}}`
+		transp := dummyRT{testJSON}
+
+		t := NewRoundTripper(testDomain, testContext, transp)
+
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
+		So(err, ShouldBeNil)
+
+		b, err := io.ReadAll(resp.Body)
+		So(err, ShouldBeNil)
+
+		err = resp.Body.Close()
+		So(err, ShouldBeNil)
+		So(string(b), ShouldEqual, `{"@context":"context.json","links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}`)
+		So(len(b), ShouldEqual, 101)
+	})
+
+	Convey("test interceptor correctly replaces later context", t, func() {
+		testJSON := `{"links":{"self":{"href":"/datasets/12345"}},"@context":"old-context.json"}`
+		transp := dummyRT{testJSON}
+
+		t := NewRoundTripper(testDomain, testContext, transp)
+
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
+		So(err, ShouldBeNil)
+
+		b, err := io.ReadAll(resp.Body)
+		So(err, ShouldBeNil)
+
+		err = resp.Body.Close()
+		So(err, ShouldBeNil)
+		So(string(b), ShouldEqual, `{"@context":"context.json","links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}`)
+		So(len(b), ShouldEqual, 101)
+	})
+
+	Convey("test interceptor correctly re-encodes escaped string and trailing-zero number", t, func() {
+		testJSON := `{"more":true,"dec2":78.90,"ouch":"line1 with \" quote\nline2 with \\ backslash\n"}`
+		transp := dummyRT{testJSON}
+
+		t := NewRoundTripper(testDomain, "", transp)
+
+		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
+		So(err, ShouldBeNil)
+
+		b, err := io.ReadAll(resp.Body)
+		So(err, ShouldBeNil)
+
+		err = resp.Body.Close()
+		So(err, ShouldBeNil)
+		So(string(b), ShouldEqual, `{"more":true,"dec2":78.90,"ouch":"line1 with \" quote\nline2 with \\ backslash\n"}`)
+		So(len(b), ShouldEqual, 82)
 	})
 
 	Convey("test interceptor correctly updates a href in downloads subdoc on a nested path", t, func() {
@@ -161,8 +216,8 @@ func TestUnitInterceptor(t *testing.T) {
 
 		err = resp.Body.Close()
 		So(err, ShouldBeNil)
-		So(len(b), ShouldEqual, 77)
-		So(string(b), ShouldEqual, `{"downloads":{"csv":{"href":"https://download.beta.ons.gov.uk/myfile.csv"}}}`+"\n")
+		So(len(b), ShouldEqual, 76)
+		So(string(b), ShouldEqual, `{"downloads":{"csv":{"href":"https://download.beta.ons.gov.uk/myfile.csv"}}}`)
 	})
 
 	Convey("test interceptor correctly updates a href in dimensions subdoc", t, func() {
@@ -179,8 +234,8 @@ func TestUnitInterceptor(t *testing.T) {
 
 		err = resp.Body.Close()
 		So(err, ShouldBeNil)
-		So(len(b), ShouldEqual, 78)
-		So(string(b), ShouldEqual, `{"dimensions":[{"href":"https://api.beta.ons.gov.uk/v1/code-lists/1234567"}]}`+"\n")
+		So(len(b), ShouldEqual, 77)
+		So(string(b), ShouldEqual, `{"dimensions":[{"href":"https://api.beta.ons.gov.uk/v1/code-lists/1234567"}]}`)
 	})
 
 	Convey("test interceptor correctly updates a nested links document", t, func() {
@@ -197,8 +252,8 @@ func TestUnitInterceptor(t *testing.T) {
 
 		err = resp.Body.Close()
 		So(err, ShouldBeNil)
-		So(len(b), ShouldEqual, 88)
-		So(string(b), ShouldEqual, `{"items":[{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}]}`+"\n")
+		So(len(b), ShouldEqual, 87)
+		So(string(b), ShouldEqual, `{"items":[{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}]}`)
 	})
 
 	Convey("test interceptor correctly updates a nested array of links", t, func() {
@@ -215,8 +270,8 @@ func TestUnitInterceptor(t *testing.T) {
 
 		err = resp.Body.Close()
 		So(err, ShouldBeNil)
-		So(len(b), ShouldEqual, 83)
-		So(string(b), ShouldEqual, `{"links":{"instances":[{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}]}}`+"\n")
+		So(len(b), ShouldEqual, 82)
+		So(string(b), ShouldEqual, `{"links":{"instances":[{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}]}}`)
 	})
 
 	Convey("test interceptor correctly updates a nested dimension href", t, func() {
@@ -233,8 +288,8 @@ func TestUnitInterceptor(t *testing.T) {
 
 		err = resp.Body.Close()
 		So(err, ShouldBeNil)
-		So(len(b), ShouldEqual, 91)
-		So(string(b), ShouldEqual, `{"dimensions":{"time":{"option":{"href":"https://api.beta.ons.gov.uk/v1/datasets/time"}}}}`+"\n")
+		So(len(b), ShouldEqual, 90)
+		So(string(b), ShouldEqual, `{"dimensions":{"time":{"option":{"href":"https://api.beta.ons.gov.uk/v1/datasets/time"}}}}`)
 	})
 
 	Convey("test query parameters are parsed correctly on response body rewrite", t, func() {
@@ -251,8 +306,8 @@ func TestUnitInterceptor(t *testing.T) {
 
 		err = resp.Body.Close()
 		So(err, ShouldBeNil)
-		So(len(b), ShouldEqual, 116)
-		So(string(b), ShouldEqual, `{"dimensions":{"time":{"option":{"href":"https://api.beta.ons.gov.uk/v1/datasets/time?hello=world&mobile=phone"}}}}`+"\n")
+		So(len(b), ShouldEqual, 115)
+		So(string(b), ShouldEqual, `{"dimensions":{"time":{"option":{"href":"https://api.beta.ons.gov.uk/v1/datasets/time?hello=world&mobile=phone"}}}}`)
 	})
 
 	Convey("test interceptor correctly updates a href in links subdocs within an array", t, func() {
@@ -269,13 +324,13 @@ func TestUnitInterceptor(t *testing.T) {
 
 		err = resp.Body.Close()
 		So(err, ShouldBeNil)
-		So(len(b), ShouldEqual, 154)
-		So(string(b), ShouldEqual, `[{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}},{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}]`+"\n")
+		So(len(b), ShouldEqual, 153)
+		So(string(b), ShouldEqual, `[{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}},{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}]`)
 	})
 
-	Convey("test interceptor correctly ignores non json and non map object that is 'maxBodyLengthToLog - 1'", t, func() {
+	Convey("test interceptor correctly ignores non-json and non-map object that has length 'maxBodyLengthToLog - 1'", t, func() {
 		testJSON := "A"
-		for i := 0; i < (maxBodyLengthToLog - 2); i++ {
+		for i := 0; i < maxBodyLengthToLog-2; i++ {
 			testJSON += "n"
 		}
 		transp := dummyRT{testJSON}
@@ -294,7 +349,7 @@ func TestUnitInterceptor(t *testing.T) {
 		So(string(b), ShouldEqual, testJSON)
 	})
 
-	Convey("test interceptor correctly ignores non json and non map object that is 'maxBodyLengthToLog'", t, func() {
+	Convey("test interceptor correctly ignores non-json and non-map object that has length 'maxBodyLengthToLog'", t, func() {
 		testJSON := "B"
 		for i := 0; i < (maxBodyLengthToLog - 1); i++ {
 			testJSON += "n"
@@ -315,9 +370,9 @@ func TestUnitInterceptor(t *testing.T) {
 		So(string(b), ShouldEqual, testJSON)
 	})
 
-	Convey("test interceptor correctly ignores non json and non map object that is 'maxBodyLengthToLog+1'", t, func() {
+	Convey("test interceptor correctly ignores non-json and non-map object that has length 'maxBodyLengthToLog+1'", t, func() {
 		testJSON := "C"
-		for i := 0; i < (maxBodyLengthToLog - 1); i++ {
+		for i := 0; i < maxBodyLengthToLog-1; i++ {
 			testJSON += "n"
 		}
 		testJSON += "1"
@@ -356,9 +411,9 @@ func TestUnitInterceptor(t *testing.T) {
 	})
 
 	Convey("test interceptor correctly handles broken json object that will be split", t, func() {
-		testJSON := `{bla`
+		testJSON := `{"a":123.00,bla`
 		for i := 0; i < maxBodyLengthToLog; i++ {
-			testJSON += "n"
+			testJSON += "n" + strconv.Itoa(i)
 		}
 		transp := dummyRT{testJSON}
 
