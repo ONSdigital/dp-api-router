@@ -905,7 +905,7 @@ func verifyProxied(path string, expectedURL *url.URL) {
 func resetProxyMocksWithExpectations(expectedURLs map[string]*url.URL) {
 	registeredProxies = map[url.URL]*proxyMock.IReverseProxyMock{}
 
-	proxy.NewSingleHostReverseProxyWithTransport = func(target *url.URL, version, envHost, contextURL string, transport http.RoundTripper) proxy.IReverseProxy {
+	proxy.NewSingleHostReverseProxyWithTransport = func(target *url.URL, transport http.RoundTripper) proxy.IReverseProxy {
 		pxyMock := &proxyMock.IReverseProxyMock{
 			ServeHTTPFunc: func(rw http.ResponseWriter, req *http.Request) {
 				for path := range expectedURLs {
