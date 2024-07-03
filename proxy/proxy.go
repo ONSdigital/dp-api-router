@@ -22,12 +22,12 @@ type APIProxy struct {
 }
 
 // NewSingleHostReverseProxy is a function that creates a new httputil ReverseProxy, with default transport
-var NewSingleHostReverseProxy = func(target *url.URL, version, envHost, contextURL string) IReverseProxy {
-	return NewSingleHostReverseProxyWithTransport(target, version, envHost, contextURL, nil)
+var NewSingleHostReverseProxy = func(target *url.URL) IReverseProxy {
+	return NewSingleHostReverseProxyWithTransport(target, nil)
 }
 
 // NewSingleHostReverseProxyWithTransport is a function that creates a new httputil ReverseProxy, with the supplied transport
-var NewSingleHostReverseProxyWithTransport = func(target *url.URL, version, envHost, contextURL string, transport http.RoundTripper) IReverseProxy {
+var NewSingleHostReverseProxyWithTransport = func(target *url.URL, transport http.RoundTripper) IReverseProxy {
 	pxy := httputil.NewSingleHostReverseProxy(target)
 	if transport != nil {
 		pxy.Transport = transport
@@ -58,7 +58,7 @@ func NewAPIProxyWithOptions(ctx context.Context, target, version, envHost, conte
 		transport = interceptor.NewRoundTripper(envHost+"/"+version, contextURL, http.DefaultTransport)
 	}
 
-	pxy := NewSingleHostReverseProxyWithTransport(targetURL, version, envHost, contextURL, transport)
+	pxy := NewSingleHostReverseProxyWithTransport(targetURL, transport)
 	return &APIProxy{
 		target:                targetURL,
 		proxy:                 pxy,

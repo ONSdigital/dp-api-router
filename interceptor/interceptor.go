@@ -221,7 +221,7 @@ func (t *Transport) updateMap(document map[string]interface{}) ([]byte, error) {
 		return nil, err
 	}
 
-	if len(t.contextURL) > 0 {
+	if t.contextURL != "" {
 		document["@context"] = t.contextURL
 	}
 	var updatedB []byte

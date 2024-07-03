@@ -82,6 +82,9 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 
 	svc.Server.DefaultShutdownTimeout = cfg.GracefulShutdown
 	svc.Server.HandleOSSignals = false
+	if cfg.HTTPWriteTimeout != nil {
+		svc.Server.WriteTimeout = *cfg.HTTPWriteTimeout
+	}
 
 	// kafka error channel logging go-routine
 	if cfg.EnableAudit {
