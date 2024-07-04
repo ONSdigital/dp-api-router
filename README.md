@@ -73,6 +73,7 @@ This service is responsible for serving a JSON-LD `@context` field on configured
 | HEALTHCHECK_INTERVAL                     | 30s                      | The period of time between health checks                                           |
 | HEALTHCHECK_CRITICAL_TIMEOUT             | 90s                      | The period of time after which failing checks will result in critical global check |
 | SHUTDOWN_TIMEOUT                         | 5s                       | The graceful shutdown timeout (`time.Duration` format)                             |
+| HTTP_WRITE_TIMEOUT                       | dp-net default           | How long the dispatcher waits for us to write to it (`time.Duration` format)       |
 | OTEL_EXPORTER_OTLP_ENDPOINT              | localhost:4317           | Host and port for the OpenTelemetry endpoint                                       |
 | OTEL_SERVICE_NAME                        | dp-api-router            | Service name to report to telemetry tools                                          |
 
