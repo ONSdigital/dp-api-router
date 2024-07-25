@@ -20,8 +20,6 @@ This service is responsible for serving a JSON-LD `@context` field on configured
 | ENABLE_V1_BETA_RESTRICTION               | false                    |                                                                                    |
 | ENABLE_SESSIONS_API                      | false                    |                                                                                    |
 | ENABLE_RELEASE_CALENDAR_API              | false                    | Flag to enable routing to the release calendar API                                 |
-| ENABLE_MAPS_API                          | false                    | Flag to enable routing to the maps API                                             |
-| ENABLE_AREAS_API                         | false                    | Flag to enable routing to the areas API                                            |
 | ENABLE_CANTABULAR_METADATA_EXTRACTOR_API | false                    | Flag to enable routing to the cantabular metadata extractor API                    |
 | ENABLE_ZEBEDEE_AUDIT                     | false                    |                                                                                    |
 | ENABLE_NLP_SEARCH_APIS                   | false                    | Flag to enable routing to the NLP search APIs                                      |
@@ -47,12 +45,8 @@ This service is responsible for serving a JSON-LD `@context` field on configured
 | PERMISSIONS_API_VERSIONS                 | "v1"                     | A comma delimted string with a list of versions supported by permissions api       |
 | RELEASE_CALENDAR_API_URL                 | "http://localhost:27800" | A URL to the release calendar api                                                  |
 | ZEBEDEE_URL                              | "http://localhost:8082"  | A URL to the zebedee service api                                                   |
-| MAPS_API_URL:                            | "http://localhost:27900" | A URL to the maps api                                                              |
-| MAPS_API_VERSIONS:                       | "v1"                     | A comma delimted string with a list of versions supported by maps api              |
 | GEODATA_API_URL                          | "http://localhost:28200" | A URL to the geodata api                                                           |
 | GEODATA_API_VERSIONS                     | "v1"                     | A comma delimted string with a list of versions supported by geodata api           |
-| AREAS_API_URL                            | "http://localhost:25500" | A URL to the areas API                                                             |
-| AREAS_API_VERSIONS                       | "v1"                     | A comma-delimited string list: versions supported by the areas API                 |
 | CANTABULAR_METADATA_EXTRACTOR_API_URL    | "http://localhost:28300" | A URL to the Cantabular metadata extractor API                                     |
 | SEARCH_SCRUBBER_API_URL                  | "http://localhost:28700" | A URL to the Cantabular metadata extractor API                                     |
 | SEARCH_SCRUBBER_API_VERSIONS             | "v1"                     | A comma delimted string with a list of versions supported by search scrubber api   |

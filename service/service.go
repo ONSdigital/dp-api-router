@@ -157,10 +157,6 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 	dimensionSearch := proxy.NewAPIProxyWithOptions(ctx, cfg.DimensionSearchAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction, proxy.Options{Interceptor: true})
 	image := proxy.NewAPIProxyWithOptions(ctx, cfg.ImageAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction, proxy.Options{Interceptor: true})
 
-	if cfg.EnableAreasAPI {
-		areas := proxy.NewAPIProxy(ctx, cfg.AreasAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
-		addVersionedHandlers(router, areas, cfg.AreasAPIVersions, "/areas")
-	}
 	if cfg.EnableReleaseCalendarAPI {
 		releaseCalendar := proxy.NewAPIProxy(ctx, cfg.ReleaseCalendarAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 		addVersionedHandlers(router, releaseCalendar, cfg.ReleaseCalendarAPIVersions, "/releases")
@@ -186,10 +182,6 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 	if cfg.EnablePopulationTypesAPI {
 		populationTypesAPI := proxy.NewAPIProxy(ctx, cfg.PopulationTypesAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 		addTransitionalHandler(router, populationTypesAPI, "/population-types")
-	}
-	if cfg.EnableMapsAPI {
-		mapsProxy := proxy.NewAPIProxy(ctx, cfg.MapsAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
-		addVersionedHandlers(router, mapsProxy, cfg.MapsAPIVersions, "/maps")
 	}
 	if cfg.EnableGeodataAPI {
 		geodataAPIproxy := proxy.NewAPIProxy(ctx, cfg.GeodataAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)

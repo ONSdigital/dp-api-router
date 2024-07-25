@@ -60,10 +60,8 @@ func TestRouterPublicAPIs(t *testing.T) {
 		feedbackAPIURL, _ := url.Parse(cfg.FeedbackAPIURL)
 		releaseCalendarAPIURL, _ := url.Parse(cfg.ReleaseCalendarAPIURL)
 		populationTypesAPIURL, _ := url.Parse(cfg.PopulationTypesAPIURL)
-		mapsAPIURL, _ := url.Parse(cfg.MapsAPIURL)
 		geodataAPIURL, _ := url.Parse(cfg.GeodataAPIURL)
 		topicAPIURL, _ := url.Parse(cfg.TopicAPIURL)
-		areasAPIURL, _ := url.Parse(cfg.AreasAPIURL)
 		scrubberAPIURL, _ := url.Parse(cfg.SearchScrubberAPIURL)
 		categoryAPIURL, _ := url.Parse(cfg.CategoryAPIURL)
 		berlinAPIURL, _ := url.Parse(cfg.BerlinAPIURL)
@@ -97,15 +95,8 @@ func TestRouterPublicAPIs(t *testing.T) {
 		for _, version := range cfg.ReleaseCalendarAPIVersions {
 			expectedPublicURLs["/"+version+"/releases"] = releaseCalendarAPIURL
 		}
-		cfg.MapsAPIVersions = []string{"vX", "vY"}
-		for _, version := range cfg.MapsAPIVersions {
-			expectedPublicURLs["/"+version+"/maps"] = mapsAPIURL
-		}
 		for _, version := range cfg.GeodataAPIVersions {
 			expectedPublicURLs["/"+version+"/geodata"] = geodataAPIURL
-		}
-		for _, version := range cfg.AreasAPIVersions {
-			expectedPublicURLs["/"+version+"/areas"] = areasAPIURL
 		}
 
 		resetProxyMocksWithExpectations(expectedPublicURLs)
@@ -374,109 +365,6 @@ func TestRouterPublicAPIs(t *testing.T) {
 				w := createRouterTest(cfg, navigationPath)
 				So(w.Code, ShouldEqual, http.StatusOK)
 				verifyProxied("/navigation", topicAPIURL)
-			})
-		})
-
-		Convey("Given an areas endpoint", func() {
-			So(len(cfg.AreasAPIVersions), ShouldBeGreaterThanOrEqualTo, 1)
-
-			Convey("When the areas feature flag is disabled", func() {
-				cfg.EnableAreasAPI = false
-
-				Convey("Then requests to the areas endpoints are proxied to zebedee", func() {
-					for _, version := range cfg.AreasAPIVersions {
-						w := createRouterTest(cfg, "http://localhost:23200/"+version+"/areas")
-						So(w.Code, ShouldEqual, http.StatusNotFound)
-						assertOnlyThisURLIsCalled(zebedeeURL)
-					}
-				})
-			})
-
-			Convey("And when the feature flag is enabled", func() {
-				cfg.EnableAreasAPI = true
-
-				for _, version := range cfg.AreasAPIVersions {
-					expectedPublicURLs["/"+version+"/areas"] = areasAPIURL
-				}
-				resetProxyMocksWithExpectations(expectedPublicURLs)
-
-				Convey("Then a request to the areas endpoint is proxied to the areasAPIURL", func() {
-					for _, version := range cfg.AreasAPIVersions {
-						w := createRouterTest(cfg, "http://localhost:23200/"+version+"/areas")
-						So(w.Code, ShouldEqual, http.StatusOK)
-						verifyProxied("/"+version+"/areas", areasAPIURL)
-					}
-				})
-			})
-		})
-
-		Convey("Given a maps service path", func() {
-			urlPathTemplate := "http://localhost:23200/%s/maps"
-
-			Convey("And the feature flag is enabled", func() {
-				cfg.EnableMapsAPI = true
-
-				Convey("When we make GET requests to configured versions", func() {
-					for _, version := range cfg.MapsAPIVersions {
-						response := createRouterTest(cfg, fmt.Sprintf(urlPathTemplate, version))
-
-						Convey("Then the "+version+" request is successful and is proxied to mapsAPIURL", func() {
-							So(response.Code, ShouldEqual, http.StatusOK)
-							verifyProxied("/"+version+"/maps", mapsAPIURL)
-						})
-					}
-				})
-
-				Convey("When we make GET requests to an unconfigured version", func() {
-					version := "vInvalid"
-					_ = createRouterTest(cfg, fmt.Sprintf(urlPathTemplate, version))
-
-					Convey("Then the request is proxied to zebedee handler", func() {
-						verifyProxied("/"+version+"/maps", zebedeeURL)
-					})
-				})
-			})
-
-			Convey("And the feature flag is disabled", func() {
-				cfg.EnableMapsAPI = false
-
-				Convey("When we make GET requests to configured versions", func() {
-					for _, version := range cfg.MapsAPIVersions {
-						_ = createRouterTest(cfg, fmt.Sprintf(urlPathTemplate, version))
-
-						Convey("Then the "+version+" request is proxied to zebedee handler", func() {
-							verifyProxied("/"+version+"/maps", zebedeeURL)
-						})
-					}
-				})
-			})
-		})
-
-		Convey("Given a maps service subpath", func() {
-			urlPathTemplate := "http://localhost:23200/%s/maps/subpath"
-
-			Convey("And the feature flag is enabled", func() {
-				cfg.EnableMapsAPI = true
-
-				Convey("When we make GET requests to configured versions", func() {
-					for _, version := range cfg.MapsAPIVersions {
-						response := createRouterTest(cfg, fmt.Sprintf(urlPathTemplate, version))
-
-						Convey("Then the "+version+" request is successful and is proxied to mapsAPIURL", func() {
-							So(response.Code, ShouldEqual, http.StatusOK)
-							verifyProxied("/"+version+"/maps/subpath", mapsAPIURL)
-						})
-					}
-				})
-
-				Convey("When we make GET requests to an unconfigured version", func() {
-					version := "vInvalid"
-					_ = createRouterTest(cfg, fmt.Sprintf(urlPathTemplate, version))
-
-					Convey("Then the request is proxied to zebedee handler", func() {
-						verifyProxied("/"+version+"/maps/subpath", zebedeeURL)
-					})
-				})
 			})
 		})
 

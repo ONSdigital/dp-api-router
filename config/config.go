@@ -69,15 +69,9 @@ type Config struct {
 	EnableReleaseCalendarAPI             bool           `envconfig:"ENABLE_RELEASE_CALENDAR_API"`
 	ReleaseCalendarAPIURL                string         `envconfig:"RELEASE_CALENDAR_API_URL"`
 	ReleaseCalendarAPIVersions           []string       `envconfig:"RELEASE_CALENDAR_API_VERSIONS"`
-	EnableMapsAPI                        bool           `envconfig:"ENABLE_MAPS_API"`
-	MapsAPIURL                           string         `envconfig:"MAPS_API_URL"`
-	MapsAPIVersions                      []string       `envconfig:"MAPS_API_VERSIONS"`
 	EnableGeodataAPI                     bool           `envconfig:"ENABLE_GEODATA_API"`
 	GeodataAPIURL                        string         `envconfig:"GEODATA_API_URL"`
 	GeodataAPIVersions                   []string       `envconfig:"GEODATA_API_VERSIONS"`
-	EnableAreasAPI                       bool           `envconfig:"ENABLE_AREAS_API"`
-	AreasAPIURL                          string         `envconfig:"AREAS_API_URL"`
-	AreasAPIVersions                     []string       `envconfig:"AREAS_API_VERSIONS"`
 	EnableCantabularMetadataExtractorAPI bool           `envconfig:"ENABLE_CANTABULAR_METADATA_EXTRACTOR_API"`
 	CantabularMetadataExtractorAPIURL    string         `envconfig:"CANTABULAR_METADATA_API_URL"`
 	ZebedeeClientTimeout                 time.Duration  `envconfig:"ZEBEDEE_CLIENT_TIMEOUT"`
@@ -151,9 +145,6 @@ func Get() (*Config, error) {
 		SessionsAPIURL:                       "http://localhost:24400",
 		EnableSessionsAPI:                    false,
 		TopicAPIURL:                          "http://localhost:25300",
-		AreasAPIURL:                          "http://localhost:25500",
-		EnableAreasAPI:                       false,
-		AreasAPIVersions:                     []string{"v1"},
 		FeedbackAPIURL:                       "http://localhost:28600",
 		EnableFeedbackAPI:                    false,
 		FeedbackAPIVersions:                  []string{"v1"},
@@ -162,9 +153,6 @@ func Get() (*Config, error) {
 		ReleaseCalendarAPIURL:                "http://localhost:27800",
 		EnableReleaseCalendarAPI:             false,
 		ReleaseCalendarAPIVersions:           []string{"v1"},
-		EnableMapsAPI:                        false,
-		MapsAPIURL:                           "http://localhost:27900",
-		MapsAPIVersions:                      []string{"v1"},
 		EnableGeodataAPI:                     false,
 		GeodataAPIURL:                        "http://localhost:28200",
 		GeodataAPIVersions:                   []string{"v1"},
