@@ -45,8 +45,6 @@ This service is responsible for serving a JSON-LD `@context` field on configured
 | PERMISSIONS_API_VERSIONS                 | "v1"                     | A comma delimted string with a list of versions supported by permissions api       |
 | RELEASE_CALENDAR_API_URL                 | "http://localhost:27800" | A URL to the release calendar api                                                  |
 | ZEBEDEE_URL                              | "http://localhost:8082"  | A URL to the zebedee service api                                                   |
-| GEODATA_API_URL                          | "http://localhost:28200" | A URL to the geodata api                                                           |
-| GEODATA_API_VERSIONS                     | "v1"                     | A comma delimted string with a list of versions supported by geodata api           |
 | CANTABULAR_METADATA_EXTRACTOR_API_URL    | "http://localhost:28300" | A URL to the Cantabular metadata extractor API                                     |
 | SEARCH_SCRUBBER_API_URL                  | "http://localhost:28700" | A URL to the Cantabular metadata extractor API                                     |
 | SEARCH_SCRUBBER_API_VERSIONS             | "v1"                     | A comma delimted string with a list of versions supported by search scrubber api   |

@@ -60,7 +60,6 @@ func TestRouterPublicAPIs(t *testing.T) {
 		feedbackAPIURL, _ := url.Parse(cfg.FeedbackAPIURL)
 		releaseCalendarAPIURL, _ := url.Parse(cfg.ReleaseCalendarAPIURL)
 		populationTypesAPIURL, _ := url.Parse(cfg.PopulationTypesAPIURL)
-		geodataAPIURL, _ := url.Parse(cfg.GeodataAPIURL)
 		topicAPIURL, _ := url.Parse(cfg.TopicAPIURL)
 		scrubberAPIURL, _ := url.Parse(cfg.SearchScrubberAPIURL)
 		categoryAPIURL, _ := url.Parse(cfg.CategoryAPIURL)
@@ -94,9 +93,6 @@ func TestRouterPublicAPIs(t *testing.T) {
 		cfg.ReleaseCalendarAPIVersions = []string{"vX", "vY"}
 		for _, version := range cfg.ReleaseCalendarAPIVersions {
 			expectedPublicURLs["/"+version+"/releases"] = releaseCalendarAPIURL
-		}
-		for _, version := range cfg.GeodataAPIVersions {
-			expectedPublicURLs["/"+version+"/geodata"] = geodataAPIURL
 		}
 
 		resetProxyMocksWithExpectations(expectedPublicURLs)
@@ -365,50 +361,6 @@ func TestRouterPublicAPIs(t *testing.T) {
 				w := createRouterTest(cfg, navigationPath)
 				So(w.Code, ShouldEqual, http.StatusOK)
 				verifyProxied("/navigation", topicAPIURL)
-			})
-		})
-
-		Convey("Given an url to the geodata api", func() {
-			Convey("And the feature flag is enabled", func() {
-				cfg.EnableGeodataAPI = true
-
-				Convey("When we make GET requests to configured versions", func() {
-					for _, version := range cfg.GeodataAPIVersions {
-						Convey("Then the "+version+" request is proxied to the geodata API", func() {
-							w := createRouterTest(cfg, "http://localhost:23200/"+version+"/geodata")
-							So(w.Code, ShouldEqual, http.StatusOK)
-							verifyProxied("/"+version+"/geodata", geodataAPIURL)
-						})
-					}
-				})
-
-				Convey("When we make GET requests to an unrecognised version", func() {
-					version := "vSomeOtherVersion"
-					Convey("Then the "+version+" request falls through to the default zebedee handler for an unhandled version", func() {
-						w := createRouterTest(cfg, "http://localhost:23200/"+version+"/geodata")
-						So(w.Code, ShouldEqual, http.StatusNotFound)
-						verifyProxied("/"+version+"/geodata", zebedeeURL)
-					})
-				})
-			})
-
-			Convey("And the feature flag is disabled", func() {
-				cfg.EnableGeodataAPI = false
-
-				Convey("When we make GET requests to configured versions", func() {
-					for _, version := range cfg.GeodataAPIVersions {
-						_ = createRouterTest(cfg, "http://localhost:23200/"+version+"/geodata")
-						if version == "v1" {
-							Convey("Then the v1 request is proxied to zebedee handler without the version", func() {
-								verifyProxied("/geodata", zebedeeURL)
-							})
-						} else {
-							Convey("Then the "+version+" request is proxied to zebedee handler", func() {
-								verifyProxied("/"+version+"/geodata", zebedeeURL)
-							})
-						}
-					}
-				})
 			})
 		})
 

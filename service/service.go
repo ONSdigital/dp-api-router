@@ -183,10 +183,6 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 		populationTypesAPI := proxy.NewAPIProxy(ctx, cfg.PopulationTypesAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
 		addTransitionalHandler(router, populationTypesAPI, "/population-types")
 	}
-	if cfg.EnableGeodataAPI {
-		geodataAPIproxy := proxy.NewAPIProxy(ctx, cfg.GeodataAPIURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)
-		addVersionedHandlers(router, geodataAPIproxy, cfg.GeodataAPIVersions, "/geodata")
-	}
 
 	if cfg.EnableFilesAPI {
 		downloadService := proxy.NewAPIProxy(ctx, cfg.DownloadServiceURL, cfg.Version, cfg.EnvironmentHost, "", cfg.EnableV1BetaRestriction)

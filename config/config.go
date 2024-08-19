@@ -69,9 +69,6 @@ type Config struct {
 	EnableReleaseCalendarAPI             bool           `envconfig:"ENABLE_RELEASE_CALENDAR_API"`
 	ReleaseCalendarAPIURL                string         `envconfig:"RELEASE_CALENDAR_API_URL"`
 	ReleaseCalendarAPIVersions           []string       `envconfig:"RELEASE_CALENDAR_API_VERSIONS"`
-	EnableGeodataAPI                     bool           `envconfig:"ENABLE_GEODATA_API"`
-	GeodataAPIURL                        string         `envconfig:"GEODATA_API_URL"`
-	GeodataAPIVersions                   []string       `envconfig:"GEODATA_API_VERSIONS"`
 	EnableCantabularMetadataExtractorAPI bool           `envconfig:"ENABLE_CANTABULAR_METADATA_EXTRACTOR_API"`
 	CantabularMetadataExtractorAPIURL    string         `envconfig:"CANTABULAR_METADATA_API_URL"`
 	ZebedeeClientTimeout                 time.Duration  `envconfig:"ZEBEDEE_CLIENT_TIMEOUT"`
@@ -153,9 +150,6 @@ func Get() (*Config, error) {
 		ReleaseCalendarAPIURL:                "http://localhost:27800",
 		EnableReleaseCalendarAPI:             false,
 		ReleaseCalendarAPIVersions:           []string{"v1"},
-		EnableGeodataAPI:                     false,
-		GeodataAPIURL:                        "http://localhost:28200",
-		GeodataAPIVersions:                   []string{"v1"},
 		EnableCantabularMetadataExtractorAPI: false,
 		CantabularMetadataExtractorAPIURL:    "http://localhost:28300",
 		ZebedeeClientTimeout:                 30 * time.Second,
