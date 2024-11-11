@@ -31,7 +31,7 @@ func TestUnitInterceptor(t *testing.T) {
 		testJSON := ``
 		transp := dummyRT{testJSON}
 
-		t := NewRoundTripper(testDomain, "", transp)
+		t := NewRoundTripper(testDomain, transp)
 
 		resp, err := t.RoundTrip(&http.Request{})
 		So(err, ShouldBeNil)
@@ -47,7 +47,7 @@ func TestUnitInterceptor(t *testing.T) {
 	Convey("test interceptor doesn't throw an error for a nil body", t, func() {
 		transp := dummyRT{}
 
-		t := NewRoundTripper(testDomain, "", transp)
+		t := NewRoundTripper(testDomain, transp)
 
 		resp, err := t.RoundTrip(&http.Request{})
 		So(err, ShouldBeNil)
@@ -63,7 +63,7 @@ func TestUnitInterceptor(t *testing.T) {
 	Convey("test interceptor doesn't throw an error for a nil body with correct URI", t, func() {
 		transp := dummyRT{}
 
-		t := NewRoundTripper(testDomain, "", transp)
+		t := NewRoundTripper(testDomain, transp)
 
 		resp, err := t.RoundTrip(&http.Request{RequestURI: "/datasets"})
 		So(err, ShouldBeNil)
@@ -80,7 +80,7 @@ func TestUnitInterceptor(t *testing.T) {
 		testJSON := `{"links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}`
 		transp := dummyRT{testJSON}
 
-		t := NewRoundTripper(testDomain, "", transp)
+		t := NewRoundTripper(testDomain, transp)
 
 		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
@@ -97,7 +97,7 @@ func TestUnitInterceptor(t *testing.T) {
 		testJSON := `{"links":{"self":{"href":"/datasets/12345"}}}`
 		transp := dummyRT{testJSON}
 
-		t := NewRoundTripper(testDomain, "", transp)
+		t := NewRoundTripper(testDomain, transp)
 
 		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
@@ -115,7 +115,7 @@ func TestUnitInterceptor(t *testing.T) {
 		testJSON := `{"dataset_links":{"self":{"href":"/datasets/12345"}}}`
 		transp := dummyRT{testJSON}
 
-		t := NewRoundTripper(testDomain, "", transp)
+		t := NewRoundTripper(testDomain, transp)
 
 		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
@@ -129,29 +129,11 @@ func TestUnitInterceptor(t *testing.T) {
 		So(string(b), ShouldEqual, `{"dataset_links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}`+"\n")
 	})
 
-	Convey("test interceptor correctly inserts context", t, func() {
-		testJSON := `{"links":{"self":{"href":"/datasets/12345"}}}`
-		transp := dummyRT{testJSON}
-
-		t := NewRoundTripper(testDomain, testContext, transp)
-
-		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
-		So(err, ShouldBeNil)
-
-		b, err := io.ReadAll(resp.Body)
-		So(err, ShouldBeNil)
-
-		err = resp.Body.Close()
-		So(err, ShouldBeNil)
-		So(len(b), ShouldEqual, 102)
-		So(string(b), ShouldEqual, `{"@context":"context.json","links":{"self":{"href":"https://api.beta.ons.gov.uk/v1/datasets/12345"}}}`+"\n")
-	})
-
 	Convey("test interceptor correctly updates a href in downloads subdoc on a nested path", t, func() {
 		testJSON := `{"downloads":{"csv":{"href":"http://localhost:22000/myfile.csv"}}}`
 		transp := dummyRT{testJSON}
 
-		t := NewRoundTripper(testDomain, "", transp)
+		t := NewRoundTripper(testDomain, transp)
 
 		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets/1234"})
 		So(err, ShouldBeNil)
@@ -169,7 +151,7 @@ func TestUnitInterceptor(t *testing.T) {
 		testJSON := `{"dimensions":[{"href":"http://localhost:23000/code-lists/1234567"}]}`
 		transp := dummyRT{testJSON}
 
-		t := NewRoundTripper(testDomain, "", transp)
+		t := NewRoundTripper(testDomain, transp)
 
 		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/code-lists"})
 		So(err, ShouldBeNil)
@@ -187,7 +169,7 @@ func TestUnitInterceptor(t *testing.T) {
 		testJSON := `{"items":[{"links":{"self":{"href":"/datasets/12345"}}}]}`
 		transp := dummyRT{testJSON}
 
-		t := NewRoundTripper(testDomain, "", transp)
+		t := NewRoundTripper(testDomain, transp)
 
 		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
@@ -205,7 +187,7 @@ func TestUnitInterceptor(t *testing.T) {
 		testJSON := `{"links":{"instances":[{"href":"/datasets/12345"}]}}`
 		transp := dummyRT{testJSON}
 
-		t := NewRoundTripper(testDomain, "", transp)
+		t := NewRoundTripper(testDomain, transp)
 
 		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
@@ -223,7 +205,7 @@ func TestUnitInterceptor(t *testing.T) {
 		testJSON := `{"dimensions":{"time":{"option":{"href":"/datasets/time"}}}}`
 		transp := dummyRT{testJSON}
 
-		t := NewRoundTripper(testDomain, "", transp)
+		t := NewRoundTripper(testDomain, transp)
 
 		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
@@ -241,7 +223,7 @@ func TestUnitInterceptor(t *testing.T) {
 		testJSON := `{"dimensions":{"time":{"option":{"href":"/datasets/time?hello=world&mobile=phone"}}}}`
 		transp := dummyRT{testJSON}
 
-		t := NewRoundTripper(testDomain, "", transp)
+		t := NewRoundTripper(testDomain, transp)
 
 		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
@@ -259,7 +241,7 @@ func TestUnitInterceptor(t *testing.T) {
 		testJSON := `[{"links":{"self":{"href":"/datasets/12345"}}}, {"links":{"self":{"href":"/datasets/12345"}}}]`
 		transp := dummyRT{testJSON}
 
-		t := NewRoundTripper(testDomain, "", transp)
+		t := NewRoundTripper(testDomain, transp)
 
 		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
@@ -280,7 +262,7 @@ func TestUnitInterceptor(t *testing.T) {
 		}
 		transp := dummyRT{testJSON}
 
-		t := NewRoundTripper(testDomain, "", transp)
+		t := NewRoundTripper(testDomain, transp)
 
 		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
@@ -301,7 +283,7 @@ func TestUnitInterceptor(t *testing.T) {
 		}
 		transp := dummyRT{testJSON}
 
-		t := NewRoundTripper(testDomain, "", transp)
+		t := NewRoundTripper(testDomain, transp)
 
 		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
@@ -323,7 +305,7 @@ func TestUnitInterceptor(t *testing.T) {
 		testJSON += "1"
 		transp := dummyRT{testJSON}
 
-		t := NewRoundTripper(testDomain, "", transp)
+		t := NewRoundTripper(testDomain, transp)
 
 		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
@@ -341,7 +323,7 @@ func TestUnitInterceptor(t *testing.T) {
 		testJSON := `{bla`
 		transp := dummyRT{testJSON}
 
-		t := NewRoundTripper(testDomain, "", transp)
+		t := NewRoundTripper(testDomain, transp)
 
 		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)
@@ -362,7 +344,7 @@ func TestUnitInterceptor(t *testing.T) {
 		}
 		transp := dummyRT{testJSON}
 
-		t := NewRoundTripper(testDomain, "", transp)
+		t := NewRoundTripper(testDomain, transp)
 
 		resp, err := t.RoundTrip(&http.Request{RequestURI: "/v1/datasets"})
 		So(err, ShouldBeNil)

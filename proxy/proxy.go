@@ -41,12 +41,12 @@ type Options struct {
 }
 
 // NewAPIProxy creates a new APIProxy with a new ReverseProxy for the provided target
-func NewAPIProxy(ctx context.Context, target, version, envHost, contextURL string, enableBetaRestriction bool) *APIProxy {
-	return NewAPIProxyWithOptions(ctx, target, version, envHost, contextURL, enableBetaRestriction, Options{})
+func NewAPIProxy(ctx context.Context, target, version, envHost string, enableBetaRestriction bool) *APIProxy {
+	return NewAPIProxyWithOptions(ctx, target, version, envHost, enableBetaRestriction, Options{})
 }
 
 // NewAPIProxyWithOptions creates a new APIProxy with a new ReverseProxy for the provided target that accepts optional parameters
-func NewAPIProxyWithOptions(ctx context.Context, target, version, envHost, contextURL string, enableBetaRestriction bool, options Options) *APIProxy {
+func NewAPIProxyWithOptions(ctx context.Context, target, version, envHost string, enableBetaRestriction bool, options Options) *APIProxy {
 	targetURL, err := url.Parse(target)
 	if err != nil {
 		log.Fatal(ctx, "failed to create url", err, log.Data{"url": target})
@@ -55,7 +55,7 @@ func NewAPIProxyWithOptions(ctx context.Context, target, version, envHost, conte
 
 	var transport http.RoundTripper
 	if options.Interceptor {
-		transport = interceptor.NewRoundTripper(envHost+"/"+version, contextURL, http.DefaultTransport)
+		transport = interceptor.NewRoundTripper(envHost+"/"+version, http.DefaultTransport)
 	}
 
 	pxy := NewSingleHostReverseProxyWithTransport(targetURL, transport)
