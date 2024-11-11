@@ -115,7 +115,7 @@ func AuditHandler(auditProducer *event.AvroProducer,
 				ctx, statusCode, err := retrieveIdentity(w, r, idClient, auth)
 				if err != nil {
 					// error already handled in retrieveIdentity. Try to audit it.
-					auditEvent.StatusCode = int32(statusCode)
+					auditEvent.StatusCode = int32(math.Min(math.Max(float64(statusCode), math.MinInt32), math.MaxInt32))
 					if auditErr := auditProducer.Audit(auditEvent); auditErr != nil {
 						log.Error(ctx, "inbound audit event could not be sent", auditErr, log.Data{"event": auditEvent})
 					}
