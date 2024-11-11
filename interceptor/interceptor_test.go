@@ -11,7 +11,6 @@ import (
 )
 
 const testDomain = "https://beta.ons.gov.uk/v1"
-const testContext = "context.json"
 
 type dummyRT struct {
 	testJSON string

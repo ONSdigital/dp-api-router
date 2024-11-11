@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"net/url"
 	"strings"
@@ -152,7 +153,7 @@ func AuditHandler(auditProducer *event.AvroProducer,
 
 			// Audit event (after proxying).
 			auditEvent.CreatedAt = event.CreatedAtMillis(Now())
-			auditEvent.StatusCode = int32(rec.statusCode)
+			auditEvent.StatusCode = int32(math.Min(math.Max(float64(rec.statusCode), math.MinInt32), math.MaxInt32))
 			eventBytes, err := auditProducer.Marshal(auditEvent)
 			if err != nil {
 				handleError(r.Context(), w, r, http.StatusInternalServerError, "outbound audit event could not be sent", err, log.Data{"event": auditEvent})
