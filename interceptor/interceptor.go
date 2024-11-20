@@ -22,25 +22,24 @@ import (
 // Transport implements the http RoundTripper method and allows the
 // response body to be post processed
 type Transport struct {
-	domain     string
-	contextURL string
+	domain string
 	http.RoundTripper
 }
 
 var _ http.RoundTripper = &Transport{}
 
 // NewRoundTripper creates a Transport instance with configured domain
-func NewRoundTripper(domain, contextURL string, rt http.RoundTripper) *Transport {
+func NewRoundTripper(domain string, rt http.RoundTripper) *Transport {
 	cfg, err := config.Get()
 	if err != nil {
 		log.Error(context.Background(), "Unable to retrieve config'", err)
 	}
 
 	if cfg.OtelEnabled {
-		return &Transport{domain, contextURL, otelhttp.NewTransport(rt)}
+		return &Transport{domain, otelhttp.NewTransport(rt)}
 	}
 
-	return &Transport{domain, contextURL, rt}
+	return &Transport{domain, rt}
 }
 
 const (
@@ -221,9 +220,6 @@ func (t *Transport) updateMap(document map[string]interface{}) ([]byte, error) {
 		return nil, err
 	}
 
-	if t.contextURL != "" {
-		document["@context"] = t.contextURL
-	}
 	var updatedB []byte
 	buf := bytes.NewBuffer(updatedB)
 

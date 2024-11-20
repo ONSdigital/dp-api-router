@@ -45,7 +45,6 @@ func TestGetReturnsDefaultValues(t *testing.T) {
 			SearchReindexAPIVersions:             []string{"v1"},
 			DimensionSearchAPIURL:                "http://localhost:23100",
 			APIPocURL:                            "http://localhost:3000",
-			ContextURL:                           "",
 			EnvironmentHost:                      "http://localhost:23200",
 			GracefulShutdown:                     5 * time.Second,
 			HealthCheckInterval:                  30 * time.Second,

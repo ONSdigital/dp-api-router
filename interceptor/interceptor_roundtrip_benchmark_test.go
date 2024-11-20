@@ -80,7 +80,7 @@ func BenchmarkTest1(b *testing.B) {
 	fmt.Println("test interceptor correctly updates a href in links subdocs within an array")
 	transp := dummyRT{testJSON}
 
-	t := NewRoundTripper(testDomain, "", transp)
+	t := NewRoundTripper(testDomain, transp)
 
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
@@ -220,7 +220,7 @@ func BenchmarkTest2(b *testing.B) {
 	fmt.Println("test interceptor correctly does not load in very large object, that might be a json object")
 	transp := dummyRT{testJSON10000}
 
-	t := NewRoundTripper(testDomain, "", transp)
+	t := NewRoundTripper(testDomain, transp)
 
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
@@ -298,10 +298,10 @@ func BenchmarkTest3(b *testing.B) {
 
 	fmt.Println("demonstrate sync.Pool failure when running parallel or OK without sync.Pool")
 	transp := dummyRT{testJSON}
-	t := NewRoundTripper(testDomain, "", transp)
+	t := NewRoundTripper(testDomain, transp)
 
 	transp2 := dummyRT{testJSON2}
-	t2 := NewRoundTripper(testDomain, "", transp2)
+	t2 := NewRoundTripper(testDomain, transp2)
 
 	b.ReportAllocs()
 
