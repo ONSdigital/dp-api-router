@@ -41,8 +41,6 @@ func TestGetReturnsDefaultValues(t *testing.T) {
 			PermissionsAPIURL:                    "http://localhost:25400",
 			PermissionsAPIVersions:               []string{"v1"},
 			SearchAPIURL:                         "http://localhost:23900",
-			SearchReindexAPIURL:                  "http://localhost:25700",
-			SearchReindexAPIVersions:             []string{"v1"},
 			DimensionSearchAPIURL:                "http://localhost:23100",
 			APIPocURL:                            "http://localhost:3000",
 			EnvironmentHost:                      "http://localhost:23200",
