@@ -21,7 +21,7 @@ func BetaAPIHandler(enableBetaRestriction bool, h http.Handler) http.Handler {
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
-
+		r.Header.Add("X-Forwarded-Path-Prefix", "/v1")
 		h.ServeHTTP(w, r)
 	})
 }
