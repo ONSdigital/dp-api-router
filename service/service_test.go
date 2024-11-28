@@ -420,7 +420,6 @@ func TestRouterPrivateAPIs(t *testing.T) {
 		uploadServiceAPIURL, _ := url.Parse(cfg.UploadServiceAPIURL)
 		identityAPIURL, _ := url.Parse(cfg.IdentityAPIURL)
 		permissionsAPIURL, _ := url.Parse(cfg.PermissionsAPIURL)
-		searchReindexURL, _ := url.Parse(cfg.SearchReindexAPIURL)
 		zebedeeURL, _ := url.Parse(cfg.ZebedeeURL)
 		cantabularMetadataExtractorAPIURL, _ := url.Parse(cfg.CantabularMetadataExtractorAPIURL)
 
@@ -429,7 +428,6 @@ func TestRouterPrivateAPIs(t *testing.T) {
 			"/recipes":             recipeAPIURL,
 			"/jobs":                importAPIURL,
 			"/instances":           datasetAPIURL,
-			"/search-reindex-jobs": searchReindexURL,
 			"/cantabular-metadata": cantabularMetadataExtractorAPIURL,
 		}
 		for _, version := range cfg.IdentityAPIVersions {
@@ -442,9 +440,6 @@ func TestRouterPrivateAPIs(t *testing.T) {
 			expectedPrivateURLs[fmt.Sprintf("/%s/policies", version)] = permissionsAPIURL
 			expectedPrivateURLs[fmt.Sprintf("/%s/roles", version)] = permissionsAPIURL
 			expectedPrivateURLs[fmt.Sprintf("/%s/permissions-bundle", version)] = permissionsAPIURL
-		}
-		for _, version := range cfg.SearchReindexAPIVersions {
-			expectedPrivateURLs[fmt.Sprintf("/%s/search-reindex-jobs", version)] = searchReindexURL
 		}
 
 		resetProxyMocksWithExpectations(expectedPrivateURLs)
@@ -580,22 +575,6 @@ func TestRouterPrivateAPIs(t *testing.T) {
 				}
 			})
 
-			Convey("A request to a search-reindex-jobs path is proxied to searchReindexURL", func() {
-				for _, version := range cfg.SearchReindexAPIVersions {
-					w := createRouterTest(cfg, "http://localhost:23200/"+version+"/search-reindex-jobs")
-					So(w.Code, ShouldEqual, http.StatusOK)
-					verifyProxied("/"+version+"/search-reindex-jobs", searchReindexURL)
-				}
-			})
-
-			Convey("A request to a search-reindex-jobs subpath is proxied to identityAPIURL", func() {
-				for _, version := range cfg.SearchReindexAPIVersions {
-					w := createRouterTest(cfg, "http://localhost:23200/"+version+"/search-reindex-jobs/subpath")
-					So(w.Code, ShouldEqual, http.StatusOK)
-					verifyProxied("/"+version+"/search-reindex-jobs/subpath", searchReindexURL)
-				}
-			})
-
 			Convey("When the enable cantabular metadata extractor API feature flag is enabled", func() {
 				cfg.EnableCantabularMetadataExtractorAPI = true
 
@@ -646,11 +625,6 @@ func TestRouterPrivateAPIs(t *testing.T) {
 
 			Convey("A request to a permissions-bundle path is not proxied and fails with StatusNotFound", func() {
 				createRouterTest(cfg, "http://localhost:23200/v1/permissions-bundle")
-				assertOnlyThisURLIsCalled(zebedeeURL)
-			})
-
-			Convey("A request to a search-reindex-jobs path is not proxied and fails with StatusNotFound", func() {
-				createRouterTest(cfg, "http://localhost:23200/v1/search-reindex-jobs")
 				assertOnlyThisURLIsCalled(zebedeeURL)
 			})
 
