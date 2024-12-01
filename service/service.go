@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/gorilla/handlers"
@@ -255,18 +254,18 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 func addVersionedHandlers(router *mux.Router, apiProxy *proxy.APIProxy, versions []string, path string) {
 	// Proxy any request after the path given to the target address
 	for _, version := range versions {
-		router.HandleFunc("/"+version+path+"{rest:.*}", apiProxy.Handle)
+		router.HandleFunc("/"+version+path+"{rest:$|/.*}", apiProxy.Handle)
 	}
 }
 
 func addTransitionalHandler(router *mux.Router, apiProxy *proxy.APIProxy, path string) {
 	// Proxy any request after the path given to the target address
-	router.HandleFunc(fmt.Sprintf("/%s"+path+"{rest:$|/.*}", apiProxy.Version), apiProxy.LegacyHandle)
+	router.HandleFunc("/"+apiProxy.Version+path+"{rest:$|/.*}", apiProxy.LegacyHandle)
 }
 
 func addLegacyHandler(router *mux.Router, apiProxy *proxy.APIProxy, path string) {
 	// Proxy any request after the path given to the target address
-	router.HandleFunc(path+"{rest:.*}", apiProxy.LegacyHandle)
+	router.HandleFunc(path+"{rest:$|/.*}", apiProxy.LegacyHandle)
 }
 
 // Close gracefully shuts the service down in the required order, with timeout
