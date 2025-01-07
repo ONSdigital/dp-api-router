@@ -74,6 +74,15 @@ job "dp-api-router" {
         destination = "${NOMAD_TASK_DIR}/vars"
       }
 
+      # Create a config file for deprecations with content from additional secrets
+      template {
+        data        = <<EOH
+        {{ with secret (print "secret/" (env "NOMAD_TASK_NAME") "-additional") }}{{ toJSON .Data.deprecations }}{{ end }}
+        EOH
+        destination = "${NOMAD_SECRETS_DIR}/deprecations.json"
+        env         = false
+      }
+
       vault {
         policies = ["dp-api-router-web"]
       }

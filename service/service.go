@@ -12,6 +12,7 @@ import (
 
 	"github.com/ONSdigital/dp-api-clients-go/v2/health"
 	"github.com/ONSdigital/dp-api-router/config"
+	"github.com/ONSdigital/dp-api-router/deprecation"
 	"github.com/ONSdigital/dp-api-router/event"
 	"github.com/ONSdigital/dp-api-router/middleware"
 	"github.com/ONSdigital/dp-api-router/proxy"
@@ -73,12 +74,26 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	otelhandler := otelhttp.NewHandler(r, "/")
 	m := svc.CreateMiddleware(cfg, r)
 
+	var rootHandler http.Handler
 	if cfg.OtelEnabled {
 		r.Use(otelmux.Middleware(cfg.OTServiceName))
-		svc.Server = dphttp.NewServer(cfg.BindAddr, m.Then(otelhandler))
+		rootHandler = m.Then(otelhandler)
 	} else {
-		svc.Server = dphttp.NewServer(cfg.BindAddr, m.Then(r))
+		rootHandler = m.Then(r)
 	}
+
+	// Add configurable deprecation middleware
+	depConfigFile := cfg.DeprecationConfigFile
+	if depConfigFile != "" {
+		deprecations, err := deprecation.LoadConfig(deprecation.ConfigFromFile(depConfigFile))
+		if err != nil {
+			log.Fatal(ctx, "could not load deprecation config", err)
+			return nil, errors.Wrap(err, "could not load deprecation config")
+		}
+		rootHandler = deprecation.DeprecationRouter(deprecations)(rootHandler)
+	}
+
+	svc.Server = dphttp.NewServer(cfg.BindAddr, rootHandler)
 
 	svc.Server.DefaultShutdownTimeout = cfg.GracefulShutdown
 	svc.Server.HandleOSSignals = false
