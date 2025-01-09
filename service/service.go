@@ -90,7 +90,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 			log.Fatal(ctx, "could not load deprecation config", err)
 			return nil, errors.Wrap(err, "could not load deprecation config")
 		}
-		rootHandler = deprecation.DeprecationRouter(deprecations)(rootHandler)
+		rootHandler = deprecation.Router(deprecations)(rootHandler)
 	}
 
 	svc.Server = dphttp.NewServer(cfg.BindAddr, rootHandler)

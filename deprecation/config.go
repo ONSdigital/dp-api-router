@@ -2,16 +2,16 @@ package deprecation
 
 import (
 	"context"
-	_ "embed"
 	"encoding/json"
 	"fmt"
-	"github.com/ONSdigital/log.go/v2/log"
-	"github.com/pkg/errors"
 	"net/http"
 	"os"
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/ONSdigital/log.go/v2/log"
+	"github.com/pkg/errors"
 )
 
 type deprecationConfig []struct {
@@ -90,19 +90,19 @@ func validatePaths(paths ...string) error {
 		func() {
 			defer func() { err = recover() }()
 			mux := http.NewServeMux()
-			mux.HandleFunc(path, func(writer http.ResponseWriter, request *http.Request) {})
+			mux.HandleFunc(path, func(_ http.ResponseWriter, _ *http.Request) {})
 		}()
 		if err != nil {
-			return errors.New(fmt.Sprintf("invalid path spec: '%s' (%v)", path, err))
+			return fmt.Errorf("invalid path spec: '%s' (%v)", path, err)
 		}
 	}
 	return nil
 }
 
-func parseTime(timestr string) (time.Time, error) {
-	for _, fmt := range []string{time.RFC3339, time.DateOnly, time.DateTime} {
-		if time, err := time.Parse(fmt, timestr); err == nil {
-			return time, nil
+func parseTime(timeStr string) (time.Time, error) {
+	for _, timeFmt := range []string{time.RFC3339, time.DateOnly, time.DateTime} {
+		if parsedTime, err := time.Parse(timeFmt, timeStr); err == nil {
+			return parsedTime, nil
 		}
 	}
 	return time.Time{}, errors.New("invalid time format")

@@ -20,7 +20,7 @@ type Outage struct {
 	End   time.Time
 }
 
-func DeprecationRouter(deprecations []Deprecation) func(http.Handler) http.Handler {
+func Router(deprecations []Deprecation) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		if deprecations == nil {
 			return next
@@ -28,7 +28,7 @@ func DeprecationRouter(deprecations []Deprecation) func(http.Handler) http.Handl
 		mux := http.NewServeMux()
 		for _, dep := range deprecations {
 			for _, path := range dep.Paths {
-				mux.Handle(path, DeprecationMiddleware(dep)(next))
+				mux.Handle(path, Middleware(dep)(next))
 			}
 		}
 		mux.Handle("/", next)
@@ -36,10 +36,9 @@ func DeprecationRouter(deprecations []Deprecation) func(http.Handler) http.Handl
 	}
 }
 
-func DeprecationMiddleware(deprecation Deprecation) func(http.Handler) http.Handler {
+func Middleware(deprecation Deprecation) func(http.Handler) http.Handler {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-
 			now := time.Now().UTC()
 
 			w.Header().Set("Deprecation", "true")
@@ -69,7 +68,6 @@ func DeprecationMiddleware(deprecation Deprecation) func(http.Handler) http.Hand
 			}
 
 			h.ServeHTTP(w, req)
-
 		})
 	}
 }
