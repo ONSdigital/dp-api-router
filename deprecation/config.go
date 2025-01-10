@@ -22,6 +22,9 @@ type deprecationConfig []struct {
 
 type loaderFunction func() ([]byte, error)
 
+// LoadConfig is a function that triggers the load of a deprecation configuration and parses its content. It takes in a
+// function  that returns the loaded bytes (eg. a function that loads content from disk) and returns a slice of
+// [Deprecation] structs as per the contents of the loaded bytes.
 func LoadConfig(loader loaderFunction) ([]Deprecation, error) {
 	configJSON, err := loader()
 	if err != nil {

@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+// Deprecation is a struct that holds details of an individual deprecation configuration such as the times it is for and
+// the paths it applies to. It can optionally contain multiple [Outage]'s
 type Deprecation struct {
 	Paths   []string
 	Date    string
@@ -15,11 +17,17 @@ type Deprecation struct {
 	Outages []Outage
 }
 
+// Outage is a struct covering the start and end times of individual outages
 type Outage struct {
 	Start time.Time
 	End   time.Time
 }
 
+// Router is a function that returns a middleware handler which intercepts http traffic and applies the deprecation
+// [Middleware] handler to the defined routes in the supplied [Deprecation] configurations. If a route doesn't match it
+// is passed through to the underlying handler unmodified.
+// If no [Deprecation] configurations are supplied then the underlying handler is returned instead to avoid any
+// unnecessary performance overhead.
 func Router(deprecations []Deprecation) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		if deprecations == nil {
@@ -36,6 +44,11 @@ func Router(deprecations []Deprecation) func(http.Handler) http.Handler {
 	}
 }
 
+// Middleware is a function that returns a middleware handler which intercepts requests and applies headers as per the
+// [Deprecation] config. If a configured [Outage] is in force then the handler responds with a
+// [http.StatusNotFound] (404) response, otherwise the request is forwarded on to the underlying handler instead.
+// Note: this middleware disregards the paths in the [Deprecation] config and applies to all requests it receives. If
+// the paths need to be considered, use the [Router] middleware instead of using this middleware directly.
 func Middleware(deprecation Deprecation) func(http.Handler) http.Handler {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
