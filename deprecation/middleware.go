@@ -30,7 +30,7 @@ type Outage struct {
 // unnecessary performance overhead.
 func Router(deprecations []Deprecation) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
-		if deprecations == nil {
+		if deprecations == nil || len(deprecations) == 0 {
 			return next
 		}
 		mux := http.NewServeMux()

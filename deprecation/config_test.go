@@ -16,7 +16,7 @@ func loaderFromString(configStr string) func() ([]byte, error) {
 }
 
 func TestParseConfig(t *testing.T) {
-	Convey("Given an empty config string", t, func(c C) {
+	Convey("Given an empty config string", t, func() {
 		configString := ""
 
 		Convey("LoadConfig will return nil with no errors", func() {
@@ -26,7 +26,7 @@ func TestParseConfig(t *testing.T) {
 		})
 	})
 
-	Convey("Given a config that fails to load", t, func(c C) {
+	Convey("Given a config that fails to load", t, func() {
 		loaderError := errors.New("loader error")
 		errLoader := func() ([]byte, error) {
 			return nil, loaderError
