@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -85,7 +86,10 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	// Add configurable deprecation middleware
 	depConfigFile := cfg.DeprecationConfigFile
 	if depConfigFile != "" {
-		deprecations, err := deprecation.LoadConfig(deprecation.ConfigFromFile(depConfigFile))
+		deprecations, err := deprecation.LoadConfig(func() ([]byte, error) {
+			return os.ReadFile(depConfigFile)
+		})
+
 		if err != nil {
 			log.Fatal(ctx, "could not load deprecation config", err)
 			return nil, errors.Wrap(err, "could not load deprecation config")

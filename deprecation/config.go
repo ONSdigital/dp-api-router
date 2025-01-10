@@ -1,16 +1,13 @@
 package deprecation
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"sort"
 	"strings"
 	"time"
 
-	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/pkg/errors"
 )
 
@@ -23,27 +20,23 @@ type deprecationConfig []struct {
 	Msg     string
 }
 
-type configProvider func() ([]byte, error)
+type loaderFunction func() ([]byte, error)
 
-func ConfigFromFile(filename string) func() ([]byte, error) {
-	return func() ([]byte, error) {
-		return os.ReadFile(filename)
-	}
-}
-
-func LoadConfig(cfgProvider configProvider) ([]Deprecation, error) {
-	configJSON, err := cfgProvider()
+func LoadConfig(loader loaderFunction) ([]Deprecation, error) {
+	configJSON, err := loader()
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to load deprecation config")
 	}
-	log.Info(context.Background(), "loaded deprecation config", log.Data{"deprecation_json": string(configJSON)})
+
+	if len(configJSON) == 0 {
+		return nil, nil
+	}
 
 	var depConfig deprecationConfig
 	err = json.Unmarshal(configJSON, &depConfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "invalid json in deprecation config")
 	}
-	log.Info(context.Background(), "unmarshalled deprecation config", log.Data{"deprecation_content": depConfig})
 
 	deprecations := make([]Deprecation, len(depConfig))
 	for i, config := range depConfig {
@@ -76,7 +69,6 @@ func LoadConfig(cfgProvider configProvider) ([]Deprecation, error) {
 			Sunset:  sunsetstr,
 			Outages: outages,
 		}
-		log.Info(context.Background(), "added deprecation", log.Data{"deprecation": deprecations[i]})
 	}
 
 	return deprecations, nil
@@ -126,7 +118,7 @@ func parseOutages(outagestrings []string) ([]Outage, error) {
 
 			outages = append(outages, Outage{Start: periodStart, End: periodStart.Add(periodLen)})
 		} else {
-			return nil, fmt.Errorf("expected `duration@time` in period %d", i+1)
+			return nil, fmt.Errorf("invalid outage, expected `duration@time` in period %d", i+1)
 		}
 	}
 	if len(outagestrings) > 1 {
