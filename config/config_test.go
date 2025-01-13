@@ -17,6 +17,7 @@ func TestGetReturnsDefaultValues(t *testing.T) {
 		So(configuration, ShouldResemble, &Config{
 			BindAddr:                             ":23200",
 			Version:                              "v1",
+			EnableInterceptor:                    true,
 			EnablePrivateEndpoints:               true,
 			EnableV1BetaRestriction:              false,
 			EnableObservationAPI:                 false,
