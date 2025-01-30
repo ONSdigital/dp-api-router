@@ -77,4 +77,4 @@ Notes:
    and can use `\n` (sic) instead of newlines (they will be converted to newlines before use).
    Any other value will be treated as a path to the given PEM file.
 
-3. the default is `0` which means "use library default" - recommended to change this _only in development_ (e.g. when running only one broker).
+3. the default is `0` which means "use library default" - recommended to change this _only in development_ (e.g. when running only one broker). 
