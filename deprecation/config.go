@@ -51,7 +51,7 @@ func LoadConfig(loader loaderFunction) ([]Deprecation, error) {
 		if err != nil {
 			return nil, errors.Wrap(err, "invalid date in deprecation config: "+config.Date)
 		}
-		datestr := date.Format(time.RFC1123)
+		dateUnix := fmt.Sprintf("@%d", date.Unix())
 
 		sunset, err := parseTime(config.Sunset)
 		if err != nil {
@@ -65,12 +65,12 @@ func LoadConfig(loader loaderFunction) ([]Deprecation, error) {
 		}
 
 		deprecations[i] = Deprecation{
-			Paths:   config.Paths,
-			Date:    datestr,
-			Link:    config.Link,
-			Message: config.Msg,
-			Sunset:  sunsetstr,
-			Outages: outages,
+			Paths:    config.Paths,
+			DateUnix: dateUnix,
+			Link:     config.Link,
+			Message:  config.Msg,
+			Sunset:   sunsetstr,
+			Outages:  outages,
 		}
 	}
 

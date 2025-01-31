@@ -92,17 +92,17 @@ func TestParseConfig(t *testing.T) {
                        ]`,
 				wanted: []Deprecation{
 					{
-						Paths:   []string{"/ops/", "/dataset/", "/timeseries/"},
-						Date:    "Tue, 10 Sep 2024 10:00:00 UTC",
-						Link:    "https://developer.ons.gov.uk/retirement/v0api/",
-						Message: "Some test message 123 !@£",
-						Sunset:  "Mon, 14 Oct 2024 00:00:00 UTC",
+						Paths:    []string{"/ops/", "/dataset/", "/timeseries/"},
+						DateUnix: "@1725962400", // Tue, 10 Sep 2024 10:00:00 UTC
+						Link:     "https://developer.ons.gov.uk/retirement/v0api/",
+						Message:  "Some test message 123 !@£",
+						Sunset:   "Mon, 14 Oct 2024 00:00:00 UTC",
 						Outages: []Outage{
-							Outage{
+							{
 								Start: time.Date(2024, 12, 31, 0, 0, 0, 0, time.UTC),
 								End:   time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC),
 							},
-							Outage{
+							{
 								Start: time.Date(2025, 1, 1, 10, 0, 0, 0, time.UTC),
 								End:   time.Date(2025, 1, 1, 22, 0, 0, 0, time.UTC),
 							},
@@ -147,38 +147,38 @@ func TestParseConfig(t *testing.T) {
                        ]`,
 				wanted: []Deprecation{
 					{
-						Paths:   []string{"/ops/", "/dataset/", "/timeseries/"},
-						Date:    "Tue, 10 Sep 2024 10:00:00 UTC",
-						Link:    "https://developer.ons.gov.uk/retirement/v0api/",
-						Message: "Some test message 123 !@£",
-						Sunset:  "Mon, 14 Oct 2024 00:00:00 UTC",
+						Paths:    []string{"/ops/", "/dataset/", "/timeseries/"},
+						DateUnix: "@1725962400", // Tue, 10 Sep 2024 10:00:00 UTC
+						Link:     "https://developer.ons.gov.uk/retirement/v0api/",
+						Message:  "Some test message 123 !@£",
+						Sunset:   "Mon, 14 Oct 2024 00:00:00 UTC",
 						Outages: []Outage{
-							Outage{
+							{
 								Start: time.Date(2024, 12, 31, 0, 0, 0, 0, time.UTC),
 								End:   time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC),
 							},
-							Outage{
+							{
 								Start: time.Date(2025, 1, 1, 10, 0, 0, 0, time.UTC),
 								End:   time.Date(2025, 1, 1, 22, 0, 0, 0, time.UTC),
 							},
 						},
 					},
 					{
-						Paths:   []string{"/another/path"},
-						Date:    "Mon, 02 Jan 2023 10:47:20 UTC",
-						Link:    "https://ons.gov.uk/",
-						Message: "!Some other test message 123",
-						Sunset:  "Thu, 29 Feb 2024 00:00:00 UTC",
+						Paths:    []string{"/another/path"},
+						DateUnix: "@1672656440", // Mon, 02 Jan 2023 10:47:20 UTC
+						Link:     "https://ons.gov.uk/",
+						Message:  "!Some other test message 123",
+						Sunset:   "Thu, 29 Feb 2024 00:00:00 UTC",
 						Outages: []Outage{
-							Outage{
+							{
 								Start: time.Date(2023, 2, 28, 13, 1, 2, 0, time.UTC),
 								End:   time.Date(2023, 2, 28, 13, 18, 2, 0, time.UTC),
 							},
-							Outage{
+							{
 								Start: time.Date(2024, 2, 28, 0, 0, 0, 0, time.UTC),
 								End:   time.Date(2024, 2, 28, 0, 0, 24, 0, time.UTC),
 							},
-							Outage{
+							{
 								Start: time.Date(2028, 2, 28, 13, 0, 0, 0, time.UTC),
 								End:   time.Date(2028, 2, 29, 13, 0, 0, 0, time.UTC),
 							},

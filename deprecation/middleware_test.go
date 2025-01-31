@@ -15,16 +15,16 @@ func TestRouter(t *testing.T) {
 		testResponse          = "hello world"
 		deprecatedLink        = "https://deprecated.example.com/some_link"
 		deprecatedMessage     = "some message deprecated"
-		deprecatedDeprecation = "Mon, 06 Jan 2025 01:11:28 GMT\n"
-		deprecatedSunset      = "Tue, 07 Jan 2025 07:41:11 GMT\n"
+		deprecatedDeprecation = "@1736125888" // "Mon, 06 Jan 2025 01:11:28 GMT"
+		deprecatedSunset      = "Tue, 07 Jan 2025 07:41:11 GMT"
 		outageLink            = "https://outage.example.com/some_link"
 		outageMessage         = "some message outage"
-		outageDeprecation     = "Thu, 09 Jan 2025 14:23:59 GMT\n"
-		outageSunset          = "Fri, 10 Jan 2025 19:00:02 GMT\n"
+		outageDeprecation     = "@1736432639" // "Thu, 09 Jan 2025 14:23:59 GMT"
+		outageSunset          = "Fri, 10 Jan 2025 19:00:02 GMT"
 		inactiveLink          = "https://inactive.example.com/some_link"
 		inactiveMessage       = "some message inactive"
-		inactiveDeprecation   = "Sat, 11 Jan 2025 04:10:30 GMT\n"
-		inactiveSunset        = "Sun, 12 Jan 2025 22:47:12 GMT\n"
+		inactiveDeprecation   = "@1736568630" // "Sat, 11 Jan 2025 04:10:30 GMT"
+		inactiveSunset        = "Sun, 12 Jan 2025 22:47:12 GMT"
 	)
 
 	baseHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -34,19 +34,19 @@ func TestRouter(t *testing.T) {
 	Convey("Given a deprecation Router", t, func() {
 		deprecations := []Deprecation{
 			{
-				Paths:   []string{"/deprecated"},
-				Date:    deprecatedDeprecation,
-				Link:    deprecatedLink,
-				Message: deprecatedMessage,
-				Sunset:  deprecatedSunset,
-				Outages: nil,
+				Paths:    []string{"/deprecated"},
+				DateUnix: deprecatedDeprecation,
+				Link:     deprecatedLink,
+				Message:  deprecatedMessage,
+				Sunset:   deprecatedSunset,
+				Outages:  nil,
 			},
 			{
-				Paths:   []string{"/outage"},
-				Date:    outageDeprecation,
-				Link:    outageLink,
-				Message: outageMessage,
-				Sunset:  outageSunset,
+				Paths:    []string{"/outage"},
+				DateUnix: outageDeprecation,
+				Link:     outageLink,
+				Message:  outageMessage,
+				Sunset:   outageSunset,
 				Outages: []Outage{
 					{Start: time.Now().Add(-3 * time.Hour), End: time.Now().Add(-2 * time.Hour)},
 					{Start: time.Now().Add(-time.Hour), End: time.Now().Add(time.Hour)},
@@ -54,11 +54,11 @@ func TestRouter(t *testing.T) {
 				},
 			},
 			{
-				Paths:   []string{"/inactive"},
-				Date:    inactiveDeprecation,
-				Link:    inactiveLink,
-				Message: inactiveMessage,
-				Sunset:  inactiveSunset,
+				Paths:    []string{"/inactive"},
+				DateUnix: inactiveDeprecation,
+				Link:     inactiveLink,
+				Message:  inactiveMessage,
+				Sunset:   inactiveSunset,
 				Outages: []Outage{
 					{Start: time.Now().Add(-3 * time.Hour), End: time.Now().Add(-2 * time.Hour)},
 					{Start: time.Now().Add(2 * time.Hour), End: time.Now().Add(3 * time.Hour)},

@@ -6,15 +6,15 @@ import (
 	"time"
 )
 
-// Deprecation is a struct that holds details of an individual deprecation configuration such as the times it is for and
-// the paths it applies to. It can optionally contain multiple [Outage]'s
+// Deprecation is a struct that holds pre-formatted details of an individual deprecation configuration such as the times
+// it is for and the paths it applies to. It can optionally contain multiple [Outage]'s
 type Deprecation struct {
-	Paths   []string
-	Date    string
-	Link    string
-	Message string
-	Sunset  string
-	Outages []Outage
+	Paths    []string
+	DateUnix string
+	Link     string
+	Message  string
+	Sunset   string
+	Outages  []Outage
 }
 
 // Outage is a struct covering the start and end times of individual outages
@@ -54,9 +54,8 @@ func Middleware(deprecation Deprecation) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			now := time.Now().UTC()
 
-			w.Header().Set("Deprecation", "true")
-			if deprecation.Date != "" {
-				w.Header().Set("Deprecation", deprecation.Date)
+			if deprecation.DateUnix != "" {
+				w.Header().Set("Deprecation", deprecation.DateUnix)
 			}
 
 			if deprecation.Link != "" {
