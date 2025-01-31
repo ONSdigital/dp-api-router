@@ -75,5 +75,5 @@ func (p *APIProxy) Handle(w http.ResponseWriter, r *http.Request) {
 func (p *APIProxy) LegacyHandle(w http.ResponseWriter, r *http.Request) {
 	r.URL.Path = strings.Replace(r.URL.Path, "/v1", "", 1)
 
-	middleware.BetaAPIHandler(p.enableBetaRestriction, p.proxy).ServeHTTP(w, r)
+	middleware.BetaAPIHandler(p.enableBetaRestriction, p.proxy, p.Version).ServeHTTP(w, r)
 }

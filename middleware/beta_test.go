@@ -10,11 +10,12 @@ import (
 
 var (
 	dummyHandler = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {})
+	version      = "v1"
 )
 
 func TestBetaHandler(t *testing.T) {
 	Convey("beta handler should wrap another handler", t, func() {
-		wrapped := BetaAPIHandler(true, dummyHandler)
+		wrapped := BetaAPIHandler(true, dummyHandler, version)
 		So(wrapped, ShouldHaveSameTypeAs, dummyHandler)
 	})
 
@@ -26,7 +27,7 @@ func TestBetaHandler(t *testing.T) {
 			req.Host = "api.beta"
 
 			w := httptest.NewRecorder()
-			wrapped := BetaAPIHandler(true, dummyHandler)
+			wrapped := BetaAPIHandler(true, dummyHandler, version)
 
 			wrapped.ServeHTTP(w, req)
 			So(w.Code, ShouldEqual, 200)
@@ -39,7 +40,7 @@ func TestBetaHandler(t *testing.T) {
 			req.Host = "api.not.beta"
 
 			w := httptest.NewRecorder()
-			wrapped := BetaAPIHandler(true, dummyHandler)
+			wrapped := BetaAPIHandler(true, dummyHandler, version)
 
 			wrapped.ServeHTTP(w, req)
 			So(w.Code, ShouldEqual, 404)
@@ -52,7 +53,7 @@ func TestBetaHandler(t *testing.T) {
 			req.Host = "10.201.4.85:80"
 
 			w := httptest.NewRecorder()
-			wrapped := BetaAPIHandler(true, dummyHandler)
+			wrapped := BetaAPIHandler(true, dummyHandler, version)
 
 			wrapped.ServeHTTP(w, req)
 			So(w.Code, ShouldEqual, 200)
@@ -65,7 +66,7 @@ func TestBetaHandler(t *testing.T) {
 			req.Host = "somehost:20100"
 
 			w := httptest.NewRecorder()
-			wrapped := BetaAPIHandler(true, dummyHandler)
+			wrapped := BetaAPIHandler(true, dummyHandler, version)
 
 			wrapped.ServeHTTP(w, req)
 			So(w.Code, ShouldEqual, 404)
@@ -78,7 +79,7 @@ func TestBetaHandler(t *testing.T) {
 			req.Host = "10.201.4.85"
 
 			w := httptest.NewRecorder()
-			wrapped := BetaAPIHandler(true, dummyHandler)
+			wrapped := BetaAPIHandler(true, dummyHandler, version)
 
 			wrapped.ServeHTTP(w, req)
 			So(w.Code, ShouldEqual, 200)
@@ -91,7 +92,7 @@ func TestBetaHandler(t *testing.T) {
 			req.Host = localhost
 
 			w := httptest.NewRecorder()
-			wrapped := BetaAPIHandler(true, dummyHandler)
+			wrapped := BetaAPIHandler(true, dummyHandler, version)
 
 			wrapped.ServeHTTP(w, req)
 			So(w.Code, ShouldEqual, 200)
@@ -104,7 +105,7 @@ func TestBetaHandler(t *testing.T) {
 			req.Host = "localhost:20300"
 
 			w := httptest.NewRecorder()
-			wrapped := BetaAPIHandler(true, dummyHandler)
+			wrapped := BetaAPIHandler(true, dummyHandler, version)
 
 			wrapped.ServeHTTP(w, req)
 			So(w.Code, ShouldEqual, 200)
@@ -119,7 +120,7 @@ func TestBetaHandler(t *testing.T) {
 			req.Host = "api.not.beta"
 
 			w := httptest.NewRecorder()
-			wrapped := BetaAPIHandler(false, dummyHandler)
+			wrapped := BetaAPIHandler(false, dummyHandler, version)
 
 			wrapped.ServeHTTP(w, req)
 			So(w.Code, ShouldEqual, 200)

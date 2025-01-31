@@ -13,7 +13,7 @@ const (
 )
 
 // BetaAPIHandler will return a 404 where enforceBetaRoutes is true and the request is aimed at a non beta domain
-func BetaAPIHandler(enableBetaRestriction bool, h http.Handler) http.Handler {
+func BetaAPIHandler(enableBetaRestriction bool, h http.Handler, version string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if enableBetaRestriction && !isInternalTraffic(r) && !isBetaDomain(r) {
 			log.Warn(r.Context(), "beta endpoint requested via a non beta domain, returning 404",
@@ -21,7 +21,7 @@ func BetaAPIHandler(enableBetaRestriction bool, h http.Handler) http.Handler {
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
-		r.Header.Add("X-Forwarded-Path-Prefix", "/v1")
+		r.Header.Add("X-Forwarded-Path-Prefix", version)
 		h.ServeHTTP(w, r)
 	})
 }
