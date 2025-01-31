@@ -14,10 +14,10 @@ import (
 type deprecationConfig []struct {
 	Paths   []string `json:"paths"`
 	Date    string   `json:"date"`
-	Sunset  string
-	Outages []string
-	Link    string
-	Msg     string
+	Sunset  string   `json:"sunset"`
+	Outages []string `json:"outages"`
+	Link    string   `json:"link"`
+	Msg     string   `json:"msg"`
 }
 
 type loaderFunction func() ([]byte, error)

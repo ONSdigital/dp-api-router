@@ -71,14 +71,14 @@ service need to be updated to point to a new file location or not.
 | HTTP_WRITE_TIMEOUT                       | dp-net default           | How long the dispatcher waits for us to write to it (`time.Duration` format)                   |
 | OTEL_EXPORTER_OTLP_ENDPOINT              | localhost:4317           | Host and port for the OpenTelemetry endpoint                                                   |
 | OTEL_SERVICE_NAME                        | dp-api-router            | Service name to report to telemetry tools                                                      |
-| DEPRECATION_CONFIG_FILE                  | _unset_                  | Optional path to a separate deprecations config file loaded at startup (see below for details) |
+| DEPRECATION_CONFIG_FILE_PATH             | _unset_                  | Optional path to a separate deprecations config file loaded at startup (see below for details) |
 
 ### Deprecation configuration
 
-A separate configuration file can be supplied via environment variable `DEPRECATION_CONFIG_FILE` containing definitions
-of deprecated paths. If this environment variable is unset or is an empty string, then the deprecation middleware is
-disabled. Otherwise, these paths will then be handled by middleware that adds deprecation headers as well as returning
-a custom error message and NOT_FOUND(404) status during defined outage periods.
+A separate configuration file can be supplied via environment variable `DEPRECATION_CONFIG_FILE_PATH` containing
+definitions of deprecated paths. If this environment variable is unset or is an empty string, then the deprecation 
+middleware is disabled. Otherwise, these paths will then be handled by middleware that adds deprecation headers as well
+as returning a custom error message and NOT_FOUND(404) status during defined outage periods.
 
 The format of the configuration file is as follows…
 

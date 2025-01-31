@@ -84,12 +84,11 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	}
 
 	// Add configurable deprecation middleware
-	depConfigFile := cfg.DeprecationConfigFile
-	if depConfigFile != "" {
+	depConfigFilePath := cfg.DeprecationConfigFilePath
+	if depConfigFilePath != "" {
 		deprecations, err := deprecation.LoadConfig(func() ([]byte, error) {
-			return os.ReadFile(depConfigFile)
+			return os.ReadFile(depConfigFilePath)
 		})
-
 		if err != nil {
 			log.Fatal(ctx, "could not load deprecation config", err)
 			return nil, errors.Wrap(err, "could not load deprecation config")

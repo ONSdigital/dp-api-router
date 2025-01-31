@@ -81,7 +81,7 @@ type Config struct {
 	OTServiceName                        string         `envconfig:"OTEL_SERVICE_NAME"`
 	OTBatchTimeout                       time.Duration  `envconfig:"OTEL_BATCH_TIMEOUT"`
 	OtelEnabled                          bool           `envconfig:"OTEL_ENABLED"`
-	DeprecationConfigFile                string         `envconfig:"DEPRECATION_CONFIG_FILE"`
+	DeprecationConfigFilePath            string         `envconfig:"DEPRECATION_CONFIG_FILE_PATH"`
 	Auth                                 authorisation.Config
 }
 
@@ -159,7 +159,7 @@ func Get() (*Config, error) {
 		OTExporterOTLPEndpoint:               "localhost:4317",
 		OTServiceName:                        "dp-api-router",
 		OTBatchTimeout:                       time.Second * 5,
-		DeprecationConfigFile:                "",
+		DeprecationConfigFilePath:            "",
 		OtelEnabled:                          false,
 	}
 

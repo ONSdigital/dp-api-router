@@ -79,7 +79,7 @@ func TestGetReturnsDefaultValues(t *testing.T) {
 			OTExporterOTLPEndpoint:               "localhost:4317",
 			OTServiceName:                        "dp-api-router",
 			OTBatchTimeout:                       5 * time.Second,
-			DeprecationConfigFile:                "",
+			DeprecationConfigFilePath:            "",
 		})
 	})
 }
