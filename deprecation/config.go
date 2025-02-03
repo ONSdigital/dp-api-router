@@ -59,6 +59,10 @@ func LoadConfig(loader loaderFunction) ([]Deprecation, error) {
 		}
 		sunsetstr := sunset.Format(time.RFC1123)
 
+		if date.After(sunset) {
+			return nil, errors.New("deprecation date must not be later than sunset")
+		}
+
 		outages, err := parseOutages(config.Outages)
 		if err != nil {
 			return nil, errors.Wrap(err, "invalid outages in deprecation config")

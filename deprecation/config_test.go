@@ -313,6 +313,28 @@ func TestParseConfig(t *testing.T) {
 				wanted:    nil,
 				wantedErr: "invalid outages in deprecation config: invalid outage, expected `duration@time` in period 1",
 			},
+			{
+				name: "With a sunset date before the deprecation date",
+				json: `[
+                         {
+                           "paths": [
+                             "/ops/",
+                             "/dataset/",
+                             "/timeseries/"
+                           ],
+                           "date": "2024-09-10T00:00:01Z",
+                           "sunset": "2024-09-10",
+                           "outages": [
+                             "24h@2024-12-31",
+                             "12h@2025-01-01T10:00:00Z"
+                           ],
+                           "link": "https://developer.ons.gov.uk/retirement/v0api/",
+                           "msg": "Some test message 123 !@£"
+                         }
+                       ]`,
+				wanted:    nil,
+				wantedErr: "deprecation date must not be later than sunset",
+			},
 		}
 
 		for _, tc := range tcs {
