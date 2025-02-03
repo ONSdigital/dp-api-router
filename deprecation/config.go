@@ -112,22 +112,36 @@ func parseOutages(outagestrings []string) ([]Outage, error) {
 	// convert OutageStrings to Outages
 	var err error
 	for i, outageStr := range outagestrings {
-		if outagePairStr := strings.Split(outageStr, "@"); len(outagePairStr) == 2 {
-			var periodLen time.Duration
-			if periodLen, err = time.ParseDuration(outagePairStr[0]); err != nil {
+		outagePairStr := strings.Split(outageStr, "@")
+
+		var duration, timeStr string
+		switch len(outagePairStr) {
+		case 1:
+			timeStr = outagePairStr[0]
+		case 2:
+			duration = outagePairStr[0]
+			timeStr = outagePairStr[1]
+		default:
+			return nil, fmt.Errorf("invalid outage, expected `[duration@]time` in period %d", i+1)
+		}
+
+		var periodStart time.Time
+		if periodStart, err = parseTime(timeStr); err != nil {
+			return nil, fmt.Errorf("cannot parse `...@time` in period %d: %w", i+1, err)
+		}
+
+		if duration == "" {
+			outages = append(outages, Outage{Start: periodStart, End: nil})
+		} else {
+			periodLen, err := time.ParseDuration(duration)
+			if err != nil {
 				return nil, fmt.Errorf("cannot parse `duration@...` in period %d: %w", i+1, err)
 			}
-
-			var periodStart time.Time
-			if periodStart, err = parseTime(outagePairStr[1]); err != nil {
-				return nil, fmt.Errorf("cannot parse `...@time` in period %d: %w", i+1, err)
-			}
-
-			outages = append(outages, Outage{Start: periodStart, End: periodStart.Add(periodLen)})
-		} else {
-			return nil, fmt.Errorf("invalid outage, expected `duration@time` in period %d", i+1)
+			periodEnd := periodStart.Add(periodLen)
+			outages = append(outages, Outage{Start: periodStart, End: &periodEnd})
 		}
 	}
+
 	if len(outagestrings) > 1 {
 		sort.Slice(outages, func(i, j int) bool {
 			return outages[i].Start.Before(outages[j].Start)

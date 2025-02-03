@@ -93,7 +93,8 @@ The format of the configuration file is as follows…
     "sunset": "2024-10-14",
     "outages": [
       "24h@2024-12-31",
-      "12h@2025-01-01T10:00:00Z"
+      "12h@2025-01-01T10:00:00Z",
+      "2025-02-03 16:00:00"
     ],
     "link": "https://developer.ons.gov.uk/retirement/v0api/",
     "msg": "This API is being decommissioned …"
@@ -107,9 +108,10 @@ Where the fields are defined as…
   to [the http.ServeMux patterns](https://pkg.go.dev/net/http#hdr-Patterns-ServeMux)
 - `date` : the date the paths became deprecated
 - `sunset` : the start date of the sunset period
-- `outages` : a list of durations and dates/times for periods where matching requests should be rejected as
+- `outages` : a list of durations (optional) and dates/times for periods where matching requests should be rejected as
   NOT_FOUND(44). Note, valid time units for the duration are "ns", "us" (or "µs"), "ms", "s", "m", "h" (as
-  per [Go's `time.ParseDuration` function](https://pkg.go.dev/time#ParseDuration))
+  per [Go's `time.ParseDuration` function](https://pkg.go.dev/time#ParseDuration)). If the duration is absent, the outage will apply forever from the
+  specified time onwards.
 - `link` : the URL to be returned in the `sunset` relational link header
 - `msg` : the message to be returned in responses to matching requests during the outage periods.
 

@@ -100,11 +100,11 @@ func TestParseConfig(t *testing.T) {
 						Outages: []Outage{
 							{
 								Start: time.Date(2024, 12, 31, 0, 0, 0, 0, time.UTC),
-								End:   time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC),
+								End:   anyToPointer(time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)),
 							},
 							{
 								Start: time.Date(2025, 1, 1, 10, 0, 0, 0, time.UTC),
-								End:   time.Date(2025, 1, 1, 22, 0, 0, 0, time.UTC),
+								End:   anyToPointer(time.Date(2025, 1, 1, 22, 0, 0, 0, time.UTC)),
 							},
 						},
 					},
@@ -155,11 +155,11 @@ func TestParseConfig(t *testing.T) {
 						Outages: []Outage{
 							{
 								Start: time.Date(2024, 12, 31, 0, 0, 0, 0, time.UTC),
-								End:   time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC),
+								End:   anyToPointer(time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)),
 							},
 							{
 								Start: time.Date(2025, 1, 1, 10, 0, 0, 0, time.UTC),
-								End:   time.Date(2025, 1, 1, 22, 0, 0, 0, time.UTC),
+								End:   anyToPointer(time.Date(2025, 1, 1, 22, 0, 0, 0, time.UTC)),
 							},
 						},
 					},
@@ -172,15 +172,15 @@ func TestParseConfig(t *testing.T) {
 						Outages: []Outage{
 							{
 								Start: time.Date(2023, 2, 28, 13, 1, 2, 0, time.UTC),
-								End:   time.Date(2023, 2, 28, 13, 18, 2, 0, time.UTC),
+								End:   anyToPointer(time.Date(2023, 2, 28, 13, 18, 2, 0, time.UTC)),
 							},
 							{
 								Start: time.Date(2024, 2, 28, 0, 0, 0, 0, time.UTC),
-								End:   time.Date(2024, 2, 28, 0, 0, 24, 0, time.UTC),
+								End:   anyToPointer(time.Date(2024, 2, 28, 0, 0, 24, 0, time.UTC)),
 							},
 							{
 								Start: time.Date(2028, 2, 28, 13, 0, 0, 0, time.UTC),
-								End:   time.Date(2028, 2, 29, 13, 0, 0, 0, time.UTC),
+								End:   anyToPointer(time.Date(2028, 2, 29, 13, 0, 0, 0, time.UTC)),
 							},
 						},
 					},
@@ -311,7 +311,7 @@ func TestParseConfig(t *testing.T) {
                          }
                        ]`,
 				wanted:    nil,
-				wantedErr: "invalid outages in deprecation config: invalid outage, expected `duration@time` in period 1",
+				wantedErr: "invalid outages in deprecation config: cannot parse `...@time` in period 1: invalid time format",
 			},
 			{
 				name: "With a sunset date before the deprecation date",
@@ -334,6 +334,46 @@ func TestParseConfig(t *testing.T) {
                        ]`,
 				wanted:    nil,
 				wantedErr: "deprecation date must not be later than sunset",
+			},
+			{
+				name: "With a single deprecation with an unbounded outage",
+				json: `[
+                         {
+                           "paths": [
+                             "/ops/",
+                             "/dataset/",
+                             "/timeseries/"
+                           ],
+                           "date": "2024-09-10T10:00:00Z",
+                           "sunset": "2024-10-14",
+                           "outages": [
+                             "24h@2024-12-31",
+                             "2025-01-01T10:00:00Z"
+                           ],
+                           "link": "https://developer.ons.gov.uk/retirement/v0api/",
+                           "msg": "Some test message 123 !@£"
+                         }
+                       ]`,
+				wanted: []Deprecation{
+					{
+						Paths:    []string{"/ops/", "/dataset/", "/timeseries/"},
+						DateUnix: "@1725962400", // Tue, 10 Sep 2024 10:00:00 UTC
+						Link:     "https://developer.ons.gov.uk/retirement/v0api/",
+						Message:  "Some test message 123 !@£",
+						Sunset:   "Mon, 14 Oct 2024 00:00:00 UTC",
+						Outages: []Outage{
+							{
+								Start: time.Date(2024, 12, 31, 0, 0, 0, 0, time.UTC),
+								End:   anyToPointer(time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)),
+							},
+							{
+								Start: time.Date(2025, 1, 1, 10, 0, 0, 0, time.UTC),
+								End:   nil,
+							},
+						},
+					},
+				},
+				wantedErr: "",
 			},
 		}
 

@@ -20,7 +20,7 @@ type Deprecation struct {
 // Outage is a struct covering the start and end times of individual outages
 type Outage struct {
 	Start time.Time
-	End   time.Time
+	End   *time.Time
 }
 
 // Router is a function that returns a middleware handler which intercepts http traffic and applies the deprecation
@@ -69,7 +69,7 @@ func Middleware(deprecation Deprecation) func(http.Handler) http.Handler {
 			// check if time of request is during a deprecation-outage
 			for _, outage := range deprecation.Outages {
 				if outage.Start.Before(now) {
-					if outage.End.After(now) {
+					if outage.End == nil || outage.End.After(now) {
 						http.Error(w, deprecation.Message, http.StatusNotFound)
 						return
 					}
