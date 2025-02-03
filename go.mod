@@ -15,6 +15,7 @@ require (
 	github.com/ONSdigital/dp-otel-go v0.0.8
 	github.com/ONSdigital/go-ns v0.0.0-20241030091535-cc1b11756418
 	github.com/ONSdigital/log.go/v2 v2.4.3
+	github.com/golang/glog v1.2.4
 	github.com/gorilla/handlers v1.5.2
 	github.com/gorilla/mux v1.8.1
 	github.com/justinas/alice v1.2.0
@@ -39,7 +40,6 @@ require (
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/golang-jwt/jwt/v4 v4.5.1 // indirect
-	github.com/golang/glog v1.2.4 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect

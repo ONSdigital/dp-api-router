@@ -12,6 +12,7 @@ import (
 type Config struct {
 	BindAddr                             string         `envconfig:"BIND_ADDR"`
 	Version                              string         `envconfig:"VERSION"`
+	EnableInterceptor                    bool           `envconfig:"ENABLE_INTERCEPTOR"`
 	EnableV1BetaRestriction              bool           `envconfig:"ENABLE_V1_BETA_RESTRICTION"`
 	EnablePrivateEndpoints               bool           `envconfig:"ENABLE_PRIVATE_ENDPOINTS"`
 	EnableObservationAPI                 bool           `envconfig:"ENABLE_OBSERVATION_API"`
@@ -96,6 +97,7 @@ func Get() (*Config, error) {
 	cfg = &Config{
 		BindAddr:                             ":23200",
 		Version:                              "v1",
+		EnableInterceptor:                    true,
 		EnablePrivateEndpoints:               true,
 		EnableV1BetaRestriction:              false,
 		EnableObservationAPI:                 false,

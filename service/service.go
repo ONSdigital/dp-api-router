@@ -166,7 +166,7 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 	addTransitionalHandler(router, topic, "/navigation")
 
 	codeList := proxy.NewAPIProxyWithOptions(ctx, cfg.CodelistAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.EnableV1BetaRestriction, proxy.Options{Interceptor: true})
-	dataset := proxy.NewAPIProxyWithOptions(ctx, cfg.DatasetAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.EnableV1BetaRestriction, proxy.Options{Interceptor: true})
+	dataset := proxy.NewAPIProxyWithOptions(ctx, cfg.DatasetAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.EnableV1BetaRestriction, proxy.Options{Interceptor: cfg.EnableInterceptor})
 	filter := proxy.NewAPIProxyWithOptions(ctx, cfg.FilterAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.EnableV1BetaRestriction, proxy.Options{Interceptor: true})
 	filterFlex := proxy.NewAPIProxy(ctx, cfg.FilterFlexAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.EnableV1BetaRestriction)
 	filterFlexIntercepted := proxy.NewAPIProxyWithOptions(ctx, cfg.FilterFlexAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.EnableV1BetaRestriction, proxy.Options{Interceptor: true})
