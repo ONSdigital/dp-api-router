@@ -93,6 +93,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 			log.Fatal(ctx, "could not load deprecation config", err)
 			return nil, errors.Wrap(err, "could not load deprecation config")
 		}
+		log.Info(ctx, "loaded deprecation config", log.Data{"deprecations": deprecations})
 		rootHandler = deprecation.Router(deprecations)(rootHandler)
 	}
 
