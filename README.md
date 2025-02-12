@@ -3,11 +3,6 @@
 A service which routes API requests to the correct services. In the future this may add additional header information
 which will be used by the services.
 
-## JSON-LD
-
-This service is responsible for serving a JSON-LD `@context` field on configured API routes. In order to update the
-JSON-LD files, follow [this guide](JSONLD.md). Once the files have been updated, consider if the secrets for this
-service need to be updated to point to a new file location or not.
 
 ## Configuration
 
