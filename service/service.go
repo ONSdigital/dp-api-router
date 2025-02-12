@@ -258,13 +258,6 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 		}
 	}
 
-	// Legacy API
-	poc := proxy.NewAPIProxy(ctx, cfg.APIPocURL, "", cfg.EnvironmentHost, false)
-	addLegacyHandler(router, poc, "/ops")
-	addLegacyHandler(router, poc, "/dataset")
-	addLegacyHandler(router, poc, "/timeseries")
-	addLegacyHandler(router, poc, "/search")
-
 	zebedee := proxy.NewAPIProxy(ctx, cfg.ZebedeeURL, cfg.Version, cfg.EnvironmentHost, false)
 	router.NotFoundHandler = http.HandlerFunc(zebedee.LegacyHandle)
 
@@ -281,11 +274,6 @@ func addVersionedHandlers(router *mux.Router, apiProxy *proxy.APIProxy, versions
 func addTransitionalHandler(router *mux.Router, apiProxy *proxy.APIProxy, path string) {
 	// Proxy any request after the path given to the target address
 	router.HandleFunc(fmt.Sprintf("/%s"+path+"{rest:$|/.*}", apiProxy.Version), apiProxy.LegacyHandle)
-}
-
-func addLegacyHandler(router *mux.Router, apiProxy *proxy.APIProxy, path string) {
-	// Proxy any request after the path given to the target address
-	router.HandleFunc(path+"{rest:.*}", apiProxy.LegacyHandle)
 }
 
 // Close gracefully shuts the service down in the required order, with timeout

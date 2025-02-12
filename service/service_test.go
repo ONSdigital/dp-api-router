@@ -636,49 +636,6 @@ func TestRouterPrivateAPIs(t *testing.T) {
 	})
 }
 
-func TestRouterLegacyAPIs(t *testing.T) {
-	Convey("Given an api router and proxies with all legacy endpoints available", t, func() {
-		cfg, err := config.Get()
-		So(err, ShouldBeNil)
-
-		apiPocURL, err := url.Parse(cfg.APIPocURL)
-		So(err, ShouldBeNil)
-
-		expectedLegacyURLs := map[string]*url.URL{
-			"/ops":        apiPocURL,
-			"/dataset":    apiPocURL,
-			"/timeseries": apiPocURL,
-			"/search":     apiPocURL,
-		}
-
-		resetProxyMocksWithExpectations(expectedLegacyURLs)
-
-		Convey("An un-versioned request to an ops path is proxied to pocAPIURL", func() {
-			w := createRouterTest(cfg, "http://localhost:23200/ops")
-			So(w.Code, ShouldEqual, http.StatusOK)
-			verifyProxied("/ops", apiPocURL)
-		})
-
-		Convey("An un-versioned request to a dataset path is proxied to pocAPIURL", func() {
-			w := createRouterTest(cfg, "http://localhost:23200/dataset")
-			So(w.Code, ShouldEqual, http.StatusOK)
-			verifyProxied("/dataset", apiPocURL)
-		})
-
-		Convey("An un-versioned request to a timeseries path is proxied to pocAPIURL", func() {
-			w := createRouterTest(cfg, "http://localhost:23200/timeseries")
-			So(w.Code, ShouldEqual, http.StatusOK)
-			verifyProxied("/timeseries", apiPocURL)
-		})
-
-		Convey("An un-versioned request to a search path is proxied to pocAPIURL", func() {
-			w := createRouterTest(cfg, "http://localhost:23200/search")
-			So(w.Code, ShouldEqual, http.StatusOK)
-			verifyProxied("/search", apiPocURL)
-		})
-	})
-}
-
 func assertOnlyThisURLIsCalled(expectedURL *url.URL) {
 	for urlToCheck, pxy := range registeredProxies {
 		if urlToCheck == *expectedURL {
