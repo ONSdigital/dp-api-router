@@ -39,7 +39,6 @@ type Config struct {
 	PermissionsAPIURL                    string         `envconfig:"PERMISSIONS_API_URL"`
 	PermissionsAPIVersions               []string       `envconfig:"PERMISSIONS_API_VERSIONS"`
 	EnvironmentHost                      string         `envconfig:"ENV_HOST"`
-	APIPocURL                            string         `envconfig:"API_POC_URL"`
 	GracefulShutdown                     time.Duration  `envconfig:"SHUTDOWN_TIMEOUT"`
 	AllowedMethods                       []string       `envconfig:"ALLOWED_METHODS"`
 	AllowedHeaders                       []string       `envconfig:"ALLOWED_HEADERS"`
@@ -123,7 +122,6 @@ func Get() (*Config, error) {
 		IdentityAPIVersions:                  []string{"v1"},
 		PermissionsAPIURL:                    "http://localhost:25400",
 		PermissionsAPIVersions:               []string{"v1"},
-		APIPocURL:                            "http://localhost:3000",
 		EnvironmentHost:                      "http://localhost:23200",
 		GracefulShutdown:                     5 * time.Second,
 		HealthCheckInterval:                  30 * time.Second,
