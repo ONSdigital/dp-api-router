@@ -158,7 +158,7 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 
 	// Public APIs
 	if cfg.EnableObservationAPI {
-		observation := proxy.NewAPIProxyWithOptions(ctx, cfg.ObservationAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.EnableV1BetaRestriction, proxy.Options{Interceptor: cfg.EnableInterceptor})
+		observation := proxy.NewAPIProxyWithOptions(ctx, cfg.ObservationAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.EnableV1BetaRestriction, proxy.Options{Interceptor: true})
 		addTransitionalHandler(router, observation, "/datasets/{dataset_id}/editions/{edition}/versions/{version}/observations")
 	}
 
