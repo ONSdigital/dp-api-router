@@ -21,6 +21,7 @@ which will be used by the services.
 | ENABLE_CANTABULAR_METADATA_EXTRACTOR_API | false                    | Flag to enable routing to the cantabular metadata extractor API                                |
 | ENABLE_ZEBEDEE_AUDIT                     | false                    |                                                                                                |
 | ENABLE_NLP_SEARCH_APIS                   | false                    | Flag to enable routing to the NLP search APIs                                                  |
+| ENABLE_INTERCEPTOR                       | true                     | Flag to enable interceptor which rewrites URLs                                                 |
 | CONTEXT_URL                              | ""                       | A URL to the JSON-LD context file describing the APIs                                          |
 | IMPORT_API_URL                           | "http://localhost:21800" | A URL to the import api                                                                        |
 | DATASET_API_URL                          | "http://localhost:22000" | A URL to the dataset api                                                                       |
@@ -122,3 +123,9 @@ Notes:
 
 3. the default is `0` which means "use library default" - recommended to change this _only in development_ (e.g. when
    running only one broker).
+
+### URL Rewriting
+
+Most data dissemination APIs currently have an anti-pattern whereby the APIs store fully qualified, internal URLs and then the API router parses the response bodies it is proxying to find any URLs then applies rewriting rules to them. This behaviour has major performance implications for API response times and more importantly for the resource usage of the API router. This issue has resulted in a number of outages due to the API router being overwhelmed by traffic and running out of memory due to the URL rewriting.
+
+A fix has been implemented and we have moved the rewriting from the router to the individual services. This rewriting is controlled by the `ENABLE_INTERCEPTOR` feature flag. 
