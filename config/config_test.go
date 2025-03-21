@@ -58,7 +58,6 @@ func TestGetReturnsDefaultValues(t *testing.T) {
 			EnableSessionsAPI:                    false,
 			TopicAPIURL:                          "http://localhost:25300",
 			FeedbackAPIURL:                       "http://localhost:28600",
-			EnableFeedbackAPI:                    false,
 			FeedbackAPIVersions:                  []string{"v1"},
 			PopulationTypesAPIURL:                "http://localhost:27300",
 			EnablePopulationTypesAPI:             false,

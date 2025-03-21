@@ -175,15 +175,14 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 	search := proxy.NewAPIProxy(ctx, cfg.SearchAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.EnableV1BetaRestriction)
 	dimensionSearch := proxy.NewAPIProxyWithOptions(ctx, cfg.DimensionSearchAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.EnableV1BetaRestriction, proxy.Options{Interceptor: cfg.EnableInterceptor})
 	image := proxy.NewAPIProxyWithOptions(ctx, cfg.ImageAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.EnableV1BetaRestriction, proxy.Options{Interceptor: true})
+	feedback := proxy.NewAPIProxy(ctx, cfg.FeedbackAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.EnableV1BetaRestriction)
 
 	if cfg.EnableReleaseCalendarAPI {
 		releaseCalendar := proxy.NewAPIProxy(ctx, cfg.ReleaseCalendarAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.EnableV1BetaRestriction)
 		addVersionedHandlers(router, releaseCalendar, cfg.ReleaseCalendarAPIVersions, "/releases")
 	}
-	if cfg.EnableFeedbackAPI {
-		feedback := proxy.NewAPIProxy(ctx, cfg.FeedbackAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.EnableV1BetaRestriction)
-		addVersionedHandlers(router, feedback, cfg.FeedbackAPIVersions, "/feedback")
-	}
+
+	addTransitionalHandler(router, feedback, "/feedback")
 
 	addTransitionalHandler(router, filterFlexIntercepted, "/datasets/{dataset_id}/editions/{edition}/versions/{version}/json")
 	addTransitionalHandler(router, filterFlexIntercepted, "/datasets/{dataset_id}/editions/{edition}/versions/{version}/census-observations")
