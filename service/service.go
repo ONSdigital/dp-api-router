@@ -256,6 +256,12 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 			cantMetadataExtractorAPIProxy := proxy.NewAPIProxy(ctx, cfg.CantabularMetadataExtractorAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.EnableV1BetaRestriction)
 			addTransitionalHandler(router, cantMetadataExtractorAPIProxy, "/cantabular-metadata")
 		}
+
+		// Feature flag for Redirect API
+		if cfg.EnableRedirectAPI {
+			redirect := proxy.NewAPIProxy(ctx, cfg.RedirectAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.EnableV1BetaRestriction)
+			addTransitionalHandler(router, redirect, "/redirects")
+		}
 	}
 
 	zebedee := proxy.NewAPIProxy(ctx, cfg.ZebedeeURL, cfg.Version, cfg.EnvironmentHost, false)

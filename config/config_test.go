@@ -75,6 +75,7 @@ func TestGetReturnsDefaultValues(t *testing.T) {
 			CategoryAPIVersions:                  []string{"v1"},
 			BerlinAPIURL:                         "http://localhost:28900",
 			BerlinAPIVersions:                    []string{"v1"},
+			RedirectAPIURL:                       "http://localhost:29900",
 			HTTPWriteTimeout:                     nil,
 			OTExporterOTLPEndpoint:               "localhost:4317",
 			OTServiceName:                        "dp-api-router",

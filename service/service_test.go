@@ -422,6 +422,7 @@ func TestRouterPrivateAPIs(t *testing.T) {
 		permissionsAPIURL, _ := url.Parse(cfg.PermissionsAPIURL)
 		zebedeeURL, _ := url.Parse(cfg.ZebedeeURL)
 		cantabularMetadataExtractorAPIURL, _ := url.Parse(cfg.CantabularMetadataExtractorAPIURL)
+		redirectAPIURL, _ := url.Parse(cfg.RedirectAPIURL)
 
 		expectedPrivateURLs := map[string]*url.URL{
 			"/upload":              uploadServiceAPIURL,
@@ -429,6 +430,7 @@ func TestRouterPrivateAPIs(t *testing.T) {
 			"/jobs":                importAPIURL,
 			"/instances":           datasetAPIURL,
 			"/cantabular-metadata": cantabularMetadataExtractorAPIURL,
+			"/redirects":           redirectAPIURL,
 		}
 		for _, version := range cfg.IdentityAPIVersions {
 			expectedPrivateURLs[fmt.Sprintf("/%s/tokens", version)] = identityAPIURL
@@ -590,6 +592,36 @@ func TestRouterPrivateAPIs(t *testing.T) {
 
 				Convey("A request to a cantabular-metadata subpath is not proxied", func() {
 					createRouterTest(cfg, "http://localhost:23200/v1/cantabular-metadata/subpath")
+					assertOnlyThisURLIsCalled(zebedeeURL)
+				})
+			})
+
+			Convey("When the redirect api feature flag is enabled", func() {
+				cfg.EnableRedirectAPI = true
+
+				Convey("Then a request to the redirects path is proxied to the redirectAPIURL", func() {
+					w := createRouterTest(cfg, "http://localhost:23200/v1/redirects")
+					So(w.Code, ShouldEqual, http.StatusOK)
+					verifyProxied("/redirects", redirectAPIURL)
+				})
+
+				Convey("Then a request to the redirects subpath is proxied to the redirectAPIURL", func() {
+					w := createRouterTest(cfg, "http://localhost:23200/v1/redirects/subpath")
+					So(w.Code, ShouldEqual, http.StatusOK)
+					verifyProxied("/redirects/subpath", redirectAPIURL)
+				})
+			})
+
+			Convey("When the redirect api feature flag is disabled", func() {
+				cfg.EnableRedirectAPI = false
+
+				Convey("Then a request to the redirects path is proxied to Zebedee", func() {
+					createRouterTest(cfg, "http://localhost:23200/v1/redirects")
+					assertOnlyThisURLIsCalled(zebedeeURL)
+				})
+
+				Convey("Then a request to the redirects subpath is proxied to Zebedee", func() {
+					createRouterTest(cfg, "http://localhost:23200/v1/redirects/subpath")
 					assertOnlyThisURLIsCalled(zebedeeURL)
 				})
 			})
