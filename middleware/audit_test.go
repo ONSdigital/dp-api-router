@@ -25,8 +25,8 @@ import (
 
 	kafka "github.com/ONSdigital/dp-kafka/v2"
 	"github.com/ONSdigital/dp-kafka/v2/kafkatest"
-	dphttp "github.com/ONSdigital/dp-net/v2/http"
-	dprequest "github.com/ONSdigital/dp-net/v2/request"
+	dphttp "github.com/ONSdigital/dp-net/v3/http"
+	dprequest "github.com/ONSdigital/dp-net/v3/request"
 
 	. "github.com/smartystreets/goconvey/convey"
 )

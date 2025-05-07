@@ -7,11 +7,11 @@ exclude github.com/hashicorp/consul/api v1.1.0
 
 require (
 	github.com/ONSdigital/dp-api-clients-go/v2 v2.266.0
-	github.com/ONSdigital/dp-authorisation/v2 v2.31.2
+	github.com/ONSdigital/dp-authorisation/v2 v2.32.2
 	github.com/ONSdigital/dp-healthcheck v1.6.4
 	github.com/ONSdigital/dp-kafka/v2 v2.8.0
 	github.com/ONSdigital/dp-kafka/v3 v3.10.0
-	github.com/ONSdigital/dp-net/v2 v2.12.0
+	github.com/ONSdigital/dp-net/v3 v3.3.0
 	github.com/ONSdigital/dp-otel-go v0.0.8
 	github.com/ONSdigital/go-ns v0.0.0-20241030091535-cc1b11756418
 	github.com/ONSdigital/log.go/v2 v2.4.5
@@ -27,8 +27,8 @@ require (
 )
 
 require (
-	github.com/ONSdigital/dp-net/v3 v3.3.0 // indirect
-	github.com/ONSdigital/dp-permissions-api v0.24.0 // indirect
+	github.com/ONSdigital/dp-net/v2 v2.22.0 // indirect
+	github.com/ONSdigital/dp-permissions-api v0.27.0 // indirect
 	github.com/Shopify/sarama v1.38.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
@@ -55,7 +55,7 @@ require (
 	github.com/jcmturner/gokrb5/v8 v8.4.4 // indirect
 	github.com/jcmturner/rpc/v2 v2.0.3 // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
-	github.com/klauspost/compress v1.17.9 // indirect
+	github.com/klauspost/compress v1.17.11 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/pierrec/lz4/v4 v4.1.21 // indirect

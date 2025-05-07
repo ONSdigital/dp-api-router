@@ -18,8 +18,8 @@ import (
 	clientsidentity "github.com/ONSdigital/dp-api-clients-go/v2/identity"
 	"github.com/ONSdigital/dp-api-router/event"
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
-	dphttp "github.com/ONSdigital/dp-net/v2/http"
-	dprequest "github.com/ONSdigital/dp-net/v2/request"
+	dphttp "github.com/ONSdigital/dp-net/v3/http"
+	dprequest "github.com/ONSdigital/dp-net/v3/request"
 	"github.com/ONSdigital/log.go/v2/log"
 )
 

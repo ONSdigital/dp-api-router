@@ -19,7 +19,7 @@ import (
 	"github.com/ONSdigital/dp-api-router/proxy"
 	"github.com/ONSdigital/dp-api-router/schema"
 	kafka "github.com/ONSdigital/dp-kafka/v3"
-	dphttp "github.com/ONSdigital/dp-net/v2/http"
+	dphttp "github.com/ONSdigital/dp-net/v3/http"
 	"github.com/ONSdigital/log.go/v2/log"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gorilla/mux/otelmux"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
