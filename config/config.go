@@ -55,8 +55,6 @@ type Config struct {
 	KafkaMaxBytes                        int            `envconfig:"KAFKA_MAX_BYTES"`
 	KafkaMinHealthyBrokers               int            `envconfig:"KAFKA_MIN_HEALTHY_BROKERS"`
 	AuditTopic                           string         `envconfig:"AUDIT_TOPIC"`
-	SessionsAPIURL                       string         `envconfig:"SESSIONS_API_URL"`
-	EnableSessionsAPI                    bool           `envconfig:"ENABLE_SESSIONS_API"`
 	TopicAPIURL                          string         `envconfig:"TOPIC_API_URL"`
 	EnableFeedbackAPI                    bool           `envconfig:"ENABLE_FEEDBACK_API"`
 	FeedbackAPIURL                       string         `envconfig:"FEEDBACK_API_URL"`
@@ -136,8 +134,6 @@ func Get() (*Config, error) {
 		KafkaMaxBytes:                        2000000,
 		KafkaMinHealthyBrokers:               0,
 		AuditTopic:                           "audit",
-		SessionsAPIURL:                       "http://localhost:24400",
-		EnableSessionsAPI:                    false,
 		TopicAPIURL:                          "http://localhost:25300",
 		FeedbackAPIURL:                       "http://localhost:28600",
 		EnableFeedbackAPI:                    false,

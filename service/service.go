@@ -240,12 +240,6 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 		addVersionedHandlers(router, permissionsAPIProxy, cfg.PermissionsAPIVersions, "/roles")
 		addVersionedHandlers(router, permissionsAPIProxy, cfg.PermissionsAPIVersions, "/permissions-bundle")
 
-		// Feature flag for Sessions API
-		if cfg.EnableSessionsAPI {
-			session := proxy.NewAPIProxy(ctx, cfg.SessionsAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.EnableV1BetaRestriction)
-			addTransitionalHandler(router, session, "/sessions")
-		}
-
 		// Feature flag for Files API
 		if cfg.EnableFilesAPI {
 			addTransitionalHandler(router, uploadServiceAPI, "/upload-new")

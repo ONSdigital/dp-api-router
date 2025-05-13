@@ -15,7 +15,6 @@ which will be used by the services.
 | ENABLE_OBSERVATION_API                   | false                      |                                                                                                |
 | ENABLE_PRIVATE_ENDPOINTS                 | true                       | If private endpoints should be routed                                                          |
 | ENABLE_V1_BETA_RESTRICTION               | false                      |                                                                                                |
-| ENABLE_SESSIONS_API                      | false                      |                                                                                                |
 | ENABLE_RELEASE_CALENDAR_API              | false                      | Flag to enable routing to the release calendar API                                             |
 | ENABLE_CANTABULAR_METADATA_EXTRACTOR_API | false                      | Flag to enable routing to the cantabular metadata extractor API                                |
 | ENABLE_ZEBEDEE_AUDIT                     | false                      |                                                                                                |
@@ -30,7 +29,6 @@ which will be used by the services.
 | HIERARCHY_API_URL                        | "<http://localhost:22600>" | A URL to the hierarchy api                                                                     |
 | SEARCH_API_URL                           | "<http://localhost:23900>" | A URL to the search api                                                                        |
 | DIMENSION_SEARCH_API_URL                 | "<http://localhost:23100>" | A URL to the dimension search api                                                              |
-| SESSIONS_API_URL                         | "<http://localhost:24400>" | A URL to the sessions api                                                                      |
 | OBSERVATION_API_URL                      | "<http://localhost:24500>" | A URL to the observation api                                                                   |
 | IMAGE_API_URL                            | "<http://localhost:24700>" | A URL to the image api                                                                         |
 | UPLOAD_SERVICE_API_URL:                  | "<http://localhost:25100>" | A URL to the upload service api                                                                |

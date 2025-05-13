@@ -54,8 +54,6 @@ func TestGetReturnsDefaultValues(t *testing.T) {
 			AllowedOrigins:                       []string{"http://localhost:20000", "http://localhost:8081"},
 			AllowedMethods:                       []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodHead, http.MethodOptions},
 			AuditTopic:                           "audit",
-			SessionsAPIURL:                       "http://localhost:24400",
-			EnableSessionsAPI:                    false,
 			TopicAPIURL:                          "http://localhost:25300",
 			FeedbackAPIURL:                       "http://localhost:28600",
 			EnableFeedbackAPI:                    false,
