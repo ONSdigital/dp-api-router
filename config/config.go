@@ -16,6 +16,7 @@ type Config struct {
 	EnableV1BetaRestriction              bool           `envconfig:"ENABLE_V1_BETA_RESTRICTION"`
 	EnablePrivateEndpoints               bool           `envconfig:"ENABLE_PRIVATE_ENDPOINTS"`
 	EnableObservationAPI                 bool           `envconfig:"ENABLE_OBSERVATION_API"`
+	EnableBundleAPI                      bool           `envconfig:"ENABLE_BUNDLE_API"`
 	EnableAudit                          bool           `envconfig:"ENABLE_AUDIT"`
 	EnableZebedeeAudit                   bool           `envconfig:"ENABLE_ZEBEDEE_AUDIT"`
 	ZebedeeURL                           string         `envconfig:"ZEBEDEE_URL"`
@@ -24,6 +25,7 @@ type Config struct {
 	FilterFlexAPIURL                     string         `envconfig:"FILTER_FLEX_API_URL"`
 	DatasetAPIURL                        string         `envconfig:"DATASET_API_URL"`
 	ObservationAPIURL                    string         `envconfig:"OBSERVATION_API_URL"`
+	BundleAPIURL                         string         `envconfig:"BUNDLE_API_URL"`
 	CodelistAPIURL                       string         `envconfig:"CODE_LIST_API_URL"`
 	RecipeAPIURL                         string         `envconfig:"RECIPE_API_URL"`
 	ImportAPIURL                         string         `envconfig:"IMPORT_API_URL"`
@@ -109,6 +111,7 @@ func Get() (*Config, error) {
 		FilterFlexAPIURL:                     "http://localhost:27100",
 		DatasetAPIURL:                        "http://localhost:22000",
 		ObservationAPIURL:                    "http://localhost:24500",
+		BundleAPIURL:                         "http://localhost:29800",
 		CodelistAPIURL:                       "http://localhost:22400",
 		RecipeAPIURL:                         "http://localhost:22300",
 		ImportAPIURL:                         "http://localhost:21800",
@@ -161,6 +164,7 @@ func Get() (*Config, error) {
 		OTBatchTimeout:                       time.Second * 5,
 		DeprecationConfigFilePath:            "",
 		OtelEnabled:                          false,
+		EnableBundleAPI:                      false,
 	}
 
 	return cfg, envconfig.Process("", cfg)

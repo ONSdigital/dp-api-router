@@ -256,6 +256,12 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 			redirect := proxy.NewAPIProxy(ctx, cfg.RedirectAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.EnableV1BetaRestriction)
 			addTransitionalHandler(router, redirect, "/redirects")
 		}
+
+		// Feature flag for Bundle API
+		if cfg.EnableBundleAPI {
+			bundle := proxy.NewAPIProxyWithOptions(ctx, cfg.BundleAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.EnableV1BetaRestriction, proxy.Options{Interceptor: cfg.EnableInterceptor})
+			addTransitionalHandler(router, bundle, "/bundles")
+		}
 	}
 
 	zebedee := proxy.NewAPIProxy(ctx, cfg.ZebedeeURL, cfg.Version, cfg.EnvironmentHost, false)

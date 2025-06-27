@@ -423,6 +423,7 @@ func TestRouterPrivateAPIs(t *testing.T) {
 		zebedeeURL, _ := url.Parse(cfg.ZebedeeURL)
 		cantabularMetadataExtractorAPIURL, _ := url.Parse(cfg.CantabularMetadataExtractorAPIURL)
 		redirectAPIURL, _ := url.Parse(cfg.RedirectAPIURL)
+		bundleAPIURL, _ := url.Parse(cfg.BundleAPIURL)
 
 		expectedPrivateURLs := map[string]*url.URL{
 			"/upload":              uploadServiceAPIURL,
@@ -431,6 +432,7 @@ func TestRouterPrivateAPIs(t *testing.T) {
 			"/instances":           datasetAPIURL,
 			"/cantabular-metadata": cantabularMetadataExtractorAPIURL,
 			"/redirects":           redirectAPIURL,
+			"/bundles":             bundleAPIURL,
 		}
 		for _, version := range cfg.IdentityAPIVersions {
 			expectedPrivateURLs[fmt.Sprintf("/%s/tokens", version)] = identityAPIURL
@@ -624,6 +626,25 @@ func TestRouterPrivateAPIs(t *testing.T) {
 					createRouterTest(cfg, "http://localhost:23200/v1/redirects/subpath")
 					assertOnlyThisURLIsCalled(zebedeeURL)
 				})
+			})
+		})
+
+		Convey("When the bundle API feature flag is enabled", func() {
+			cfg.EnableBundleAPI = true
+
+			Convey("A request to a bundles subpath is proxied to bundleAPIURL", func() {
+				w := createRouterTest(cfg, "http://localhost:23200/v1/bundles/subpath")
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/bundles/subpath", bundleAPIURL)
+			})
+		})
+
+		Convey("When the bundle API feature flag is disabled", func() {
+			cfg.EnableBundleAPI = false
+
+			Convey("A request to a bundles subpath is not proxied", func() {
+				createRouterTest(cfg, "http://localhost:23200/v1/bundles/subpath")
+				assertOnlyThisURLIsCalled(zebedeeURL)
 			})
 		})
 
