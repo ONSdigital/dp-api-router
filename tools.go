@@ -7,4 +7,5 @@ package main
 
 import (
 	_ "github.com/golang/glog"
+	_ "golang.org/x/image"
 )
