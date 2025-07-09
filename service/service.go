@@ -6,11 +6,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/gorilla/handlers"
-	"github.com/gorilla/mux"
-	"github.com/justinas/alice"
-	"github.com/pkg/errors"
-
 	"github.com/ONSdigital/dp-api-clients-go/v2/health"
 	"github.com/ONSdigital/dp-api-router/config"
 	"github.com/ONSdigital/dp-api-router/deprecation"
@@ -21,6 +16,10 @@ import (
 	kafka "github.com/ONSdigital/dp-kafka/v3"
 	dphttp "github.com/ONSdigital/dp-net/v3/http"
 	"github.com/ONSdigital/log.go/v2/log"
+	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
+	"github.com/justinas/alice"
+	"github.com/pkg/errors"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gorilla/mux/otelmux"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
@@ -261,6 +260,7 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 		if cfg.EnableBundleAPI {
 			bundle := proxy.NewAPIProxyWithOptions(ctx, cfg.BundleAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.EnableV1BetaRestriction, proxy.Options{Interceptor: cfg.EnableInterceptor})
 			addTransitionalHandler(router, bundle, "/bundles")
+			addTransitionalHandler(router, bundle, "/bundle-events")
 		}
 	}
 

@@ -433,6 +433,7 @@ func TestRouterPrivateAPIs(t *testing.T) {
 			"/cantabular-metadata": cantabularMetadataExtractorAPIURL,
 			"/redirects":           redirectAPIURL,
 			"/bundles":             bundleAPIURL,
+			"/bundle-events":       bundleAPIURL,
 		}
 		for _, version := range cfg.IdentityAPIVersions {
 			expectedPrivateURLs[fmt.Sprintf("/%s/tokens", version)] = identityAPIURL
@@ -636,6 +637,12 @@ func TestRouterPrivateAPIs(t *testing.T) {
 				w := createRouterTest(cfg, "http://localhost:23200/v1/bundles/subpath")
 				So(w.Code, ShouldEqual, http.StatusOK)
 				verifyProxied("/bundles/subpath", bundleAPIURL)
+			})
+
+			Convey("A request to a bundle-events subpath is proxied to bundleAPIURL", func() {
+				w := createRouterTest(cfg, "http://localhost:23200/v1/bundle-events/subpath")
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/bundle-events/subpath", bundleAPIURL)
 			})
 		})
 
