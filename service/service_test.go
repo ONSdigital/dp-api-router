@@ -460,6 +460,10 @@ func TestRouterPrivateAPIs(t *testing.T) {
 			expectedPrivateURLs[fmt.Sprintf("/%s/permissions-bundle", version)] = permissionsAPIURL
 		}
 
+		for _, version := range cfg.RedirectAPIVersions {
+			expectedPrivateURLs[fmt.Sprintf("/%s/redirects", version)] = redirectAPIURL
+		}
+
 		resetProxyMocksWithExpectations(expectedPrivateURLs)
 
 		Convey("and private endpoints enabled by configuration", func() {
@@ -618,13 +622,13 @@ func TestRouterPrivateAPIs(t *testing.T) {
 				Convey("Then a request to the redirects path is proxied to the redirectAPIURL", func() {
 					w := createRouterTest(cfg, "http://localhost:23200/v1/redirects")
 					So(w.Code, ShouldEqual, http.StatusOK)
-					verifyProxied("/redirects", redirectAPIURL)
+					verifyProxied("/v1/redirects", redirectAPIURL)
 				})
 
 				Convey("Then a request to the redirects subpath is proxied to the redirectAPIURL", func() {
 					w := createRouterTest(cfg, "http://localhost:23200/v1/redirects/subpath")
 					So(w.Code, ShouldEqual, http.StatusOK)
-					verifyProxied("/redirects/subpath", redirectAPIURL)
+					verifyProxied("/v1/redirects/subpath", redirectAPIURL)
 				})
 			})
 

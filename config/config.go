@@ -78,6 +78,7 @@ type Config struct {
 	BerlinAPIVersions                    []string       `envconfig:"BERLIN_API_VERSIONS"`
 	EnableRedirectAPI                    bool           `envconfig:"ENABLE_REDIRECT_API"`
 	RedirectAPIURL                       string         `envconfig:"REDIRECT_API_URL"`
+	RedirectAPIVersions                  []string       `envconfig:"REDIRECT_API_VERSIONS"`
 	HTTPWriteTimeout                     *time.Duration `envconfig:"HTTP_WRITE_TIMEOUT"`
 	OTExporterOTLPEndpoint               string         `envconfig:"OTEL_EXPORTER_OTLP_ENDPOINT"`
 	OTServiceName                        string         `envconfig:"OTEL_SERVICE_NAME"`
@@ -158,6 +159,7 @@ func Get() (*Config, error) {
 		BerlinAPIVersions:                    []string{"v1"},
 		EnableRedirectAPI:                    false,
 		RedirectAPIURL:                       "http://localhost:29900",
+		RedirectAPIVersions:                  []string{"v1"},
 		HTTPWriteTimeout:                     nil,
 		OTExporterOTLPEndpoint:               "localhost:4317",
 		OTServiceName:                        "dp-api-router",

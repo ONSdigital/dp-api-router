@@ -254,8 +254,8 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 
 		// Feature flag for Redirect API
 		if cfg.EnableRedirectAPI {
-			redirect := proxy.NewAPIProxy(ctx, cfg.RedirectAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.EnableV1BetaRestriction)
-			addTransitionalHandler(router, redirect, "/redirects")
+			redirectAPIProxy := proxy.NewAPIProxy(ctx, cfg.RedirectAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.EnableV1BetaRestriction)
+			addVersionedHandlers(router, redirectAPIProxy, cfg.RedirectAPIVersions, "/redirects")
 		}
 
 		// Feature flag for Bundle API
