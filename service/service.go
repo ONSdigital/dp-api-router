@@ -190,6 +190,8 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 
 	addTransitionalHandler(router, codeList, "/code-lists")
 	addTransitionalHandler(router, dataset, "/datasets")
+	addTransitionalHandler(router, dataset, "/dataset-editions")
+
 	addTransitionalHandler(router, filter, "/filters")
 	addTransitionalHandler(router, filter, "/filter-outputs")
 	addTransitionalHandler(router, hierarchy, "/hierarchies")

@@ -71,6 +71,7 @@ func TestRouterPublicAPIs(t *testing.T) {
 			"/datasets/{dataset_id}/editions/{edition}/versions/{version}/observations":        observationAPIURL,
 			"/datasets/{dataset_id}/editions/{edition}/versions/{version}/json":                filterFlexAPIURL,
 			"/datasets/{dataset_id}/editions/{edition}/versions/{version}/census-observations": filterFlexAPIURL,
+			"/dataset-editions": datasetAPIURL,
 			"/custom/filters":   filterFlexAPIURL,
 			"/filters":          filterAPIURL,
 			"/filter-outputs":   filterAPIURL,
@@ -118,6 +119,12 @@ func TestRouterPublicAPIs(t *testing.T) {
 				verifyProxied("/datasets", datasetAPIURL)
 			})
 
+			Convey("A request to dataset-editions path succeeds and is proxied to datasetAPIURL", func() {
+				w := createRouterTest(cfg, "http://localhost:23200/v1/dataset-editions")
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/dataset-editions", datasetAPIURL)
+			})
+
 			Convey("A request to dataset edition path succeeds and is proxied to datasetAPIURL", func() {
 				w := createRouterTest(cfg, "http://localhost:23200/v1/datasets/cpih012/editions/123")
 				So(w.Code, ShouldEqual, http.StatusOK)
@@ -144,6 +151,12 @@ func TestRouterPublicAPIs(t *testing.T) {
 				w := createRouterTest(cfg, "http://localhost:23200/v1/datasets")
 				So(w.Code, ShouldEqual, http.StatusOK)
 				verifyProxied("/datasets", datasetAPIURL)
+			})
+
+			Convey("A request to dataset-editions path succeeds and is proxied to datasetAPIURL", func() {
+				w := createRouterTest(cfg, "http://localhost:23200/v1/dataset-editions")
+				So(w.Code, ShouldEqual, http.StatusOK)
+				verifyProxied("/dataset-editions", datasetAPIURL)
 			})
 
 			Convey("A request to dataset edition path succeeds and is proxied to datasetAPIURL", func() {
