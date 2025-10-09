@@ -2,9 +2,6 @@ module github.com/ONSdigital/dp-api-router
 
 go 1.24
 
-//to avoid  [CVE-2022-29153] CWE-918: Server-Side Request Forgery (SSRF)
-exclude github.com/hashicorp/consul/api v1.1.0
-
 require (
 	github.com/ONSdigital/dp-api-clients-go/v2 v2.266.0
 	github.com/ONSdigital/dp-authorisation/v2 v2.32.2
