@@ -32,8 +32,8 @@ which will be used by the services.
 | OBSERVATION_API_URL                      | "<http://localhost:24500>" | A URL to the observation api                                                                   |
 | IMAGE_API_URL                            | "<http://localhost:24700>" | A URL to the image api                                                                         |
 | UPLOAD_SERVICE_API_URL:                  | "<http://localhost:25100>" | A URL to the upload service api                                                                |
+| ENABLE_FILES_API                         | false                      | Flag to enable routing to the files API                                                        |
 | FILES_API_URL:                           | "<http://localhost:26900>" | A URL to the files API                                                                         |
-| DOWNLOAD_SERVICE_URL:                    | "<http://localhost:23600>" | A URL to the download service API                                                              |
 | IDENTITY_API_URL:                        | "<http://localhost:25600>" | A URL to the identity api                                                                      |
 | IDENTITY_API_VERSIONS                    | "v1"                       | A comma delimted string with a list of versions supported by identity api                      |
 | PERMISSIONS_API_URL:                     | "<http://localhost:25400>" | A URL to the permissions api                                                                   |
@@ -47,6 +47,8 @@ which will be used by the services.
 | CATEGORY_API_VERSIONS                    | "v1"                       | A comma delimted string with a list of versions supported by search scrubber api               |
 | BERLIN_API_URL                           | "<http://localhost:28900>" | A URL to the NLP Berlin API                                                                    |
 | BERLIN_API_VERSIONS                      | "v1"                       | A comma delimted string with a list of versions supported by search scrubber api               |
+| ENABLE_BUNDLE_API                        | false                      | Flag to enable routing to the bundle API                                                       |
+| BUNDLE_API_URL                           | "<http://localhost:29800>" | A URL to the bundle API                                                                        |
 | ENABLE_REDIRECT_API                      | false                      | Flag to enable routing to the redirect API                                                     |
 | REDIRECT_API_URL                         | "<http://localhost:29900>" | A URL to the redirect API                                                                      |
 | KAFKA_ADDR                               | localhost:9092             | The list of kafka hosts                                                                        |
