@@ -423,12 +423,9 @@ func TestRouterPublicAPIs(t *testing.T) {
 			Convey("When the enable files API feature flag is enabled", func() {
 				cfg.EnableFilesAPI = true
 				filesAPIURL, _ := url.Parse(cfg.FilesAPIURL)
-				downloadServiceURL, _ := url.Parse(cfg.DownloadServiceURL)
 
 				expectedFilesURLs := map[string]*url.URL{
-					"/files":         filesAPIURL,
-					"/file-events":   filesAPIURL,
-					"/downloads-new": downloadServiceURL,
+					"/files": filesAPIURL,
 				}
 
 				resetProxyMocksWithExpectations(expectedFilesURLs)
@@ -438,29 +435,14 @@ func TestRouterPublicAPIs(t *testing.T) {
 					So(w.Code, ShouldEqual, http.StatusOK)
 					verifyProxied("/files", filesAPIURL)
 				})
-
-				Convey("A request to /file-events is proxied to filesAPIURL", func() {
-					w := createRouterTest(cfg, "http://localhost:23200/v1/file-events")
-					So(w.Code, ShouldEqual, http.StatusOK)
-					verifyProxied("/file-events", filesAPIURL)
-				})
-
-				Convey("A request to /downloads-new is proxied to downloadServiceURL", func() {
-					w := createRouterTest(cfg, "http://localhost:23200/v1/downloads-new")
-					So(w.Code, ShouldEqual, http.StatusOK)
-					verifyProxied("/downloads-new", downloadServiceURL)
-				})
 			})
 
 			Convey("When the enable files API feature flag is disabled", func() {
 				cfg.EnableFilesAPI = false
 				zebedeeURL, _ := url.Parse(cfg.ZebedeeURL)
 
-				Convey("Requests to /files and /file-events should fall through to Zebedee", func() {
+				Convey("Requests to /files should fall through to Zebedee", func() {
 					createRouterTest(cfg, "http://localhost:23200/v1/files")
-					assertOnlyThisURLIsCalled(zebedeeURL)
-
-					createRouterTest(cfg, "http://localhost:23200/v1/file-events")
 					assertOnlyThisURLIsCalled(zebedeeURL)
 				})
 			})

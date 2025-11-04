@@ -205,12 +205,8 @@ func CreateRouter(ctx context.Context, cfg *config.Config) *mux.Router {
 	}
 
 	if cfg.EnableFilesAPI {
-		downloadService := proxy.NewAPIProxy(ctx, cfg.DownloadServiceURL, cfg.Version, cfg.EnvironmentHost, cfg.EnableV1BetaRestriction)
 		filesAPI := proxy.NewAPIProxy(ctx, cfg.FilesAPIURL, cfg.Version, cfg.EnvironmentHost, cfg.EnableV1BetaRestriction)
-
 		addTransitionalHandler(router, filesAPI, "/files")
-		addTransitionalHandler(router, filesAPI, "/file-events")
-		addTransitionalHandler(router, downloadService, "/downloads-new")
 	}
 
 	if cfg.EnableNLPSearchAPIs {
