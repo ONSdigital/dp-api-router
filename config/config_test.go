@@ -36,7 +36,6 @@ func TestGetReturnsDefaultValues(t *testing.T) {
 			ImportAPIURL:                         "http://localhost:21800",
 			ImageAPIURL:                          "http://localhost:24700",
 			UploadServiceAPIURL:                  "http://localhost:25100",
-			DownloadServiceURL:                   "http://localhost:23600",
 			FilesAPIURL:                          "http://localhost:26900",
 			IdentityAPIURL:                       "http://localhost:25600",
 			BundleAPIURL:                         "http://localhost:29800",
