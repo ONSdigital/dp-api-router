@@ -162,7 +162,7 @@ func Get() (*Config, error) {
 		OTExporterOTLPEndpoint:               "localhost:4317",
 		OTServiceName:                        "dp-api-router",
 		OTBatchTimeout:                       time.Second * 5,
-		DeprecationConfigFilePath:            "",
+		DeprecationConfigFilePath:            "[{\"paths\":[\"/data\"],\"date\":\"2025-10-14T00:00:00Z\",\"sunset\":\"2026-01-31\",\"link\":\"https://developer.ons.gov.uk/retirement/\",\"msg\":\"As we progress towards a new website platform, this legacy endpoint will be decommissioned on 31/01/2026.\"}]",
 		OtelEnabled:                          false,
 		EnableBundleAPI:                      false,
 	}
