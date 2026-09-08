@@ -450,6 +450,7 @@ func TestRouterPublicAPIs(t *testing.T) {
 	})
 }
 
+//nolint:gocognit,gocyclo // cognitive complexity 45 (> 42) is acceptable for now
 func TestRouterPrivateAPIs(t *testing.T) {
 	Convey("Given an api router and proxies with all private endpoints available", t, func() {
 		cfg, _ := config.Get()
