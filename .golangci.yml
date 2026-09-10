@@ -56,7 +56,7 @@ linters:
     revive:
       rules:
         - name: unused-parameter
-          severity: error
+          severity: warning
           disabled: true
   exclusions:
     generated: lax

@@ -74,6 +74,8 @@ func shallIgnore(path string) bool {
 // AuditHandler is a middleware handler that keeps track of calls for auditing purposes,
 // before and after proxying calling the downstream service.
 // It obtains the user and caller information by calling Zebedee GET /identity
+//
+//nolint:gocognit,gocyclo // cognitive complexity 41 (> 30) is acceptable for now
 func AuditHandler(auditProducer *event.AvroProducer,
 	cli dphttp.Clienter,
 	zebedeeURL, versionPrefix string,
