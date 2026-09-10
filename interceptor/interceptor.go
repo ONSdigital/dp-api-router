@@ -257,7 +257,6 @@ func (t *Transport) updateSlice(documents []interface{}) ([]byte, error) {
 	return buf.Bytes(), err
 }
 
-//nolint:gocognit,gocyclo // cognitive complexity 35 (> 30) is acceptable for now
 func (t *Transport) checkMap(document map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 
