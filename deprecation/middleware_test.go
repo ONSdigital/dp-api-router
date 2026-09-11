@@ -101,7 +101,7 @@ func TestRouter(t *testing.T) {
 		So(router, ShouldNotEqual, baseHandler)
 
 		Convey("With a request to a non routed path", func() {
-			req := httptest.NewRequest("GET", "http://example.com/nonmatched", nil)
+			req := httptest.NewRequest("GET", "http://example.com/nonmatched", http.NoBody)
 			Convey("When the request is made to the router", func() {
 				w := httptest.NewRecorder()
 				router.ServeHTTP(w, req)
@@ -122,7 +122,7 @@ func TestRouter(t *testing.T) {
 		})
 
 		Convey("With a request to a deprecated path but no outage", func() {
-			req := httptest.NewRequest("GET", "http://example.com/deprecated", nil)
+			req := httptest.NewRequest("GET", "http://example.com/deprecated", http.NoBody)
 			Convey("When the request is made to the router", func() {
 				w := httptest.NewRecorder()
 				router.ServeHTTP(w, req)
@@ -146,7 +146,7 @@ func TestRouter(t *testing.T) {
 		})
 
 		Convey("With a request to a deprecated path with a current outage", func() {
-			req := httptest.NewRequest("GET", "http://example.com/outage", nil)
+			req := httptest.NewRequest("GET", "http://example.com/outage", http.NoBody)
 			Convey("When the request is made to the router", func() {
 				w := httptest.NewRecorder()
 				router.ServeHTTP(w, req)
@@ -170,7 +170,7 @@ func TestRouter(t *testing.T) {
 		})
 
 		Convey("With a request to a deprecated path with inactive outages", func() {
-			req := httptest.NewRequest("GET", "http://example.com/inactive", nil)
+			req := httptest.NewRequest("GET", "http://example.com/inactive", http.NoBody)
 			Convey("When the request is made to the router", func() {
 				w := httptest.NewRecorder()
 				router.ServeHTTP(w, req)
@@ -194,7 +194,7 @@ func TestRouter(t *testing.T) {
 		})
 
 		Convey("With a request to a deprecated path with an unbounded current outage", func() {
-			req := httptest.NewRequest("GET", "http://example.com/unbounded", nil)
+			req := httptest.NewRequest("GET", "http://example.com/unbounded", http.NoBody)
 			Convey("When the request is made to the router", func() {
 				w := httptest.NewRecorder()
 				router.ServeHTTP(w, req)
@@ -218,7 +218,7 @@ func TestRouter(t *testing.T) {
 		})
 
 		Convey("With a request to a deprecated path with future unbounded outage", func() {
-			req := httptest.NewRequest("GET", "http://example.com/futureunbounded", nil)
+			req := httptest.NewRequest("GET", "http://example.com/futureunbounded", http.NoBody)
 			Convey("When the request is made to the router", func() {
 				w := httptest.NewRecorder()
 				router.ServeHTTP(w, req)

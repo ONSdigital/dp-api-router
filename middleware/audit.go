@@ -299,9 +299,10 @@ func getFlorenceTokenFromCookie(ctx context.Context, req *http.Request) (string,
 	var err error
 
 	c, err := req.Cookie(dprequest.FlorenceCookieKey)
-	if err == nil {
+	switch err {
+	case nil:
 		florenceToken = c.Value
-	} else if err == http.ErrNoCookie {
+	case http.ErrNoCookie:
 		err = nil // we don't consider this scenario an error so we set err to nil and return an empty token
 		log.Info(ctx, "florence access token cookie not found in request")
 	}

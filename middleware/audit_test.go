@@ -63,7 +63,7 @@ func testHandler(statusCode int, body []byte, c C) http.Handler {
 }
 
 // utility function to create a producer and valid audit handler
-func createValidAuditHandler() (kafka.IProducer, func(h http.Handler) http.Handler) {
+func createValidAuditHandler() (producer kafka.IProducer, handler func(h http.Handler) http.Handler) {
 	cliMock := createHTTPClientMock(http.StatusOK, testIdentityResponse)
 	p := kafkatest.NewMessageProducer(true)
 	auditProducer := event.NewAvroProducer(p.Channels().Output, schema.AuditEvent)
@@ -73,7 +73,7 @@ func createValidAuditHandler() (kafka.IProducer, func(h http.Handler) http.Handl
 }
 
 // utility function to create a producer and an audit handler that fails to marshal and send events
-func createFailingAuditHandler() (kafka.IProducer, func(h http.Handler) http.Handler) {
+func createFailingAuditHandler() (producer kafka.IProducer, handler func(h http.Handler) http.Handler) {
 	cliMock := createHTTPClientMock(http.StatusOK, testIdentityResponse)
 	failingMarshaller := &eventmock.MarshallerMock{
 		MarshalFunc: func(s interface{}) ([]byte, error) {

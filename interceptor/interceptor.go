@@ -235,7 +235,7 @@ func (t *Transport) updateSlice(documents []interface{}) ([]byte, error) {
 	var (
 		err error
 	)
-	documentList := make([]map[string]interface{}, len(documents), len(documents))
+	documentList := make([]map[string]interface{}, len(documents))
 
 	for i := range documents {
 		document := documents[i].(map[string]interface{})
