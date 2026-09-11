@@ -12,8 +12,5 @@ inputs:
   - name: dp-api-router
     path: dp-api-router
 
-# caches:
-#   - path: go/
-
 run:
   path: dp-api-router/ci/scripts/lint.sh
