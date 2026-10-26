@@ -13,6 +13,13 @@ import (
 	"github.com/ONSdigital/dp-api-router/proxy"
 	proxyMock "github.com/ONSdigital/dp-api-router/proxy/mock"
 	"github.com/ONSdigital/dp-api-router/service"
+	dprequest "github.com/ONSdigital/dp-net/v3/request"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gorilla/mux/otelmux"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/trace"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -23,6 +30,7 @@ var (
 	testCtx              = context.Background()
 	registeredProxies    = map[url.URL]*proxyMock.IReverseProxyMock{}
 	testServiceAuthToken = "Bearer testServiceAuthToken"
+	realProxyFactory     = proxy.NewSingleHostReverseProxyWithTransport
 )
 
 func TestNotProxied(t *testing.T) {
@@ -760,6 +768,144 @@ func createRouterTest(cfg *config.Config, urlStr string) *httptest.ResponseRecor
 	router := service.CreateRouter(testCtx, cfg)
 	router.ServeHTTP(w, r)
 	return w
+}
+
+func TestRouterPreservesTracingHeadersWithoutOTel(t *testing.T) {
+	// This pretend backend sends the headers back so we can see what arrived.
+	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Received-Traceparent", r.Header.Get("traceparent"))
+		w.Header().Set("Received-Request-Id", r.Header.Get("X-Request-Id"))
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte("{}"))
+	}))
+	defer backend.Close()
+
+	cfg, err := config.Get()
+	if err != nil {
+		t.Fatal(err)
+	}
+	previousConfig := *cfg
+	t.Cleanup(func() { *cfg = previousConfig })
+	cfg.OtelEnabled = false
+	cfg.EnableInterceptor = true
+	cfg.EnableV1BetaRestriction = false
+	cfg.DatasetAPIURL = backend.URL
+	cfg.SearchAPIURL = backend.URL
+
+	// Other router tests use a fake proxy; this test needs the real one.
+	previousProxyFactory := proxy.NewSingleHostReverseProxyWithTransport
+	proxy.NewSingleHostReverseProxyWithTransport = realProxyFactory
+	t.Cleanup(func() { proxy.NewSingleHostReverseProxyWithTransport = previousProxyFactory })
+
+	router := dprequest.HandlerRequestID(16)(service.CreateRouter(testCtx, cfg))
+	const traceparent = "00-0123456789abcdef0123456789abcdef-0123456789abcdef-01"
+	const requestID = "original-request"
+
+	// Datasets edit the reply; search does not. Both must keep the same request headers.
+	for _, path := range []string{"/v1/datasets", "/v1/search"} {
+		t.Run(path, func(t *testing.T) {
+			r := httptest.NewRequest(http.MethodGet, path, http.NoBody)
+			r.Header.Set("traceparent", traceparent)
+			r.Header.Set("X-Request-Id", requestID)
+			w := httptest.NewRecorder()
+			router.ServeHTTP(w, r)
+
+			if w.Code != http.StatusOK {
+				t.Fatalf("unexpected status: got %d, want %d", w.Code, http.StatusOK)
+			}
+			if got := w.Header().Get("Received-Traceparent"); got != traceparent {
+				t.Errorf("backend traceparent: got %q, want %q", got, traceparent)
+			}
+			if got := w.Header().Get("Received-Request-Id"); got != requestID {
+				t.Errorf("backend X-Request-Id: got %q, want %q", got, requestID)
+			}
+		})
+	}
+}
+
+func TestRouterPreservesIncomingTraceWithOTel(t *testing.T) {
+	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Received-Traceparent", r.Header.Get("traceparent"))
+		w.Header().Set("Received-Request-Id", r.Header.Get("X-Request-Id"))
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte("{}"))
+	}))
+	defer backend.Close()
+
+	cfg, err := config.Get()
+	if err != nil {
+		t.Fatal(err)
+	}
+	previousConfig := *cfg
+	t.Cleanup(func() { *cfg = previousConfig })
+	cfg.OtelEnabled = true
+	cfg.EnableInterceptor = true
+	cfg.EnableV1BetaRestriction = false
+	cfg.DatasetAPIURL = backend.URL
+	cfg.SearchAPIURL = backend.URL
+
+	previousProxyFactory := proxy.NewSingleHostReverseProxyWithTransport
+	proxy.NewSingleHostReverseProxyWithTransport = realProxyFactory
+	t.Cleanup(func() { proxy.NewSingleHostReverseProxyWithTransport = previousProxyFactory })
+
+	// Make trace IDs here in memory; the test does not need a telemetry server.
+	tracerProvider := sdktrace.NewTracerProvider()
+	t.Cleanup(func() {
+		if err := tracerProvider.Shutdown(context.Background()); err != nil {
+			t.Errorf("shutdown tracer provider: %v", err)
+		}
+	})
+	propagator := propagation.TraceContext{}
+	previousPropagator := otel.GetTextMapPropagator()
+	otel.SetTextMapPropagator(propagator)
+	t.Cleanup(func() { otel.SetTextMapPropagator(previousPropagator) })
+
+	// Wrap the router like the real app, so it reads the incoming traceparent.
+	router := service.CreateRouter(testCtx, cfg)
+	router.Use(otelmux.Middleware(cfg.OTServiceName, otelmux.WithTracerProvider(tracerProvider), otelmux.WithPropagators(propagator)))
+	handler := dprequest.HandlerRequestID(16)(otelhttp.NewHandler(router, "/", otelhttp.WithTracerProvider(tracerProvider), otelhttp.WithPropagators(propagator)))
+	const traceparent = "00-0123456789abcdef0123456789abcdef-0123456789abcdef-01"
+	const requestID = "original-request"
+
+	for _, path := range []string{"/v1/datasets", "/v1/search"} {
+		t.Run(path, func(t *testing.T) {
+			r := httptest.NewRequest(http.MethodGet, path, http.NoBody)
+			r.Header.Set("traceparent", traceparent)
+			r.Header.Set("X-Request-Id", requestID)
+			w := httptest.NewRecorder()
+			handler.ServeHTTP(w, r)
+
+			if w.Code != http.StatusOK {
+				t.Fatalf("unexpected status: got %d, want %d", w.Code, http.StatusOK)
+			}
+			if got := w.Header().Get("Received-Request-Id"); got != requestID {
+				t.Errorf("backend X-Request-Id: got %q, want %q", got, requestID)
+			}
+
+			got := w.Header().Get("Received-Traceparent")
+			if path == "/v1/search" {
+				if got != traceparent {
+					t.Errorf("backend traceparent: got %q, want %q", got, traceparent)
+				}
+				return
+			}
+
+			receivedHeaders := make(http.Header)
+			receivedHeaders.Set("traceparent", got)
+			incomingSpan := trace.SpanContextFromContext(propagator.Extract(context.Background(), propagation.HeaderCarrier(r.Header)))
+			backendSpan := trace.SpanContextFromContext(propagator.Extract(context.Background(), propagation.HeaderCarrier(receivedHeaders)))
+			if !backendSpan.IsValid() {
+				t.Fatalf("backend received an invalid traceparent: %q", got)
+			}
+			// Same trace means the story continues; a new span marks this hop.
+			if backendSpan.TraceID() != incomingSpan.TraceID() {
+				t.Errorf("backend trace ID: got %s, want %s", backendSpan.TraceID(), incomingSpan.TraceID())
+			}
+			if backendSpan.SpanID() == incomingSpan.SpanID() {
+				t.Error("backend span ID should differ from the incoming span ID")
+			}
+		})
+	}
 }
 
 // verifyProxied asserts that only the proxy that was registered for the expected URL is called, with the expected path
